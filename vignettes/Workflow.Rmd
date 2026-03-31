@@ -1,0 +1,144 @@
+---
+title: "Workflow"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Workflow}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+```{r setup}
+library(curveRfreq)
+script_path <- system.file("vignette_helpers", "db_functions.R", package = "curveRfreq")
+if (file.exists(script_path)) {
+  source(script_path)
+} else {
+  warning("Script file not found at expected path: ", script_path)
+}
+conn <- get_db_connection()
+param_user = "seamus.owen.stein@dartmouth.edu"
+
+```
+
+```{r configuration}
+# other packages for loading
+library(glue)
+verbose = TRUE
+model_names = c("Y5", "Yd5", "Y4", "Yd4", "Ygomp4")
+param_group = "standard_curve_options"
+is_display_log_response = TRUE
+is_display_log_independent = TRUE
+
+project_id = 17
+study_accession = "MADI_01"
+experiment_accession = "IgG1"
+
+## controls next to figure
+source = "Standard"
+antigen = "victoria"
+plate_nom = "plate_3-1000"
+
+```
+
+```{r}
+
+loaded_data <- pull_data(study_accession = study_accession, experiment_accession = experiment_accession, project_id = 17, conn = conn)
+nominal_sample_dilution = unique(loaded_data$standards$nominal_sample_dilution)[1]
+```
+
+```{r}
+response_var <- loaded_data$response_var
+indep_var <- loaded_data$indep_var
+cat("response variable:", response_var, "\n")
+cat("independent variable:", indep_var)
+```
+
+```{r}
+antigen_constraints <- loaded_data$antigen_constraints
+antigen_constraints <- antigen_constraints[antigen_constraints$antigen == antigen,]
+print(antigen_constraints)
+```
+```{r}
+study_params <- fetch_study_parameters(study_accession=study_accession, param_user=param_user, param_group=param_group,
+                                       project_id = project_id, conn)
+print(study_params)
+```
+
+```{r}
+antigen_plate <-  select_antigen_plate(
+        loaded_data          = loaded_data,
+        study_accession      = study_accession,
+        experiment_accession = experiment_accession,
+        source               = source,
+        antigen              = antigen,
+        plate                = plate_nom,
+        antigen_constraints  = antigen_constraints
+      )
+```
+
+```{r}
+preprocessed_data <- preprocess_robust_curves(data = antigen_plate$plate_standard, antigen_settings = antigen_plate$antigen_settings,
+                                     response_variable = response_var,
+                                     independent_variable = indep_var,
+                                     is_log_response = study_params$is_log_response,
+                                     blank_data = antigen_plate$plate_blanks,
+                                     blank_option = study_params$blank_option,
+                                     is_log_independent = study_params$is_log_independent,
+                                     apply_prozone = study_params$applyProzone,
+                                     verbose = verbose)
+preprocessed_data$data
+preprocessed_data$antigen_fit_options
+```
+
+```{r}
+formulas <- select_model_formulas(fixed_constraint = antigen_plate$fixed_a_result, response_variable = response_var,
+                                    is_log_response = study_params$is_log_response)
+print(formulas)
+```
+
+```{r}
+model_constraints <- obtain_model_constraints(data = preprocessed_data$data,
+                                                formulas = formulas,
+                                                independent_variable = indep_var,
+                                                response_variable = response_var,
+                                                is_log_response = study_params$is_log_response,
+                                                is_log_concentration = study_params$is_log_independent,
+                                                antigen_settings = antigen_plate$antigen_settings,
+                                                max_response = max(preprocessed_data$data[[response_var]], na.rm = TRUE),
+                                                min_response = min(preprocessed_data$data[[response_var]], na.rm = TRUE),
+                                                verbose = verbose
+                                                )
+model_constraints
+```
+
+
+```{r}
+start_lists <- make_start_lists(model_constraints = model_constraints,
+                                  frac_generate = 0.8,
+                                  quants = c(low = 0.2, mid = 0.5, high = 0.8))
+```
+
+
+```{r}
+fit_robust_lm <- compute_robust_curves(prepped_data = preprocessed_data$data,
+                                         response_variable = response_var,
+                                         independent_variable = indep_var,
+                                         formulas = formulas,
+                                         model_constraints = model_constraints,
+                                         start_lists = start_lists,
+                                         verbose = verbose)
+```
+
+
+```{r}
+fit_summary <- summarize_model_fits(fit_robust_lm, verbose = verbose)
+fit_summary
+```
+

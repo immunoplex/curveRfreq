@@ -1,0 +1,20 @@
+Package: curveRfreq
+Title: Frequentist Immunoassay Standard Curve Fitting
+Version: 0.0.0.9000
+Authors@R: 
+    person("First", "Last", , "first.last@example.com", role = c("aut", "cre"))
+Description: provides frequentist methods for modeling and calibrating immunoassay standard curves 
+            (e.g., 4PL and 5PL models).
+Imports:
+    minpack.lm,
+    nlstools,
+    tibble,
+    dplyr
+License: AGPL (>= 3)
+Encoding: UTF-8
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 7.3.3
+Suggests: 
+    knitr,
+    rmarkdown
+VignetteBuilder: knitr
