@@ -175,6 +175,9 @@ attach_grouping_keys <- function(df, best_data, context = "") {
 #'
 #' @return The first non-NULL value.
 #'
+#' @name op-null-default
+#' @rdname op-null-default
+#'
 #' @examples
 #' NULL %||% 5
 #' 10 %||% 5

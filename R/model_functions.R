@@ -1060,7 +1060,7 @@ grad_y_Yd5_fixed <- function(y, fixed_a, b, d, g) {
 make_inv_and_grad_fixed <- function(model, y, fixed_a) {
   # Strip any accidental names from scalar inputs
   y <- as.numeric(y)
-  
+
   # ── Branch A: 'a' is a TRUE external constant ──────────────
   if (!is.null(fixed_a)) {
     fixed_a <- as.numeric(fixed_a)
@@ -1112,7 +1112,7 @@ make_inv_and_grad_fixed <- function(model, y, fixed_a) {
                   stop("Unsupported model: ", model)
     ))
   }
-  
+
   # ── Branch B: 'a' is FREE — must be in p (coef(fit)) ───────
   switch(model,
          Y4 = list(
@@ -1236,6 +1236,7 @@ make_inv_and_grad_fixed <- function(model, y, fixed_a) {
 #'   \eqn{\log_{10}}-transformed before substitution (with a small
 #'   epsilon to avoid \eqn{\log(0)}).
 #'
+#' @param model_names a vector of model formulas to be considered.
 #' @return Named list of formulas keyed by model name:
 #'   `"Y5"`, `"Yd5"`, `"Y4"`, `"Yd4"`, `"Ygomp4"`.
 #'
@@ -1252,19 +1253,21 @@ make_inv_and_grad_fixed <- function(model, y, fixed_a) {
 #' # Fixed lower asymptote
 #' forms <- select_model_formulas(fixed_constraint = 50,
 #'                                response_variable = "mfi",
-#'                                is_log_response = FALSE)
+#'                                is_log_response = FALSE,
+#'                                model_names = c("Y4", "Y5", "Yd4", "Yd5", "Ygomp4"))
 #' names(forms)
 #' forms$Y4
 #'
 #' # Free lower asymptote
 #' forms_free <- select_model_formulas(fixed_constraint = NULL,
 #'                                     response_variable = "mfi",
-#'                                     is_log_response = FALSE)
+#'                                     is_log_response = FALSE,
+#'                                     model_names = c("Y4", "Y5", "Yd4", "Yd5", "Ygomp4"))
 #' forms_free$Y4
 #'
 #' @export
-select_model_formulas <- function(fixed_constraint, response_variable, is_log_response) {
-  
+select_model_formulas <- function(fixed_constraint, response_variable, is_log_response, model_names) {
+
   if (!is.null(fixed_constraint)) {
     if (!is.numeric(fixed_constraint) ||
         !is.finite(fixed_constraint) ||
@@ -1276,7 +1279,7 @@ select_model_formulas <- function(fixed_constraint, response_variable, is_log_re
       fixed_constraint <- NULL
     }
   }
-  
+
   if (!is.null(fixed_constraint)) {
     if (is_log_response) {
       .eps <- 0.00005
@@ -1284,63 +1287,67 @@ select_model_formulas <- function(fixed_constraint, response_variable, is_log_re
     }
     message("Lower asymptote is fixed at", fixed_constraint)
     fixed_value <- fixed_constraint
-    
+
     standard_curve_formulas <- list(
       Y5 = as.formula(substitute(
         lhs ~ d + (((fixed_a) - d) / (1 + exp((concentration - c) / b))^g),
         list(lhs = as.name(response_variable), fixed_a = fixed_value)
       ), env = parent.frame()),
-      
+
       Yd5 = as.formula(substitute(
         lhs ~ (fixed_a) + (d - (fixed_a)) * I((1 + g * exp(-b * (concentration - c)))^(-1 / g)),
         list(lhs = as.name(response_variable), fixed_a = fixed_value)
       ), env = parent.frame()),
-      
+
       Y4 = as.formula(substitute(
         lhs ~ d + (((fixed_a) - d) / I((1 + exp((concentration - c) / b)))),
         list(lhs = as.name(response_variable), fixed_a = fixed_value)
       ), env = parent.frame()),
-      
+
       Yd4 = as.formula(substitute(
         lhs ~ (fixed_a) + (d - (fixed_a)) / I((1 + (concentration / c)^b)),
         list(lhs = as.name(response_variable), fixed_a = fixed_value)
       ), env = parent.frame()),
-      
+
       Ygomp4 = as.formula(substitute(
         lhs ~ (fixed_a) + (d - (fixed_a)) * I(exp(-exp(-b * (concentration - c)))),
         list(lhs = as.name(response_variable), fixed_a = fixed_value)
       ), env = parent.frame())
     )
-    
+
   } else {
     standard_curve_formulas <- list(
       Y5 = as.formula(substitute(
         lhs ~ d + (a - d) / (I((1 + exp((concentration - c) / b))^g)),
         list(lhs = as.name(response_variable))),
         env = parent.frame()),
-      
+
       Yd5 = as.formula(substitute(
         lhs ~ a + (d - a) * I((1 + g * exp(-b * (concentration - c)))^(-1 / g)),
         list(lhs = as.name(response_variable))),
         env = parent.frame()),
-      
+
       Y4 = as.formula(substitute(
         lhs ~ d + (a - d) / I(1 + exp((concentration - c) / b)),
         list(lhs = as.name(response_variable))),
         env = parent.frame()),
-      
+
       Yd4 = as.formula(substitute(
         lhs ~ a + (d - a) / I(1 + (concentration / c)^b),
         list(lhs = as.name(response_variable))),
         env = parent.frame()),
-      
+
       Ygomp4 = as.formula(substitute(
         lhs ~ a + (d - a) * I(exp(-exp(-b * (concentration - c)))),
         list(lhs = as.name(response_variable))),
         env = parent.frame())
     )
   }
-  
+
+
+  # Subset formulas to only the models specified
+  standard_curve_formulas <- standard_curve_formulas[model_names]
+
   return(standard_curve_formulas)
 }
 
@@ -1392,7 +1399,7 @@ Y5_safe_constraint <- function(data,
                                antigen_settings,
                                constraint_profile = NULL) {
   .eps <- 1e-5
-  
+
   if (is.null(constraint_profile)) {
     constraint_profile <- adaptive_constraint_profile(
       data, response_variable = names(data)[1],
@@ -1400,14 +1407,14 @@ Y5_safe_constraint <- function(data,
       antigen_settings = antigen_settings
     )
   }
-  
+
   .slope_max <- constraint_profile$slope_max
   .slope_min <- constraint_profile$slope_min
   .g_min     <- constraint_profile$g_min
   .g_max     <- constraint_profile$g_max
-  
+
   formula_vars <- all.vars(Y5_formula)
-  
+
   # ── Lower asymptote a ──
   a_lower <- antigen_settings$l_asy_min_constraint
   a_upper <- antigen_settings$l_asy_max_constraint
@@ -1415,7 +1422,7 @@ Y5_safe_constraint <- function(data,
     a_lower <- log10(a_lower + .eps)
     a_upper <- log10(a_upper + .eps)
   }
-  
+
   # ── Upper asymptote d — adaptive ──
   dr     <- constraint_profile$dynamic_range
   margin <- constraint_profile$d_margin_frac
@@ -1423,22 +1430,22 @@ Y5_safe_constraint <- function(data,
   d_lower <- max(d_lower, y_min + .eps)
   d_upper <- y_max + dr * margin
   if (d_upper <= d_lower) d_upper <- d_lower + abs(dr) * 0.5 + .eps
-  
+
   # ── Inflection point c ──
   midpoint_concentration <- mean(range(data$concentration, na.rm = TRUE))
   conc_range <- diff(range(data$concentration, na.rm = TRUE))
   pad     <- constraint_profile$conc_pad_frac
   c_lower <- midpoint_concentration - pad * conc_range
   c_upper <- midpoint_concentration + pad * conc_range
-  
+
   # ── Slope b ──
   b_lower <- .slope_min
   b_upper <- .slope_max
-  
+
   # ── Asymmetry g ──
   g_lower <- .g_min
   g_upper <- .g_max
-  
+
   if ("a" %in% formula_vars) {
     lower <- c(a = a_lower, b = b_lower, c = c_lower, d = d_lower, g = g_lower)
     upper <- c(a = a_upper, b = b_upper, c = c_upper, d = d_upper, g = g_upper)
@@ -1446,7 +1453,7 @@ Y5_safe_constraint <- function(data,
     lower <- c(b = b_lower, c = c_lower, d = d_lower, g = g_lower)
     upper <- c(b = b_upper, c = c_upper, d = d_lower, g = g_upper)
   }
-  
+
   return(.make_bounds(Y5_free_vars, lower_vals = lower, upper_vals = upper))
 }
 
@@ -1469,7 +1476,7 @@ Yd5_safe_constraint <- function(data, y_min = 1, y_max, Yd5_formula,
                                 is_log_concentration, antigen_settings,
                                 constraint_profile = NULL) {
   .eps <- 1e-5
-  
+
   if (is.null(constraint_profile)) {
     constraint_profile <- adaptive_constraint_profile(
       data, response_variable = names(data)[1],
@@ -1477,14 +1484,14 @@ Yd5_safe_constraint <- function(data, y_min = 1, y_max, Yd5_formula,
       antigen_settings = antigen_settings
     )
   }
-  
+
   .slope_max <- constraint_profile$slope_max
   .slope_min <- constraint_profile$slope_min
   .g_min     <- constraint_profile$g_min
   .g_max     <- constraint_profile$g_max
-  
+
   formula_vars <- all.vars(Yd5_formula)
-  
+
   # ── Lower asymptote a ──
   a_lower <- antigen_settings$l_asy_min_constraint
   a_upper <- antigen_settings$l_asy_max_constraint
@@ -1492,7 +1499,7 @@ Yd5_safe_constraint <- function(data, y_min = 1, y_max, Yd5_formula,
     a_lower <- log10(max(a_lower, .eps) + .eps)
     a_upper <- log10(max(a_upper, .eps) + .eps)
   }
-  
+
   # ── Upper asymptote d — adaptive ──
   dr     <- constraint_profile$dynamic_range
   margin <- constraint_profile$d_margin_frac
@@ -1500,22 +1507,22 @@ Yd5_safe_constraint <- function(data, y_min = 1, y_max, Yd5_formula,
   d_lower <- max(d_lower, y_min + .eps)
   d_upper <- y_max + dr * margin
   if (d_upper <= d_lower) d_upper <- d_lower + abs(dr) * 0.5 + .eps
-  
+
   # ── Inflection point c ──
   midpoint_concentration <- mean(range(data$concentration, na.rm = TRUE))
   conc_range <- diff(range(data$concentration, na.rm = TRUE))
   pad     <- constraint_profile$conc_pad_frac
   c_lower <- midpoint_concentration - pad * conc_range
   c_upper <- midpoint_concentration + pad * conc_range
-  
+
   # ── Slope b ──
   b_lower <- .slope_min
   b_upper <- .slope_max
-  
+
   # ── Asymmetry g ──
   g_lower <- .g_min
   g_upper <- .g_max
-  
+
   if ("a" %in% formula_vars) {
     lower <- c(a = a_lower, b = b_lower, c = c_lower, d = d_lower, g = g_lower)
     upper <- c(a = a_upper, b = b_upper, c = c_upper, d = d_upper, g = g_upper)
@@ -1523,7 +1530,7 @@ Yd5_safe_constraint <- function(data, y_min = 1, y_max, Yd5_formula,
     lower <- c(b = b_lower, c = c_lower, d = d_lower, g = g_lower)
     upper <- c(b = b_upper, c = c_upper, d = d_upper, g = g_upper)
   }
-  
+
   return(.make_bounds(Yd5_free_vars, lower_vals = lower, upper_vals = upper))
 }
 
@@ -1546,7 +1553,7 @@ Y4_safe_constraint <- function(data, y_min = 1, y_max, Y4_formula,
                                is_log_concentration, antigen_settings,
                                constraint_profile = NULL) {
   .eps <- 1e-5
-  
+
   if (is.null(constraint_profile)) {
     constraint_profile <- adaptive_constraint_profile(
       data, response_variable = names(data)[1],
@@ -1554,12 +1561,12 @@ Y4_safe_constraint <- function(data, y_min = 1, y_max, Y4_formula,
       antigen_settings = antigen_settings
     )
   }
-  
+
   .slope_max <- constraint_profile$slope_max
   .slope_min <- constraint_profile$slope_min
-  
+
   formula_vars <- all.vars(Y4_formula)
-  
+
   # ── Lower asymptote a ──
   a_lower <- antigen_settings$l_asy_min_constraint
   a_upper <- antigen_settings$l_asy_max_constraint
@@ -1567,7 +1574,7 @@ Y4_safe_constraint <- function(data, y_min = 1, y_max, Y4_formula,
     a_lower <- log10(max(a_lower, .eps) + .eps)
     a_upper <- log10(max(a_upper, .eps) + .eps)
   }
-  
+
   # ── Upper asymptote d — adaptive ──
   dr     <- constraint_profile$dynamic_range
   margin <- constraint_profile$d_margin_frac
@@ -1575,18 +1582,18 @@ Y4_safe_constraint <- function(data, y_min = 1, y_max, Y4_formula,
   d_lower <- max(d_lower, y_min + .eps)
   d_upper <- y_max + dr * margin
   if (d_upper <= d_lower) d_upper <- d_lower + abs(dr) * 0.5 + .eps
-  
+
   # ── Inflection point c ──
   midpoint_concentration <- mean(range(data$concentration, na.rm = TRUE))
   conc_range <- diff(range(data$concentration, na.rm = TRUE))
   pad     <- constraint_profile$conc_pad_frac
   c_lower <- midpoint_concentration - pad * conc_range
   c_upper <- midpoint_concentration + pad * conc_range
-  
+
   # ── Slope b ──
   b_lower <- .slope_min
   b_upper <- .slope_max
-  
+
   if ("a" %in% formula_vars) {
     lower <- c(a = a_lower, b = b_lower, c = c_lower, d = d_lower)
     upper <- c(a = a_upper, b = b_upper, c = c_upper, d = d_upper)
@@ -1594,7 +1601,7 @@ Y4_safe_constraint <- function(data, y_min = 1, y_max, Y4_formula,
     lower <- c(b = b_lower, c = c_lower, d = d_lower)
     upper <- c(b = b_upper, c = c_upper, d = d_upper)
   }
-  
+
   return(.make_bounds(Y4_free_vars, lower_vals = lower, upper_vals = upper))
 }
 
@@ -1617,7 +1624,7 @@ Yd4_safe_constraint <- function(data, y_min = 1, y_max, Yd4_formula,
                                 is_log_concentration, antigen_settings,
                                 constraint_profile = NULL) {
   .eps <- 1e-5
-  
+
   if (is.null(constraint_profile)) {
     constraint_profile <- adaptive_constraint_profile(
       data, response_variable = names(data)[1],
@@ -1625,12 +1632,12 @@ Yd4_safe_constraint <- function(data, y_min = 1, y_max, Yd4_formula,
       antigen_settings = antigen_settings
     )
   }
-  
+
   .slope_max <- constraint_profile$slope_max
   .slope_min <- constraint_profile$slope_min
-  
+
   formula_vars <- all.vars(Yd4_formula)
-  
+
   # ── Lower asymptote a ──
   a_lower <- antigen_settings$l_asy_min_constraint
   a_upper <- antigen_settings$l_asy_max_constraint
@@ -1638,7 +1645,7 @@ Yd4_safe_constraint <- function(data, y_min = 1, y_max, Yd4_formula,
     a_lower <- log10(max(a_lower, .eps) + .eps)
     a_upper <- log10(max(a_upper, .eps) + .eps)
   }
-  
+
   # ── Upper asymptote d — adaptive ──
   dr     <- constraint_profile$dynamic_range
   margin <- constraint_profile$d_margin_frac
@@ -1646,18 +1653,18 @@ Yd4_safe_constraint <- function(data, y_min = 1, y_max, Yd4_formula,
   d_lower <- max(d_lower, y_min + .eps)
   d_upper <- y_max + dr * margin
   if (d_upper <= d_lower) d_upper <- d_lower + abs(dr) * 0.5 + .eps
-  
+
   # ── Inflection point c ──
   midpoint_concentration <- mean(range(data$concentration, na.rm = TRUE))
   conc_range <- diff(range(data$concentration, na.rm = TRUE))
   pad     <- constraint_profile$conc_pad_frac
   c_lower <- midpoint_concentration - pad * conc_range
   c_upper <- midpoint_concentration + pad * conc_range
-  
+
   # ── Slope b ──
   b_lower <- .slope_min
   b_upper <- .slope_max
-  
+
   if ("a" %in% formula_vars) {
     lower <- c(a = a_lower, b = b_lower, c = c_lower, d = d_lower)
     upper <- c(a = a_upper, b = b_upper, c = c_upper, d = d_upper)
@@ -1665,7 +1672,7 @@ Yd4_safe_constraint <- function(data, y_min = 1, y_max, Yd4_formula,
     lower <- c(b = b_lower, c = c_lower, d = d_lower)
     upper <- c(b = b_upper, c = c_upper, d = d_upper)
   }
-  
+
   return(.make_bounds(Yd4_free_vars, lower_vals = lower, upper_vals = upper))
 }
 
@@ -1688,7 +1695,7 @@ Ygomp4_safe_constraint <- function(data, y_min = 1, y_max, Ygomp4_formula,
                                    is_log_concentration, antigen_settings,
                                    constraint_profile = NULL) {
   .eps <- 1e-5
-  
+
   if (is.null(constraint_profile)) {
     constraint_profile <- adaptive_constraint_profile(
       data, response_variable = names(data)[1],
@@ -1696,12 +1703,12 @@ Ygomp4_safe_constraint <- function(data, y_min = 1, y_max, Ygomp4_formula,
       antigen_settings = antigen_settings
     )
   }
-  
+
   .slope_max <- constraint_profile$slope_max
   .slope_min <- constraint_profile$slope_min
-  
+
   formula_vars <- all.vars(Ygomp4_formula)
-  
+
   # ── Lower asymptote a ──
   a_lower <- antigen_settings$l_asy_min_constraint
   a_upper <- antigen_settings$l_asy_max_constraint
@@ -1709,7 +1716,7 @@ Ygomp4_safe_constraint <- function(data, y_min = 1, y_max, Ygomp4_formula,
     a_lower <- log10(max(a_lower, .eps) + .eps)
     a_upper <- log10(max(a_upper, .eps) + .eps)
   }
-  
+
   # ── Upper asymptote d — adaptive ──
   dr     <- constraint_profile$dynamic_range
   margin <- constraint_profile$d_margin_frac
@@ -1717,18 +1724,18 @@ Ygomp4_safe_constraint <- function(data, y_min = 1, y_max, Ygomp4_formula,
   d_lower <- max(d_lower, y_min + .eps)
   d_upper <- y_max + dr * margin
   if (d_upper <= d_lower) d_upper <- d_lower + abs(dr) * 0.5 + .eps
-  
+
   # ── Inflection point c ──
   midpoint_concentration <- mean(range(data$concentration, na.rm = TRUE))
   conc_range <- diff(range(data$concentration, na.rm = TRUE))
   pad     <- constraint_profile$conc_pad_frac
   c_lower <- midpoint_concentration - pad * conc_range
   c_upper <- midpoint_concentration + pad * conc_range
-  
+
   # ── Slope b ──
   b_lower <- .slope_min
   b_upper <- .slope_max
-  
+
   if ("a" %in% formula_vars) {
     lower <- c(a = a_lower, b = b_lower, c = c_lower, d = d_lower)
     upper <- c(a = a_upper, b = b_upper, c = c_upper, d = d_upper)
@@ -1736,7 +1743,7 @@ Ygomp4_safe_constraint <- function(data, y_min = 1, y_max, Ygomp4_formula,
     lower <- c(b = b_lower, c = c_lower, d = d_lower)
     upper <- c(b = b_upper, c = c_upper, d = d_upper)
   }
-  
+
   return(.make_bounds(Ygomp4_free_vars, lower_vals = lower, upper_vals = upper))
 }
 
@@ -1815,10 +1822,10 @@ adaptive_constraint_profile <- function(data,
   y_min  <- min(y_vals)
   y_max  <- max(y_vals)
   dynamic_range <- y_max - y_min
-  
+
   conc_vals  <- data$concentration[is.finite(data$concentration)]
   conc_range <- diff(range(conc_vals))
-  
+
   # Classify the response scale
   if (is_log_response) {
     scale_class <- if (y_max > 2.5) {
@@ -1831,7 +1838,7 @@ adaptive_constraint_profile <- function(data,
   } else {
     scale_class <- if (y_max > 1000) "high" else if (y_max > 10) "medium" else "low"
   }
-  
+
   # Adapt slope bounds to dynamic range
   slope_max <- switch(scale_class,
                       high   = 2.0,
@@ -1843,17 +1850,17 @@ adaptive_constraint_profile <- function(data,
                       medium = 0.05,
                       low    = 0.01
   )
-  
+
   # Asymmetry parameter g
   g_min <- switch(scale_class, high = 0.5, medium = 0.3, low = 0.1)
   g_max <- switch(scale_class, high = 5.0, medium = 7.0, low = 10.0)
-  
+
   # How far beyond data range to allow the inflection point c
   conc_pad_frac <- switch(scale_class, high = 0.5, medium = 0.7, low = 1.0)
-  
+
   # Upper asymptote d: margin above/below y_max
   d_margin_frac <- switch(scale_class, high = 0.5, medium = 0.3, low = 0.15)
-  
+
   list(
     y_min          = y_min,
     y_max          = y_max,

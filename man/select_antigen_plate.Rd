@@ -81,7 +81,7 @@ The nominal dilution suffix is stripped internally when calling
 \code{\link{obtain_lower_constraint}}.
 }
 \seealso{
-\code{\link{pull_data}},
+\code{pull_data},
 \code{\link{obtain_lower_constraint}},
 \code{\link{resolve_fixed_lower_asymptote}},
 \code{\link{validate_fixed_lower_asymptote}},

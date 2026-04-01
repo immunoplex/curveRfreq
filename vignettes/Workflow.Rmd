@@ -15,7 +15,7 @@ knitr::opts_chunk$set(
 ```
 
 ```{r setup}
-library(curveRfreq)
+devtools::load_all()
 script_path <- system.file("vignette_helpers", "db_functions.R", package = "curveRfreq")
 if (file.exists(script_path)) {
   source(script_path)
@@ -31,7 +31,8 @@ param_user = "seamus.owen.stein@dartmouth.edu"
 # other packages for loading
 library(glue)
 verbose = TRUE
-model_names = c("Y5", "Yd5", "Y4", "Yd4", "Ygomp4")
+# models to be considered in the algorithm. If one is not included, it is not considered in the model candidates.
+model_names = c("Y5", "Yd5", "Y4", "Ygomp4") #- no Yd4
 param_group = "standard_curve_options"
 is_display_log_response = TRUE
 is_display_log_independent = TRUE
@@ -47,31 +48,31 @@ plate_nom = "plate_3-1000"
 
 ```
 
-```{r}
+```{r, load data}
 
 loaded_data <- pull_data(study_accession = study_accession, experiment_accession = experiment_accession, project_id = 17, conn = conn)
 nominal_sample_dilution = unique(loaded_data$standards$nominal_sample_dilution)[1]
 ```
 
-```{r}
+```{r, response and independent variables}
 response_var <- loaded_data$response_var
 indep_var <- loaded_data$indep_var
 cat("response variable:", response_var, "\n")
 cat("independent variable:", indep_var)
 ```
 
-```{r}
+```{r, antigen constraints}
 antigen_constraints <- loaded_data$antigen_constraints
 antigen_constraints <- antigen_constraints[antigen_constraints$antigen == antigen,]
 print(antigen_constraints)
 ```
-```{r}
+```{r, study parameters}
 study_params <- fetch_study_parameters(study_accession=study_accession, param_user=param_user, param_group=param_group,
                                        project_id = project_id, conn)
 print(study_params)
 ```
 
-```{r}
+```{r, select antigen on the plate}
 antigen_plate <-  select_antigen_plate(
         loaded_data          = loaded_data,
         study_accession      = study_accession,
@@ -83,7 +84,7 @@ antigen_plate <-  select_antigen_plate(
       )
 ```
 
-```{r}
+```{r, preproccess data}
 preprocessed_data <- preprocess_robust_curves(data = antigen_plate$plate_standard, antigen_settings = antigen_plate$antigen_settings,
                                      response_variable = response_var,
                                      independent_variable = indep_var,
@@ -97,13 +98,13 @@ preprocessed_data$data
 preprocessed_data$antigen_fit_options
 ```
 
-```{r}
+```{r, model formulas}
 formulas <- select_model_formulas(fixed_constraint = antigen_plate$fixed_a_result, response_variable = response_var,
-                                    is_log_response = study_params$is_log_response)
+                                    is_log_response = study_params$is_log_response, model_names = model_names)
 print(formulas)
 ```
 
-```{r}
+```{r, model constraints}
 model_constraints <- obtain_model_constraints(data = preprocessed_data$data,
                                                 formulas = formulas,
                                                 independent_variable = indep_var,
@@ -119,14 +120,14 @@ model_constraints
 ```
 
 
-```{r}
+```{r, starting lists}
 start_lists <- make_start_lists(model_constraints = model_constraints,
                                   frac_generate = 0.8,
                                   quants = c(low = 0.2, mid = 0.5, high = 0.8))
 ```
 
 
-```{r}
+```{r, compute robust curves}
 fit_robust_lm <- compute_robust_curves(prepped_data = preprocessed_data$data,
                                          response_variable = response_var,
                                          independent_variable = indep_var,
@@ -137,8 +138,49 @@ fit_robust_lm <- compute_robust_curves(prepped_data = preprocessed_data$data,
 ```
 
 
-```{r}
+```{r, summary of fits}
 fit_summary <- summarize_model_fits(fit_robust_lm, verbose = verbose)
 fit_summary
+```
+```{r}
+fit_params <- summarize_model_parameters(models_fit_list = fit_robust_lm, level = 0.95, model_names = model_names)
+```
+
+```{r}
+plot_data <- get_plot_data(models_fit_list = fit_robust_lm,
+                             prepped_data = preprocessed_data$data,
+                             fit_params = fit_params,
+                             fixed_a_result = antigen_plate$fixed_a_result,
+                             model_names = model_names,
+                             x_var = indep_var,
+                             y_var = response_var)
+```
+
+```{r, model comparisions, fig.width = 10, fig.height = 12}
+plot_model_comparisons(plot_data = plot_data,
+                         model_names = model_names,
+                         x_var = indep_var,
+                         y_var = response_var,
+                         use_patchwork = TRUE)
+```
+
+```{r}
+best_fit <- select_model_fit_AIC(fit_summary = fit_summary,
+                                   fit_robust_lm = fit_robust_lm,
+                                   fit_params = fit_params,
+                                   plot_data = plot_data,
+                                   verbose = verbose)
+
+best_fit
+```
+
+
+```{r}
+## add the tidy to the best fit object
+best_fit <- tidy.nlsLM(best_fit = best_fit, fixed_a_result = antigen_plate$fixed_a_result, model_constraints =
+               model_constraints, antigen_settings = antigen_plate$antigen_settings,
+               antigen_fit_options = prepped_data$antigen_fit_options, verbose = verbose)
+
+best_fit$best_tidy
 ```
 

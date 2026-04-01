@@ -4,7 +4,12 @@
 \alias{select_model_formulas}
 \title{Select Model Formulas for Standard Curve Fitting}
 \usage{
-select_model_formulas(fixed_constraint, response_variable, is_log_response)
+select_model_formulas(
+  fixed_constraint,
+  response_variable,
+  is_log_response,
+  model_names
+)
 }
 \arguments{
 \item{fixed_constraint}{Numeric or \code{NULL}. If non-\code{NULL}, the lower
@@ -19,6 +24,8 @@ formulas.}
 \item{is_log_response}{Logical. If \code{TRUE}, \code{fixed_constraint} is
 \eqn{\log_{10}}-transformed before substitution (with a small
 epsilon to avoid \eqn{\log(0)}).}
+
+\item{model_names}{a vector of model formulas to be considered.}
 }
 \value{
 Named list of formulas keyed by model name:
@@ -39,14 +46,16 @@ formula parsing by \code{\link[stats:nls]{stats::nls()}}.
 # Fixed lower asymptote
 forms <- select_model_formulas(fixed_constraint = 50,
                                response_variable = "mfi",
-                               is_log_response = FALSE)
+                               is_log_response = FALSE,
+                               model_names = c("Y4", "Y5", "Yd4", "Yd5", "Ygomp4"))
 names(forms)
 forms$Y4
 
 # Free lower asymptote
 forms_free <- select_model_formulas(fixed_constraint = NULL,
                                     response_variable = "mfi",
-                                    is_log_response = FALSE)
+                                    is_log_response = FALSE,
+                                    model_names = c("Y4", "Y5", "Yd4", "Yd5", "Ygomp4"))
 forms_free$Y4
 
 }

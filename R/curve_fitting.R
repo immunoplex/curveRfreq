@@ -712,34 +712,98 @@ obtain_model_constraints <- function(data, formulas,
   free_variables <- obtain_free_variables(formulas, dep = response_variable,
                                           indep = independent_variable)
 
-  Y5_nls_constraint   <- Y5_safe_constraint(data, y_min = min_response, y_max = max_response,
-                                            Y5_formula = formulas$Y5,   Y5_free_vars = free_variables$Y5,
-                                            is_log_response = is_log_response, is_log_concentration = is_log_concentration,
-                                            antigen_settings = antigen_settings, constraint_profile = constraint_profile)
+  active_models  <- names(formulas)
+  constraint_models <- list()
 
-  Yd5_constraint      <- Yd5_safe_constraint(data, y_min = min_response, y_max = max_response,
-                                             Yd5_formula = formulas$Yd5, Yd5_free_vars = free_variables$Yd5,
-                                             is_log_response = is_log_response, is_log_concentration = is_log_concentration,
-                                             antigen_settings = antigen_settings, constraint_profile = constraint_profile)
+  if ("Y5" %in% active_models) {
+    constraint_models$Y5 <- Y5_safe_constraint(
+      data, y_min = min_response, y_max = max_response,
+      Y5_formula   = formulas$Y5,
+      Y5_free_vars = free_variables$Y5,
+      is_log_response      = is_log_response,
+      is_log_concentration = is_log_concentration,
+      antigen_settings     = antigen_settings,
+      constraint_profile   = constraint_profile
+    )
+  }
 
-  Y4_nls_constraint   <- Y4_safe_constraint(data, y_min = min_response, y_max = max_response,
-                                            Y4_formula = formulas$Y4,   Y4_free_vars = free_variables$Y4,
-                                            is_log_response = is_log_response, is_log_concentration = is_log_concentration,
-                                            antigen_settings = antigen_settings, constraint_profile = constraint_profile)
+  if ("Yd5" %in% active_models) {
+    constraint_models$Yd5 <- Yd5_safe_constraint(
+      data, y_min = min_response, y_max = max_response,
+      Yd5_formula   = formulas$Yd5,
+      Yd5_free_vars = free_variables$Yd5,
+      is_log_response      = is_log_response,
+      is_log_concentration = is_log_concentration,
+      antigen_settings     = antigen_settings,
+      constraint_profile   = constraint_profile
+    )
+  }
 
-  Yd4_constraint      <- Yd4_safe_constraint(data, y_min = min_response, y_max = max_response,
-                                             Yd4_formula = formulas$Yd4, Yd4_free_vars = free_variables$Yd4,
-                                             is_log_response = is_log_response, is_log_concentration = is_log_concentration,
-                                             antigen_settings = antigen_settings, constraint_profile = constraint_profile)
+  if ("Y4" %in% active_models) {
+    constraint_models$Y4 <- Y4_safe_constraint(
+      data, y_min = min_response, y_max = max_response,
+      Y4_formula   = formulas$Y4,
+      Y4_free_vars = free_variables$Y4,
+      is_log_response      = is_log_response,
+      is_log_concentration = is_log_concentration,
+      antigen_settings     = antigen_settings,
+      constraint_profile   = constraint_profile
+    )
+  }
 
-  Ygomp4_constraint   <- Ygomp4_safe_constraint(data, y_min = min_response, y_max = max_response,
-                                                Ygomp4_formula = formulas$Ygomp4, Ygomp4_free_vars = free_variables$Ygomp4,
-                                                is_log_response = is_log_response, is_log_concentration = is_log_concentration,
-                                                antigen_settings = antigen_settings, constraint_profile = constraint_profile)
+  if ("Yd4" %in% active_models) {
+    constraint_models$Yd4 <- Yd4_safe_constraint(
+      data, y_min = min_response, y_max = max_response,
+      Yd4_formula   = formulas$Yd4,
+      Yd4_free_vars = free_variables$Yd4,
+      is_log_response      = is_log_response,
+      is_log_concentration = is_log_concentration,
+      antigen_settings     = antigen_settings,
+      constraint_profile   = constraint_profile
+    )
+  }
 
-  constraint_models <- list(Y5 = Y5_nls_constraint, Yd5 = Yd5_constraint,
-                            Y4 = Y4_nls_constraint,  Yd4 = Yd4_constraint,
-                            Ygomp4 = Ygomp4_constraint)
+  if ("Ygomp4" %in% active_models) {
+    constraint_models$Ygomp4 <- Ygomp4_safe_constraint(
+      data, y_min = min_response, y_max = max_response,
+      Ygomp4_formula   = formulas$Ygomp4,
+      Ygomp4_free_vars = free_variables$Ygomp4,
+      is_log_response      = is_log_response,
+      is_log_concentration = is_log_concentration,
+      antigen_settings     = antigen_settings,
+      constraint_profile   = constraint_profile
+    )
+  }
+
+  #
+  # Y5_nls_constraint   <- Y5_safe_constraint(data, y_min = min_response, y_max = max_response,
+  #                                           Y5_formula = formulas$Y5,   Y5_free_vars = free_variables$Y5,
+  #                                           is_log_response = is_log_response, is_log_concentration = is_log_concentration,
+  #                                           antigen_settings = antigen_settings, constraint_profile = constraint_profile)
+  #
+  # Yd5_constraint      <- Yd5_safe_constraint(data, y_min = min_response, y_max = max_response,
+  #                                            Yd5_formula = formulas$Yd5, Yd5_free_vars = free_variables$Yd5,
+  #                                            is_log_response = is_log_response, is_log_concentration = is_log_concentration,
+  #                                            antigen_settings = antigen_settings, constraint_profile = constraint_profile)
+  #
+  # Y4_nls_constraint   <- Y4_safe_constraint(data, y_min = min_response, y_max = max_response,
+  #                                           Y4_formula = formulas$Y4,   Y4_free_vars = free_variables$Y4,
+  #                                           is_log_response = is_log_response, is_log_concentration = is_log_concentration,
+  #                                           antigen_settings = antigen_settings, constraint_profile = constraint_profile)
+  #
+  # Yd4_constraint      <- Yd4_safe_constraint(data, y_min = min_response, y_max = max_response,
+  #                                            Yd4_formula = formulas$Yd4, Yd4_free_vars = free_variables$Yd4,
+  #                                            is_log_response = is_log_response, is_log_concentration = is_log_concentration,
+  #                                            antigen_settings = antigen_settings, constraint_profile = constraint_profile)
+  #
+  # Ygomp4_constraint   <- Ygomp4_safe_constraint(data, y_min = min_response, y_max = max_response,
+  #                                               Ygomp4_formula = formulas$Ygomp4, Ygomp4_free_vars = free_variables$Ygomp4,
+  #                                               is_log_response = is_log_response, is_log_concentration = is_log_concentration,
+  #                                               antigen_settings = antigen_settings, constraint_profile = constraint_profile)
+  #
+  # constraint_models <- list(Y5 = Y5_nls_constraint, Yd5 = Yd5_constraint,
+  #                           Y4 = Y4_nls_constraint,  Yd4 = Yd4_constraint,
+  #                           Ygomp4 = Ygomp4_constraint)
 
   attr(constraint_models, "constraint_profile") <- constraint_profile
 
