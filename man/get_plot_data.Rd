@@ -9,7 +9,7 @@ get_plot_data(
   prepped_data,
   fit_params,
   fixed_a_result,
-  model_names = c("Y5", "Yd5", "Y4", "Yd4", "Ygomp4"),
+  model_names = c("logistic5", "loglogistic5", "logistic4", "loglogistic4", "gompertz4"),
   x_var = "concentration",
   y_var = "mfi",
   verbose = TRUE
@@ -32,7 +32,7 @@ coefficient vectors.}
 
 \item{model_names}{Character vector of model names to process. Must match
 keys in \code{models_fit_list}. Default is
-\code{c("Y5","Yd5","Y4","Yd4","Ygomp4")}.}
+\code{c("logistic5","loglogistic5","logistic4","loglogistic4","gompertz4")}.}
 
 \item{x_var}{Character string naming the independent variable column in
 \code{prepped_data}. Default is \code{"concentration"}.}

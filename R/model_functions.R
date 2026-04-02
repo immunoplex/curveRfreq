@@ -20,43 +20,43 @@
 #' @details
 #' The classical 4PL model is the workhorse of immunoassay quantitation
 #' (ELISA, Luminex bead arrays). It is symmetric about its inflection
-#' point; for asymmetric data see [Y5()].
+#' point; for asymmetric data see [logistic5()].
 #'
 #' @family forward-models
-#' @seealso [Y5()], [Yd4()], [Ygomp4()] for alternative parameterisations;
-#'   [inv_Y4()] for the inverse; [dydxY4()] for the first derivative.
+#' @seealso [logistic5()], [loglogistic4()], [gompertz4()] for alternative parameterisations;
+#'   [inv_logistic4()] for the inverse; [dydxlogistic4()] for the first derivative.
 #'
 #' @examples
 #' x <- seq(-2, 6, length.out = 200)
-#' y <- Y4(x, a = 100, b = 1.5, c = 2, d = 20000)
+#' y <- logistic4(x, a = 100, b = 1.5, c = 2, d = 20000)
 #' plot(x, y, type = "l", main = "4PL Standard Curve")
 #'
 #' @export
-Y4 <- function(x, a, b, c, d) {
+logistic4 <- function(x, a, b, c, d) {
   d + (a - d) / (1 + exp((x - c) / b))
 }
 
 
 #' First Derivative of the 4PL Model
 #'
-#' Computes \eqn{dy/dx} analytically for [Y4()]:
+#' Computes \eqn{dy/dx} analytically for [logistic4()]:
 #' \deqn{\frac{dy}{dx} = -\frac{(a - d)\,u}{b\,(1 + u)^2}
 #'   \quad\text{where } u = \exp\!\left(\frac{x - c}{b}\right)}
 #'
-#' @inheritParams Y4
+#' @inheritParams logistic4
 #'
 #' @return Numeric vector of first-derivative values, same length as `x`.
 #'
 #' @family derivatives
-#' @seealso [Y4()], [d2xY4()]
+#' @seealso [logistic4()], [d2xlogistic4()]
 #'
 #' @examples
 #' x <- seq(-2, 6, length.out = 200)
-#' slope <- dydxY4(x, a = 100, b = 1.5, c = 2, d = 20000)
+#' slope <- dydxlogistic4(x, a = 100, b = 1.5, c = 2, d = 20000)
 #' plot(x, slope, type = "l", main = "4PL dy/dx")
 #'
 #' @export
-dydxY4 <- function(x, a, b, c, d) {
+dydxlogistic4 <- function(x, a, b, c, d) {
   u <- exp((x - c) / b)
   -(a - d) * u / (b * (1 + u)^2)
 }
@@ -64,18 +64,18 @@ dydxY4 <- function(x, a, b, c, d) {
 
 #' Second Derivative of the 4PL Model
 #'
-#' Computes \eqn{d^2y/dx^2} analytically for [Y4()]:
+#' Computes \eqn{d^2y/dx^2} analytically for [logistic4()]:
 #' \deqn{\frac{d^2y}{dx^2} = \frac{(a - d)\,u\,(u - 1)}{b^2\,(1 + u)^3}}
 #'
-#' @inheritParams Y4
+#' @inheritParams logistic4
 #'
 #' @return Numeric vector of second-derivative values, same length as `x`.
 #'
 #' @family derivatives
-#' @seealso [Y4()], [dydxY4()]
+#' @seealso [logistic4()], [dydxlogistic4()]
 #'
 #' @keywords internal
-d2xY4 <- function(x, a, b, c, d) {
+d2xlogistic4 <- function(x, a, b, c, d) {
   u <- exp((x - c) / b)
   (a - d) * u * (u - 1) / (b^2 * (1 + u)^3)
 }
@@ -88,9 +88,9 @@ d2xY4 <- function(x, a, b, c, d) {
 #' \deqn{y = d + \frac{a - d}{\left(1 +
 #'   \exp\!\left(\frac{x - c}{b}\right)\right)^{\!g}}}
 #'
-#' When \eqn{g = 1} this reduces to [Y4()].
+#' When \eqn{g = 1} this reduces to [logistic4()].
 #'
-#' @inheritParams Y4
+#' @inheritParams logistic4
 #' @param g Numeric scalar. Asymmetry parameter. Values \eqn{> 1} skew the
 #'   curve toward the upper asymptote; values \eqn{< 1} skew it toward the
 #'   lower asymptote.
@@ -98,33 +98,33 @@ d2xY4 <- function(x, a, b, c, d) {
 #' @return Numeric vector of predicted response values.
 #'
 #' @family forward-models
-#' @seealso [Y4()], [inv_Y5()], [dydxY5()]
+#' @seealso [logistic4()], [inv_logistic5()], [dydxlogistic5()]
 #'
 #' @examples
 #' x <- seq(-2, 6, length.out = 200)
-#' y <- Y5(x, a = 80, b = 1.2, c = 2.5, d = 18000, g = 1.3)
+#' y <- logistic5(x, a = 80, b = 1.2, c = 2.5, d = 18000, g = 1.3)
 #' plot(x, y, type = "l", main = "5PL Standard Curve")
 #'
 #' @export
-Y5 <- function(x, a, b, c, d, g) {
+logistic5 <- function(x, a, b, c, d, g) {
   d + (a - d) / (1 + exp((x - c) / b))^g
 }
 
 
 #' First Derivative of the 5PL Model
 #'
-#' Computes \eqn{dy/dx} analytically for [Y5()]:
+#' Computes \eqn{dy/dx} analytically for [logistic5()]:
 #' \deqn{\frac{dy}{dx} = -\frac{g\,(a - d)\,u}{b\,(1 + u)^{g+1}}}
 #'
-#' @inheritParams Y5
+#' @inheritParams logistic5
 #'
 #' @return Numeric vector of first-derivative values.
 #'
 #' @family derivatives
-#' @seealso [Y5()], [d2xY5()]
+#' @seealso [logistic5()], [d2xlogistic5()]
 #'
 #' @export
-dydxY5 <- function(x, a, b, c, d, g) {
+dydxlogistic5 <- function(x, a, b, c, d, g) {
   u <- exp((x - c) / b)
   -g * (a - d) * u / (b * (1 + u)^(g + 1))
 }
@@ -132,88 +132,88 @@ dydxY5 <- function(x, a, b, c, d, g) {
 
 #' Second Derivative of the 5PL Model (Numerical)
 #'
-#' Approximates \eqn{d^2y/dx^2} for [Y5()] using a central-difference
+#' Approximates \eqn{d^2y/dx^2} for [logistic5()] using a central-difference
 #' finite-difference scheme.
 #'
-#' @inheritParams Y5
+#' @inheritParams logistic5
 #' @param h Numeric scalar. Step size for the finite difference.
 #'   Default `1e-5`.
 #'
 #' @return Numeric vector of second-derivative values.
 #'
 #' @family derivatives
-#' @seealso [Y5()], [dydxY5()]
+#' @seealso [logistic5()], [dydxlogistic5()]
 #'
 #' @keywords internal
-d2xY5 <- function(x, a, b, c, d, g, h = 1e-5) {
-  (Y5(x + h, a, b, c, d, g) - 2 * Y5(x, a, b, c, d, g) +
-     Y5(x - h, a, b, c, d, g)) / h^2
+d2xlogistic5 <- function(x, a, b, c, d, g, h = 1e-5) {
+  (logistic5(x + h, a, b, c, d, g) - 2 * logistic5(x, a, b, c, d, g) +
+     logistic5(x - h, a, b, c, d, g)) / h^2
 }
 
 
-#' Four-Parameter Dose–Response (Yd4) Forward Function
+#' Four-Parameter Dose–Response (loglogistic4) Forward Function
 #'
 #' An alternative 4-parameter logistic parameterisation where the
 #' inflection point `c` is on the concentration scale (not log-scale)
 #' and the slope `b` acts as a Hill coefficient:
 #' \deqn{y = a + \frac{d - a}{1 + (x / c)^b}}
 #'
-#' @inheritParams Y4
+#' @inheritParams logistic4
 #'
 #' @return Numeric vector of predicted response values.
 #'
 #' @family forward-models
-#' @seealso [Y4()], [Yd5()], [inv_Yd4()], [dydxYd4()]
+#' @seealso [logistic4()], [loglogistic5()], [inv_loglogistic4()], [dydxloglogistic4()]
 #'
 #' @examples
 #' x <- seq(0.01, 100, length.out = 200)
-#' y <- Yd4(x, a = 50, b = -2, c = 10, d = 15000)
-#' plot(x, y, type = "l", log = "x", main = "Yd4 Dose-Response")
+#' y <- loglogistic4(x, a = 50, b = -2, c = 10, d = 15000)
+#' plot(x, y, type = "l", log = "x", main = "loglogistic4 Dose-Response")
 #'
 #' @export
-Yd4 <- function(x, a, b, c, d) {
+loglogistic4 <- function(x, a, b, c, d) {
   a + (d - a) / (1 + (x / c)^b)
 }
 
 
-#' First Derivative of the Yd4 Model
+#' First Derivative of the loglogistic4 Model
 #'
-#' Computes \eqn{dy/dx} analytically for [Yd4()]:
+#' Computes \eqn{dy/dx} analytically for [loglogistic4()]:
 #' \deqn{\frac{dy}{dx} = -\frac{b\,(d - a)\,r}{x\,(1 + r)^2}
 #'   \quad\text{where } r = (x/c)^b}
 #'
-#' @inheritParams Yd4
+#' @inheritParams loglogistic4
 #'
 #' @return Numeric vector of first-derivative values.
 #'
 #' @family derivatives
-#' @seealso [Yd4()], [d2xYd4()]
+#' @seealso [loglogistic4()], [d2xloglogistic4()]
 #'
 #' @export
-dydxYd4 <- function(x, a, b, c, d) {
+dydxloglogistic4 <- function(x, a, b, c, d) {
   r <- (x / c)^b
   -b * (d - a) * r / (x * (1 + r)^2)
 }
 
 
-#' Second Derivative of the Yd4 Model (Numerical)
+#' Second Derivative of the loglogistic4 Model (Numerical)
 #'
-#' Approximates \eqn{d^2y/dx^2} for [Yd4()] via central difference.
+#' Approximates \eqn{d^2y/dx^2} for [loglogistic4()] via central difference.
 #'
-#' @inheritParams Yd4
+#' @inheritParams loglogistic4
 #' @param h Numeric scalar. Finite-difference step size. Default `1e-5`.
 #'
 #' @return Numeric vector of second-derivative values.
 #'
 #' @family derivatives
 #' @keywords internal
-d2xYd4 <- function(x, a, b, c, d, h = 1e-5) {
-  (Yd4(x + h, a, b, c, d) - 2 * Yd4(x, a, b, c, d) +
-     Yd4(x - h, a, b, c, d)) / h^2
+d2xloglogistic4 <- function(x, a, b, c, d, h = 1e-5) {
+  (loglogistic4(x + h, a, b, c, d) - 2 * loglogistic4(x, a, b, c, d) +
+     loglogistic4(x - h, a, b, c, d)) / h^2
 }
 
 
-#' Five-Parameter Dose–Response (Yd5) Forward Function
+#' Five-Parameter Dose–Response (loglogistic5) Forward Function
 #'
 #' A five-parameter generalised logistic (Richards) curve in dose–response
 #' form with asymmetry parameter `g`:
@@ -221,55 +221,55 @@ d2xYd4 <- function(x, a, b, c, d, h = 1e-5) {
 #'
 #' When \eqn{g = 1} this reduces to a standard 4PL dose–response.
 #'
-#' @inheritParams Y4
+#' @inheritParams logistic4
 #' @param g Numeric scalar. Asymmetry (Richards) parameter.
 #'
 #' @return Numeric vector of predicted response values.
 #'
 #' @family forward-models
-#' @seealso [Yd4()], [Y5()], [inv_Yd5()], [dydxYd5()]
+#' @seealso [loglogistic4()], [logistic5()], [inv_loglogistic5()], [dydxloglogistic5()]
 #'
 #' @export
-Yd5 <- function(x, a, b, c, d, g) {
+loglogistic5 <- function(x, a, b, c, d, g) {
   a + (d - a) * (1 + g * exp(-b * (x - c)))^(-1 / g)
 }
 
 
-#' First Derivative of the Yd5 Model
+#' First Derivative of the loglogistic5 Model
 #'
-#' Computes \eqn{dy/dx} analytically for [Yd5()]:
+#' Computes \eqn{dy/dx} analytically for [loglogistic5()]:
 #' \deqn{\frac{dy}{dx} = b\,(d - a)\,\exp(-b(x-c))\,
 #'   u^{-1/g - 1}
 #'   \quad\text{where } u = 1 + g\,\exp(-b(x-c))}
 #'
-#' @inheritParams Yd5
+#' @inheritParams loglogistic5
 #'
 #' @return Numeric vector of first-derivative values.
 #'
 #' @family derivatives
-#' @seealso [Yd5()], [d2xYd5()]
+#' @seealso [loglogistic5()], [d2xloglogistic5()]
 #'
 #' @export
-dydxYd5 <- function(x, a, b, c, d, g) {
+dydxloglogistic5 <- function(x, a, b, c, d, g) {
   u <- 1 + g * exp(-b * (x - c))
   b * (d - a) * exp(-b * (x - c)) * u^(-1 / g - 1)
 }
 
 
-#' Second Derivative of the Yd5 Model (Numerical)
+#' Second Derivative of the loglogistic5 Model (Numerical)
 #'
-#' Approximates \eqn{d^2y/dx^2} for [Yd5()] via central difference.
+#' Approximates \eqn{d^2y/dx^2} for [loglogistic5()] via central difference.
 #'
-#' @inheritParams Yd5
+#' @inheritParams loglogistic5
 #' @param h Numeric scalar. Finite-difference step size. Default `1e-5`.
 #'
 #' @return Numeric vector of second-derivative values.
 #'
 #' @family derivatives
 #' @keywords internal
-d2xYd5 <- function(x, a, b, c, d, g, h = 1e-5) {
-  (Yd5(x + h, a, b, c, d, g) - 2 * Yd5(x, a, b, c, d, g) +
-     Yd5(x - h, a, b, c, d, g)) / h^2
+d2xloglogistic5 <- function(x, a, b, c, d, g, h = 1e-5) {
+  (loglogistic5(x + h, a, b, c, d, g) - 2 * loglogistic5(x, a, b, c, d, g) +
+     loglogistic5(x - h, a, b, c, d, g)) / h^2
 }
 
 
@@ -281,39 +281,39 @@ d2xYd5 <- function(x, a, b, c, d, g, h = 1e-5) {
 #' The Gompertz is intrinsically asymmetric — unlike the 4PL it does not
 #' require a fifth parameter for asymmetry.
 #'
-#' @inheritParams Y4
+#' @inheritParams logistic4
 #'
 #' @return Numeric vector of predicted response values.
 #'
 #' @family forward-models
-#' @seealso [Y4()], [Yd4()], [inv_Ygomp4()], [dydxYgomp4()]
+#' @seealso [logistic4()], [loglogistic4()], [inv_gompertz4()], [dydxgompertz4()]
 #'
 #' @examples
 #' x <- seq(-2, 8, length.out = 200)
-#' y <- Ygomp4(x, a = 50, b = 1, c = 3, d = 15000)
+#' y <- gompertz4(x, a = 50, b = 1, c = 3, d = 15000)
 #' plot(x, y, type = "l", main = "Gompertz Curve")
 #'
 #' @export
-Ygomp4 <- function(x, a, b, c, d) {
+gompertz4 <- function(x, a, b, c, d) {
   a + (d - a) * exp(-exp(-b * (x - c)))
 }
 
 
 #' First Derivative of the Gompertz Model
 #'
-#' Computes \eqn{dy/dx} analytically for [Ygomp4()]:
+#' Computes \eqn{dy/dx} analytically for [gompertz4()]:
 #' \deqn{\frac{dy}{dx} = b\,(d - a)\,u\,\exp(-u)
 #'   \quad\text{where } u = \exp(-b(x - c))}
 #'
-#' @inheritParams Ygomp4
+#' @inheritParams gompertz4
 #'
 #' @return Numeric vector of first-derivative values.
 #'
 #' @family derivatives
-#' @seealso [Ygomp4()], [d2xYgomp4()]
+#' @seealso [gompertz4()], [d2xgompertz4()]
 #'
 #' @export
-dydxYgomp4 <- function(x, a, b, c, d) {
+dydxgompertz4 <- function(x, a, b, c, d) {
   u <- exp(-b * (x - c))
   b * (d - a) * u * exp(-u)
 }
@@ -321,17 +321,17 @@ dydxYgomp4 <- function(x, a, b, c, d) {
 
 #' Second Derivative of the Gompertz Model
 #'
-#' Computes \eqn{d^2y/dx^2} analytically for [Ygomp4()]:
+#' Computes \eqn{d^2y/dx^2} analytically for [gompertz4()]:
 #' \deqn{\frac{d^2y}{dx^2} = b^2\,(d - a)\,e_2\,(e_2 - 1)\,\exp(-e_2)
 #'   \quad\text{where } e_2 = \exp(-b(x - c))}
 #'
-#' @inheritParams Ygomp4
+#' @inheritParams gompertz4
 #'
 #' @return Numeric vector of second-derivative values.
 #'
 #' @family derivatives
 #' @keywords internal
-d2xYgomp4 <- function(x, a, b, c, d) {
+d2xgompertz4 <- function(x, a, b, c, d) {
   e2 <- exp(-(b * (x - c)))
   b^2 * (d - a) * e2 * (e2 - 1) * exp(-e2)
 }
@@ -362,17 +362,17 @@ d2xYgomp4 <- function(x, a, b, c, d) {
 #'   `NA` for out-of-range `y`.
 #'
 #' @family inverse-functions
-#' @seealso [Y4()], [inv_Y4_fixed()] for the fixed-\eqn{a} variant.
+#' @seealso [logistic4()], [inv_logistic4_fixed()] for the fixed-\eqn{a} variant.
 #'
 #' @examples
 #' # Round-trip: forward then inverse recovers x
 #' x <- seq(-1, 5, length.out = 50)
-#' y <- Y4(x, a = 100, b = 1.5, c = 2, d = 20000)
-#' x_hat <- inv_Y4(y, a = 100, b = 1.5, c = 2, d = 20000)
+#' y <- logistic4(x, a = 100, b = 1.5, c = 2, d = 20000)
+#' x_hat <- inv_logistic4(y, a = 100, b = 1.5, c = 2, d = 20000)
 #' all.equal(x, x_hat)
 #'
 #' @export
-inv_Y4 <- function(y, a, b, c, d, tol = 1e-6) {
+inv_logistic4 <- function(y, a, b, c, d, tol = 1e-6) {
   y_min <- min(a, d) + tol
   y_max <- max(a, d) - tol
   result <- rep(NA_real_, length(y))
@@ -385,7 +385,7 @@ inv_Y4 <- function(y, a, b, c, d, tol = 1e-6) {
 
 #' Inverse of the 4PL Model with Fixed Lower Asymptote
 #'
-#' Same algebra as [inv_Y4()] but parameter `a` is supplied as a known
+#' Same algebra as [inv_logistic4()] but parameter `a` is supplied as a known
 #' constant (`fixed_a`) rather than estimated from the fit. No domain
 #' checking is performed — caller must ensure `y` is in range.
 #'
@@ -396,50 +396,50 @@ inv_Y4 <- function(y, a, b, c, d, tol = 1e-6) {
 #' @return Numeric vector of estimated `x` values.
 #'
 #' @family inverse-functions
-#' @seealso [inv_Y4()], [grad_inv_Y4_fixed()]
+#' @seealso [inv_logistic4()], [grad_inv_logistic4_fixed()]
 #'
 #' @keywords internal
-inv_Y4_fixed <- function(y, fixed_a, b, c, d) {
+inv_logistic4_fixed <- function(y, fixed_a, b, c, d) {
   c + b * log((fixed_a - d) / (y - d) - 1)
 }
 
 
-#' Inverse of the Yd4 Model
+#' Inverse of the loglogistic4 Model
 #'
-#' Solves for `x` given response `y` under the [Yd4()] parameterisation:
+#' Solves for `x` given response `y` under the [loglogistic4()] parameterisation:
 #' \deqn{x = c\,\left(\frac{d - a}{y - a} - 1\right)^{1/b}}
 #'
 #' @param y Numeric vector. Observed response values.
-#' @param a,b,c,d Numeric scalars. Yd4 model parameters.
+#' @param a,b,c,d Numeric scalars. loglogistic4 model parameters.
 #'
 #' @return Numeric vector of estimated `x` values.
 #'
 #' @family inverse-functions
-#' @seealso [Yd4()], [inv_Yd4_fixed()]
+#' @seealso [loglogistic4()], [inv_loglogistic4_fixed()]
 #'
 #' @export
-inv_Yd4 <- function(y, a, b, c, d) {
+inv_loglogistic4 <- function(y, a, b, c, d) {
   c * (((d - a) / (y - a)) - 1)^(1 / b)
 }
 
 
-#' Inverse of the Yd4 Model with Fixed Lower Asymptote
+#' Inverse of the loglogistic4 Model with Fixed Lower Asymptote
 #'
-#' @inheritParams inv_Y4_fixed
+#' @inheritParams inv_logistic4_fixed
 #' @param b,c,d Numeric scalars. Model parameters.
 #'
 #' @return Numeric vector of estimated `x` values.
 #'
 #' @family inverse-functions
 #' @keywords internal
-inv_Yd4_fixed <- function(y, fixed_a, b, c, d) {
+inv_loglogistic4_fixed <- function(y, fixed_a, b, c, d) {
   c * (((d - fixed_a) / (y - fixed_a)) - 1)^(1 / b)
 }
 
 
 #' Inverse of the Gompertz Model
 #'
-#' Solves for `x` given response `y` under [Ygomp4()]:
+#' Solves for `x` given response `y` under [gompertz4()]:
 #' \deqn{x = c - \frac{1}{b}\,\log\!\left(-\log\frac{y - a}{d - a}\right)}
 #'
 #' @param y Numeric vector. Observed response values.
@@ -448,31 +448,31 @@ inv_Yd4_fixed <- function(y, fixed_a, b, c, d) {
 #' @return Numeric vector of estimated `x` values.
 #'
 #' @family inverse-functions
-#' @seealso [Ygomp4()], [inv_Ygomp4_fixed()]
+#' @seealso [gompertz4()], [inv_gompertz4_fixed()]
 #'
 #' @export
-inv_Ygomp4 <- function(y, a, b, c, d) {
+inv_gompertz4 <- function(y, a, b, c, d) {
   c - (1 / b) * log(-log((y - a) / (d - a)))
 }
 
 
 #' Inverse of the Gompertz Model with Fixed Lower Asymptote
 #'
-#' @inheritParams inv_Y4_fixed
+#' @inheritParams inv_logistic4_fixed
 #' @param b,c,d Numeric scalars. Model parameters.
 #'
 #' @return Numeric vector of estimated `x` values.
 #'
 #' @family inverse-functions
 #' @keywords internal
-inv_Ygomp4_fixed <- function(y, fixed_a, b, c, d) {
+inv_gompertz4_fixed <- function(y, fixed_a, b, c, d) {
   c - (1 / b) * log(-log((y - fixed_a) / (d - fixed_a)))
 }
 
 
 #' Inverse of the 5PL Model
 #'
-#' Solves for `x` given response `y` under [Y5()]:
+#' Solves for `x` given response `y` under [logistic5()]:
 #' \deqn{x = c + b\,\log\!\left(\left(\frac{a - d}{y - d}\right)^{1/g}
 #'   - 1\right)}
 #'
@@ -483,17 +483,17 @@ inv_Ygomp4_fixed <- function(y, fixed_a, b, c, d) {
 #' @return Numeric vector of estimated `x` values.
 #'
 #' @family inverse-functions
-#' @seealso [Y5()], [inv_Y5_fixed()]
+#' @seealso [logistic5()], [inv_logistic5_fixed()]
 #'
 #' @export
-inv_Y5 <- function(y, a, b, c, d, g) {
+inv_logistic5 <- function(y, a, b, c, d, g) {
   c + b * log(((a - d) / (y - d))^(1 / g) - 1)
 }
 
 
 #' Inverse of the 5PL Model with Fixed Lower Asymptote
 #'
-#' @inheritParams inv_Y4_fixed
+#' @inheritParams inv_logistic4_fixed
 #' @param b,c,d Numeric scalars. Model parameters.
 #' @param g Numeric scalar. Asymmetry parameter.
 #'
@@ -501,35 +501,35 @@ inv_Y5 <- function(y, a, b, c, d, g) {
 #'
 #' @family inverse-functions
 #' @keywords internal
-inv_Y5_fixed <- function(y, fixed_a, b, c, d, g) {
+inv_logistic5_fixed <- function(y, fixed_a, b, c, d, g) {
   c + b * log(((fixed_a - d) / (y - d))^(1 / g) - 1)
 }
 
 
-#' Inverse of the Yd5 Model
+#' Inverse of the loglogistic5 Model
 #'
-#' Solves for `x` given response `y` under [Yd5()]:
+#' Solves for `x` given response `y` under [loglogistic5()]:
 #' \deqn{x = c - \frac{1}{b}\left(\log\!\left(\left(\frac{y - a}{d - a}
 #'   \right)^{-g} - 1\right) - \log g\right)}
 #'
 #' @param y Numeric vector. Observed response values.
-#' @param a,b,c,d Numeric scalars. Yd5 model parameters.
+#' @param a,b,c,d Numeric scalars. loglogistic5 model parameters.
 #' @param g Numeric scalar. Asymmetry parameter.
 #'
 #' @return Numeric vector of estimated `x` values.
 #'
 #' @family inverse-functions
-#' @seealso [Yd5()], [inv_Yd5_fixed()]
+#' @seealso [loglogistic5()], [inv_loglogistic5_fixed()]
 #'
 #' @export
-inv_Yd5 <- function(y, a, b, c, d, g) {
+inv_loglogistic5 <- function(y, a, b, c, d, g) {
   c - (1 / b) * (log(((y - a) / (d - a))^(-g) - 1) - log(g))
 }
 
 
-#' Inverse of the Yd5 Model with Fixed Lower Asymptote
+#' Inverse of the loglogistic5 Model with Fixed Lower Asymptote
 #'
-#' @inheritParams inv_Y4_fixed
+#' @inheritParams inv_logistic4_fixed
 #' @param b,c,d Numeric scalars. Model parameters.
 #' @param g Numeric scalar. Asymmetry parameter.
 #'
@@ -537,7 +537,7 @@ inv_Yd5 <- function(y, a, b, c, d, g) {
 #'
 #' @family inverse-functions
 #' @keywords internal
-inv_Yd5_fixed <- function(y, fixed_a, b, c, d, g) {
+inv_loglogistic5_fixed <- function(y, fixed_a, b, c, d, g) {
   c - (1 / b) * (log(((y - fixed_a) / (d - fixed_a))^(-g) - 1) - log(g))
 }
 
@@ -548,7 +548,7 @@ inv_Yd5_fixed <- function(y, fixed_a, b, c, d, g) {
 
 #' \eqn{dx/dy} for the 4PL Inverse
 #'
-#' Scalar derivative of the [inv_Y4()] function with respect to `y`,
+#' Scalar derivative of the [inv_logistic4()] function with respect to `y`,
 #' used by [propagate_error_analytic()] for error propagation through
 #' the measurement uncertainty component.
 #'
@@ -559,21 +559,21 @@ inv_Yd5_fixed <- function(y, fixed_a, b, c, d, g) {
 #'
 #' @family dxdy-helpers
 #' @keywords internal
-dxdyiY4 <- function(y, a, b, c, d) {
+dxdyilogistic4 <- function(y, a, b, c, d) {
   ratio <- (a - d) / (y - d)
   b * ratio / ((ratio - 1) * (y - d))
 }
 
 
-#' \eqn{dx/dy} for the Yd4 Inverse
+#' \eqn{dx/dy} for the loglogistic4 Inverse
 #'
-#' @inheritParams dxdyiY4
+#' @inheritParams dxdyilogistic4
 #'
 #' @return Numeric scalar \eqn{dx/dy}.
 #'
 #' @family dxdy-helpers
 #' @keywords internal
-dxdyiYd4 <- function(y, a, b, c, d) {
+dxdyiloglogistic4 <- function(y, a, b, c, d) {
   inner <- ((d - a) / (y - a)) - 1
   -c * (1 / b) * inner^(1 / b - 1) * (d - a) / (y - a)^2
 }
@@ -588,7 +588,7 @@ dxdyiYd4 <- function(y, a, b, c, d) {
 #'
 #' @family dxdy-helpers
 #' @keywords internal
-dxdyiYgomp4 <- function(y, a, b, c, d) {
+dxdyigompertz4 <- function(y, a, b, c, d) {
   ratio <- (y - a) / (d - a)
   (1 / b) / ((y - a) * log(ratio))
 }
@@ -604,23 +604,23 @@ dxdyiYgomp4 <- function(y, a, b, c, d) {
 #'
 #' @family dxdy-helpers
 #' @keywords internal
-dxdyiY5 <- function(y, a, b, c, d, g) {
+dxdyilogistic5 <- function(y, a, b, c, d, g) {
   ratio <- (a - d) / (y - d)
   b * (1 / g) * ratio^(1 / g) / ((ratio^(1 / g) - 1) * (y - d))
 }
 
 
-#' \eqn{dx/dy} for the Yd5 Inverse
+#' \eqn{dx/dy} for the loglogistic5 Inverse
 #'
 #' @param y Numeric scalar. Observed response.
-#' @param a,b,c,d Numeric scalars. Yd5 model parameters.
+#' @param a,b,c,d Numeric scalars. loglogistic5 model parameters.
 #' @param g Numeric scalar. Asymmetry parameter.
 #'
 #' @return Numeric scalar \eqn{dx/dy}.
 #'
 #' @family dxdy-helpers
 #' @keywords internal
-dxdyiYd5 <- function(y, a, b, c, d, g) {
+dxdyiloglogistic5 <- function(y, a, b, c, d, g) {
   ratio <- (y - a) / (d - a)
   (1 / b) * g * ratio^(-g) / ((ratio^(-g) - 1) * (y - a))
 }
@@ -633,7 +633,7 @@ dxdyiYd5 <- function(y, a, b, c, d, g) {
 #' Analytical Gradient of the Inverse 4PL
 #'
 #' Returns partial derivatives \eqn{\partial x / \partial \theta} and
-#' \eqn{\partial x / \partial y} for the [inv_Y4()] function when all
+#' \eqn{\partial x / \partial y} for the [inv_logistic4()] function when all
 #' four parameters are free. Consumed by [propagate_error_analytic()]
 #' for delta-method error propagation.
 #'
@@ -648,10 +648,10 @@ dxdyiYd5 <- function(y, a, b, c, d, g) {
 #'   }
 #'
 #' @family gradient-functions
-#' @seealso [inv_Y4()], [grad_inv_Y4_fixed()]
+#' @seealso [inv_logistic4()], [grad_inv_logistic4_fixed()]
 #'
 #' @export
-grad_Y4 <- function(y, a, b, c, d) {
+grad_logistic4 <- function(y, a, b, c, d) {
   A  <- (a - d) / (y - d) - 1
   da <-  b / (A * (y - d))
   db <-  log(A)
@@ -662,21 +662,21 @@ grad_Y4 <- function(y, a, b, c, d) {
 }
 
 
-#' Analytical Gradient of the Inverse Yd4
+#' Analytical Gradient of the Inverse loglogistic4
 #'
-#' Returns partial derivatives for [inv_Yd4()] with all parameters free.
+#' Returns partial derivatives for [inv_loglogistic4()] with all parameters free.
 #'
 #' @param y Numeric scalar. Observed response.
-#' @param a,b,c,d Numeric scalars. Free Yd4 model parameters.
+#' @param a,b,c,d Numeric scalars. Free loglogistic4 model parameters.
 #'
 #' @return A list with `grad_theta` (named vector `c(a=, b=, c=, d=)`)
 #'   and scalar `grad_y`.
 #'
 #' @family gradient-functions
-#' @seealso [inv_Yd4()], [grad_inv_Yd4_fixed()]
+#' @seealso [inv_loglogistic4()], [grad_inv_loglogistic4_fixed()]
 #'
 #' @export
-grad_Yd4 <- function(y, a, b, c, d) {
+grad_loglogistic4 <- function(y, a, b, c, d) {
   Q  <- ((d - a) / (y - a)) - 1
   p  <- 1 / b
   x  <- c * Q^p
@@ -691,7 +691,7 @@ grad_Yd4 <- function(y, a, b, c, d) {
 
 #' Analytical Gradient of the Inverse Gompertz
 #'
-#' Returns partial derivatives for [inv_Ygomp4()] with all parameters free.
+#' Returns partial derivatives for [inv_gompertz4()] with all parameters free.
 #'
 #' @param y Numeric scalar. Observed response.
 #' @param a,b,c,d Numeric scalars. Free Gompertz model parameters.
@@ -700,10 +700,10 @@ grad_Yd4 <- function(y, a, b, c, d) {
 #'   and scalar `grad_y`.
 #'
 #' @family gradient-functions
-#' @seealso [inv_Ygomp4()], [grad_inv_Ygomp4_fixed()]
+#' @seealso [inv_gompertz4()], [grad_inv_gompertz4_fixed()]
 #'
 #' @export
-grad_Ygomp4 <- function(y, a, b, c, d) {
+grad_gompertz4 <- function(y, a, b, c, d) {
   R  <- (y - a) / (d - a)
   B  <- -log(R)
   da <-  1 / (b * B * (y - a))
@@ -717,7 +717,7 @@ grad_Ygomp4 <- function(y, a, b, c, d) {
 
 #' Analytical Gradient of the Inverse 5PL
 #'
-#' Returns partial derivatives for [inv_Y5()] with all five parameters free.
+#' Returns partial derivatives for [inv_logistic5()] with all five parameters free.
 #'
 #' @param y Numeric scalar. Observed response.
 #' @param a,b,c,d Numeric scalars. Free 5PL model parameters.
@@ -727,10 +727,10 @@ grad_Ygomp4 <- function(y, a, b, c, d) {
 #'   and scalar `grad_y`.
 #'
 #' @family gradient-functions
-#' @seealso [inv_Y5()], [grad_inv_Y5_fixed()]
+#' @seealso [inv_logistic5()], [grad_inv_logistic5_fixed()]
 #'
 #' @export
-grad_Y5 <- function(y, a, b, c, d, g) {
+grad_logistic5 <- function(y, a, b, c, d, g) {
   H  <- ((a - d) / (y - d))^(1 / g) - 1
   da <-  b / (g * H * (a - d))
   db <-  log(H)
@@ -742,22 +742,22 @@ grad_Y5 <- function(y, a, b, c, d, g) {
 }
 
 
-#' Analytical Gradient of the Inverse Yd5
+#' Analytical Gradient of the Inverse loglogistic5
 #'
-#' Returns partial derivatives for [inv_Yd5()] with all five parameters free.
+#' Returns partial derivatives for [inv_loglogistic5()] with all five parameters free.
 #'
 #' @param y Numeric scalar. Observed response.
-#' @param a,b,c,d Numeric scalars. Free Yd5 model parameters.
+#' @param a,b,c,d Numeric scalars. Free loglogistic5 model parameters.
 #' @param g Numeric scalar. Asymmetry parameter.
 #'
 #' @return A list with `grad_theta` (named vector `c(a=, b=, c=, d=, g=)`)
 #'   and scalar `grad_y`.
 #'
 #' @family gradient-functions
-#' @seealso [inv_Yd5()], [grad_inv_Yd5_fixed()]
+#' @seealso [inv_loglogistic5()], [grad_inv_loglogistic5_fixed()]
 #'
 #' @export
-grad_Yd5 <- function(y, a, b, c, d, g) {
+grad_loglogistic5 <- function(y, a, b, c, d, g) {
   Q  <- ((y - a) / (d - a))^(-g) - 1
   da <-  (1 / (b * Q * g)) * ((y - a) / (d - a))^(-g - 1) * (1 / (d - a))
   db <-  (log(g) - log(Q)) / b^2
@@ -776,7 +776,7 @@ grad_Yd5 <- function(y, a, b, c, d, g) {
 #' Gradient of the Inverse 4PL with Fixed Lower Asymptote
 #'
 #' Returns partial derivatives \eqn{\partial x / \partial \theta} for
-#' [inv_Y4_fixed()] where `a` is an externally fixed constant and only
+#' [inv_logistic4_fixed()] where `a` is an externally fixed constant and only
 #' `b`, `c`, `d` are free.
 #'
 #' @param y Numeric scalar. Observed response.
@@ -786,10 +786,10 @@ grad_Yd5 <- function(y, a, b, c, d, g) {
 #' @return Named numeric vector `c(b=, c=, d=)` of partial derivatives.
 #'
 #' @family fixed-a-gradients
-#' @seealso [grad_Y4()], [inv_Y4_fixed()], [grad_y_Y4_fixed()]
+#' @seealso [grad_logistic4()], [inv_logistic4_fixed()], [grad_y_logistic4_fixed()]
 #'
 #' @keywords internal
-grad_inv_Y4_fixed <- function(y, fixed_a, b, c, d) {
+grad_inv_logistic4_fixed <- function(y, fixed_a, b, c, d) {
   y <- as.numeric(y); fixed_a <- as.numeric(fixed_a)
   b <- as.numeric(b); c <- as.numeric(c); d <- as.numeric(d)
   inside <- (fixed_a - d) / (y - d) - 1
@@ -800,15 +800,15 @@ grad_inv_Y4_fixed <- function(y, fixed_a, b, c, d) {
 }
 
 
-#' Gradient of the Inverse Yd4 with Fixed Lower Asymptote
+#' Gradient of the Inverse loglogistic4 with Fixed Lower Asymptote
 #'
-#' @inheritParams grad_inv_Y4_fixed
+#' @inheritParams grad_inv_logistic4_fixed
 #'
 #' @return Named numeric vector `c(b=, c=, d=)`.
 #'
 #' @family fixed-a-gradients
 #' @keywords internal
-grad_inv_Yd4_fixed <- function(y, fixed_a, b, c, d) {
+grad_inv_loglogistic4_fixed <- function(y, fixed_a, b, c, d) {
   y <- as.numeric(y); fixed_a <- as.numeric(fixed_a)
   b <- as.numeric(b); c <- as.numeric(c); d <- as.numeric(d)
   inside <- (d - fixed_a) / (y - fixed_a) - 1
@@ -822,13 +822,13 @@ grad_inv_Yd4_fixed <- function(y, fixed_a, b, c, d) {
 
 #' Gradient of the Inverse Gompertz with Fixed Lower Asymptote
 #'
-#' @inheritParams grad_inv_Y4_fixed
+#' @inheritParams grad_inv_logistic4_fixed
 #'
 #' @return Named numeric vector `c(b=, c=, d=)`.
 #'
 #' @family fixed-a-gradients
 #' @keywords internal
-grad_inv_Ygomp4_fixed <- function(y, fixed_a, b, c, d) {
+grad_inv_gompertz4_fixed <- function(y, fixed_a, b, c, d) {
   y <- as.numeric(y); fixed_a <- as.numeric(fixed_a)
   b <- as.numeric(b); c <- as.numeric(c); d <- as.numeric(d)
   L  <- -log((y - fixed_a) / (d - fixed_a))
@@ -850,7 +850,7 @@ grad_inv_Ygomp4_fixed <- function(y, fixed_a, b, c, d) {
 #'
 #' @family fixed-a-gradients
 #' @keywords internal
-grad_inv_Y5_fixed <- function(y, fixed_a, b, c, d, g) {
+grad_inv_logistic5_fixed <- function(y, fixed_a, b, c, d, g) {
   y <- as.numeric(y); fixed_a <- as.numeric(fixed_a)
   b <- as.numeric(b); c <- as.numeric(c)
   d <- as.numeric(d); g <- as.numeric(g)
@@ -865,15 +865,15 @@ grad_inv_Y5_fixed <- function(y, fixed_a, b, c, d, g) {
 }
 
 
-#' Gradient of the Inverse Yd5 with Fixed Lower Asymptote
+#' Gradient of the Inverse loglogistic5 with Fixed Lower Asymptote
 #'
-#' @inheritParams grad_inv_Y5_fixed
+#' @inheritParams grad_inv_logistic5_fixed
 #'
 #' @return Named numeric vector `c(b=, c=, d=, g=)`.
 #'
 #' @family fixed-a-gradients
 #' @keywords internal
-grad_inv_Yd5_fixed <- function(y, fixed_a, b, c, d, g) {
+grad_inv_loglogistic5_fixed <- function(y, fixed_a, b, c, d, g) {
   y <- as.numeric(y); fixed_a <- as.numeric(fixed_a)
   b <- as.numeric(b); c <- as.numeric(c)
   d <- as.numeric(d); g <- as.numeric(g)
@@ -907,7 +907,7 @@ grad_inv_Yd5_fixed <- function(y, fixed_a, b, c, d, g) {
 #'
 #' @family fixed-a-grad-y
 #' @keywords internal
-grad_y_Y4_fixed <- function(y, fixed_a, b, d) {
+grad_y_logistic4_fixed <- function(y, fixed_a, b, d) {
   y <- as.numeric(y); fixed_a <- as.numeric(fixed_a)
   b <- as.numeric(b); d <- as.numeric(d)
   inside <- (fixed_a - d) / (y - d) - 1
@@ -915,7 +915,7 @@ grad_y_Y4_fixed <- function(y, fixed_a, b, d) {
 }
 
 
-#' \eqn{\partial x / \partial y} for the Yd4 Inverse with Fixed \eqn{a}
+#' \eqn{\partial x / \partial y} for the loglogistic4 Inverse with Fixed \eqn{a}
 #'
 #' @param y Numeric scalar. Observed response.
 #' @param fixed_a Numeric scalar. Externally fixed lower asymptote.
@@ -925,7 +925,7 @@ grad_y_Y4_fixed <- function(y, fixed_a, b, d) {
 #'
 #' @family fixed-a-grad-y
 #' @keywords internal
-grad_y_Yd4_fixed <- function(y, fixed_a, b, c, d) {
+grad_y_loglogistic4_fixed <- function(y, fixed_a, b, c, d) {
   y <- as.numeric(y); fixed_a <- as.numeric(fixed_a)
   b <- as.numeric(b); c <- as.numeric(c); d <- as.numeric(d)
   inside <- (d - fixed_a) / (y - fixed_a) - 1
@@ -944,7 +944,7 @@ grad_y_Yd4_fixed <- function(y, fixed_a, b, c, d) {
 #'
 #' @family fixed-a-grad-y
 #' @keywords internal
-grad_y_Ygomp4_fixed <- function(y, fixed_a, b, d) {
+grad_y_gompertz4_fixed <- function(y, fixed_a, b, d) {
   y <- as.numeric(y); fixed_a <- as.numeric(fixed_a)
   b <- as.numeric(b); d <- as.numeric(d)
   ratio <- (y - fixed_a) / (d - fixed_a)
@@ -965,7 +965,7 @@ grad_y_Ygomp4_fixed <- function(y, fixed_a, b, d) {
 #'
 #' @family fixed-a-grad-y
 #' @keywords internal
-grad_y_Y5_fixed <- function(y, fixed_a, b, d, g) {
+grad_y_logistic5_fixed <- function(y, fixed_a, b, d, g) {
   y <- as.numeric(y); fixed_a <- as.numeric(fixed_a)
   b <- as.numeric(b); d <- as.numeric(d); g <- as.numeric(g)
   ratio   <- (fixed_a - d) / (y - d)
@@ -975,7 +975,7 @@ grad_y_Y5_fixed <- function(y, fixed_a, b, d, g) {
 }
 
 
-#' \eqn{\partial x / \partial y} for the Yd5 Inverse with Fixed \eqn{a}
+#' \eqn{\partial x / \partial y} for the loglogistic5 Inverse with Fixed \eqn{a}
 #'
 #' @param y Numeric scalar. Observed response.
 #' @param fixed_a Numeric scalar. Externally fixed lower asymptote.
@@ -987,7 +987,7 @@ grad_y_Y5_fixed <- function(y, fixed_a, b, d, g) {
 #'
 #' @family fixed-a-grad-y
 #' @keywords internal
-grad_y_Yd5_fixed <- function(y, fixed_a, b, d, g) {
+grad_y_loglogistic5_fixed <- function(y, fixed_a, b, d, g) {
   y <- as.numeric(y); fixed_a <- as.numeric(fixed_a)
   b <- as.numeric(b); d <- as.numeric(d); g <- as.numeric(g)
   ratio   <- (y - fixed_a) / (d - fixed_a)
@@ -1022,8 +1022,8 @@ grad_y_Yd5_fixed <- function(y, fixed_a, b, d, g) {
 #'     partials for `a`, `b`, `c`, `d` (and `g`).}
 #' }
 #'
-#' @param model Character. One of `"Y4"`, `"Y5"`, `"Yd4"`, `"Yd5"`,
-#'   `"Ygomp4"`.
+#' @param model Character. One of `"logistic4"`, `"logistic5"`, `"loglogistic4"`, `"loglogistic5"`,
+#'   `"gompertz4"`.
 #' @param y Numeric scalar. The observed response value at which to
 #'   evaluate the inverse and its derivatives.
 #' @param fixed_a Numeric scalar or `NULL`. If non-`NULL`, the lower
@@ -1039,19 +1039,19 @@ grad_y_Yd5_fixed <- function(y, fixed_a, b, d, g) {
 #'       \eqn{\partial x / \partial y}.}
 #'   }
 #'
-#' @seealso [propagate_error_analytic()], [inv_Y4()], [grad_Y4()],
-#'   [inv_Y4_fixed()], [grad_inv_Y4_fixed()]
+#' @seealso [propagate_error_analytic()], [inv_logistic4()], [grad_logistic4()],
+#'   [inv_logistic4_fixed()], [grad_inv_logistic4_fixed()]
 #'
 #' @examples
 #' # Free-a example
-#' fns <- make_inv_and_grad_fixed("Y4", y = 5000, fixed_a = NULL)
+#' fns <- make_inv_and_grad_fixed("logistic4", y = 5000, fixed_a = NULL)
 #' p <- c(a = 100, b = 1.5, c = 2, d = 20000)
 #' fns$inv(p)
 #' fns$grad(p)
 #' fns$grad_y(p)
 #'
 #' # Fixed-a example
-#' fns2 <- make_inv_and_grad_fixed("Y4", y = 5000, fixed_a = 100)
+#' fns2 <- make_inv_and_grad_fixed("logistic4", y = 5000, fixed_a = 100)
 #' p2 <- c(b = 1.5, c = 2, d = 20000)
 #' fns2$inv(p2)
 #' fns2$grad(p2)
@@ -1065,48 +1065,48 @@ make_inv_and_grad_fixed <- function(model, y, fixed_a) {
   if (!is.null(fixed_a)) {
     fixed_a <- as.numeric(fixed_a)
     return(switch(model,
-                  Y4 = list(
-                    inv    = function(p) inv_Y4_fixed(y, fixed_a,
+                  logistic4 = list(
+                    inv    = function(p) inv_logistic4_fixed(y, fixed_a,
                                                       as.numeric(p["b"]), as.numeric(p["c"]), as.numeric(p["d"])),
-                    grad   = function(p) grad_inv_Y4_fixed(y, fixed_a,
+                    grad   = function(p) grad_inv_logistic4_fixed(y, fixed_a,
                                                            as.numeric(p["b"]), as.numeric(p["c"]), as.numeric(p["d"])),
-                    grad_y = function(p) grad_y_Y4_fixed(y, fixed_a,
+                    grad_y = function(p) grad_y_logistic4_fixed(y, fixed_a,
                                                          as.numeric(p["b"]), as.numeric(p["d"]))
                   ),
-                  Yd4 = list(
-                    inv    = function(p) inv_Yd4_fixed(y, fixed_a,
+                  loglogistic4 = list(
+                    inv    = function(p) inv_loglogistic4_fixed(y, fixed_a,
                                                        as.numeric(p["b"]), as.numeric(p["c"]), as.numeric(p["d"])),
-                    grad   = function(p) grad_inv_Yd4_fixed(y, fixed_a,
+                    grad   = function(p) grad_inv_loglogistic4_fixed(y, fixed_a,
                                                             as.numeric(p["b"]), as.numeric(p["c"]), as.numeric(p["d"])),
-                    grad_y = function(p) grad_y_Yd4_fixed(y, fixed_a,
+                    grad_y = function(p) grad_y_loglogistic4_fixed(y, fixed_a,
                                                           as.numeric(p["b"]), as.numeric(p["c"]), as.numeric(p["d"]))
                   ),
-                  Ygomp4 = list(
-                    inv    = function(p) inv_Ygomp4_fixed(y, fixed_a,
+                  gompertz4 = list(
+                    inv    = function(p) inv_gompertz4_fixed(y, fixed_a,
                                                           as.numeric(p["b"]), as.numeric(p["c"]), as.numeric(p["d"])),
-                    grad   = function(p) grad_inv_Ygomp4_fixed(y, fixed_a,
+                    grad   = function(p) grad_inv_gompertz4_fixed(y, fixed_a,
                                                                as.numeric(p["b"]), as.numeric(p["c"]), as.numeric(p["d"])),
-                    grad_y = function(p) grad_y_Ygomp4_fixed(y, fixed_a,
+                    grad_y = function(p) grad_y_gompertz4_fixed(y, fixed_a,
                                                              as.numeric(p["b"]), as.numeric(p["d"]))
                   ),
-                  Y5 = list(
-                    inv    = function(p) inv_Y5_fixed(y, fixed_a,
+                  logistic5 = list(
+                    inv    = function(p) inv_logistic5_fixed(y, fixed_a,
                                                       as.numeric(p["b"]), as.numeric(p["c"]),
                                                       as.numeric(p["d"]), as.numeric(p["g"])),
-                    grad   = function(p) grad_inv_Y5_fixed(y, fixed_a,
+                    grad   = function(p) grad_inv_logistic5_fixed(y, fixed_a,
                                                            as.numeric(p["b"]), as.numeric(p["c"]),
                                                            as.numeric(p["d"]), as.numeric(p["g"])),
-                    grad_y = function(p) grad_y_Y5_fixed(y, fixed_a,
+                    grad_y = function(p) grad_y_logistic5_fixed(y, fixed_a,
                                                          as.numeric(p["b"]), as.numeric(p["d"]), as.numeric(p["g"]))
                   ),
-                  Yd5 = list(
-                    inv    = function(p) inv_Yd5_fixed(y, fixed_a,
+                  loglogistic5 = list(
+                    inv    = function(p) inv_loglogistic5_fixed(y, fixed_a,
                                                        as.numeric(p["b"]), as.numeric(p["c"]),
                                                        as.numeric(p["d"]), as.numeric(p["g"])),
-                    grad   = function(p) grad_inv_Yd5_fixed(y, fixed_a,
+                    grad   = function(p) grad_inv_loglogistic5_fixed(y, fixed_a,
                                                             as.numeric(p["b"]), as.numeric(p["c"]),
                                                             as.numeric(p["d"]), as.numeric(p["g"])),
-                    grad_y = function(p) grad_y_Yd5_fixed(y, fixed_a,
+                    grad_y = function(p) grad_y_loglogistic5_fixed(y, fixed_a,
                                                           as.numeric(p["b"]), as.numeric(p["d"]), as.numeric(p["g"]))
                   ),
                   stop("Unsupported model: ", model)
@@ -1115,95 +1115,95 @@ make_inv_and_grad_fixed <- function(model, y, fixed_a) {
 
   # ── Branch B: 'a' is FREE — must be in p (coef(fit)) ───────
   switch(model,
-         Y4 = list(
+         logistic4 = list(
            inv    = function(p) {
              a <- as.numeric(p["a"])
-             inv_Y4_fixed(y, a, as.numeric(p["b"]),
+             inv_logistic4_fixed(y, a, as.numeric(p["b"]),
                           as.numeric(p["c"]), as.numeric(p["d"]))
            },
            grad   = function(p) {
-             grads <- grad_Y4(y,
+             grads <- grad_logistic4(y,
                               a = as.numeric(p["a"]), b = as.numeric(p["b"]),
                               c = as.numeric(p["c"]), d = as.numeric(p["d"]))
              grads$grad_theta
            },
            grad_y = function(p) {
-             grad_Y4(y,
+             grad_logistic4(y,
                      a = as.numeric(p["a"]), b = as.numeric(p["b"]),
                      c = as.numeric(p["c"]), d = as.numeric(p["d"]))$grad_y
            }
          ),
-         Yd4 = list(
+         loglogistic4 = list(
            inv    = function(p) {
              a <- as.numeric(p["a"])
-             inv_Yd4_fixed(y, a, as.numeric(p["b"]),
+             inv_loglogistic4_fixed(y, a, as.numeric(p["b"]),
                            as.numeric(p["c"]), as.numeric(p["d"]))
            },
            grad   = function(p) {
-             grads <- grad_Yd4(y,
+             grads <- grad_loglogistic4(y,
                                a = as.numeric(p["a"]), b = as.numeric(p["b"]),
                                c = as.numeric(p["c"]), d = as.numeric(p["d"]))
              grads$grad_theta
            },
            grad_y = function(p) {
-             grad_Yd4(y,
+             grad_loglogistic4(y,
                       a = as.numeric(p["a"]), b = as.numeric(p["b"]),
                       c = as.numeric(p["c"]), d = as.numeric(p["d"]))$grad_y
            }
          ),
-         Ygomp4 = list(
+         gompertz4 = list(
            inv    = function(p) {
              a <- as.numeric(p["a"])
-             inv_Ygomp4_fixed(y, a, as.numeric(p["b"]),
+             inv_gompertz4_fixed(y, a, as.numeric(p["b"]),
                               as.numeric(p["c"]), as.numeric(p["d"]))
            },
            grad   = function(p) {
-             grads <- grad_Ygomp4(y,
+             grads <- grad_gompertz4(y,
                                   a = as.numeric(p["a"]), b = as.numeric(p["b"]),
                                   c = as.numeric(p["c"]), d = as.numeric(p["d"]))
              grads$grad_theta
            },
            grad_y = function(p) {
-             grad_Ygomp4(y,
+             grad_gompertz4(y,
                          a = as.numeric(p["a"]), b = as.numeric(p["b"]),
                          c = as.numeric(p["c"]), d = as.numeric(p["d"]))$grad_y
            }
          ),
-         Y5 = list(
+         logistic5 = list(
            inv    = function(p) {
              a <- as.numeric(p["a"])
-             inv_Y5_fixed(y, a, as.numeric(p["b"]), as.numeric(p["c"]),
+             inv_logistic5_fixed(y, a, as.numeric(p["b"]), as.numeric(p["c"]),
                           as.numeric(p["d"]), as.numeric(p["g"]))
            },
            grad   = function(p) {
-             grads <- grad_Y5(y,
+             grads <- grad_logistic5(y,
                               a = as.numeric(p["a"]), b = as.numeric(p["b"]),
                               c = as.numeric(p["c"]), d = as.numeric(p["d"]),
                               g = as.numeric(p["g"]))
              grads$grad_theta
            },
            grad_y = function(p) {
-             grad_Y5(y,
+             grad_logistic5(y,
                      a = as.numeric(p["a"]), b = as.numeric(p["b"]),
                      c = as.numeric(p["c"]), d = as.numeric(p["d"]),
                      g = as.numeric(p["g"]))$grad_y
            }
          ),
-         Yd5 = list(
+         loglogistic5 = list(
            inv    = function(p) {
              a <- as.numeric(p["a"])
-             inv_Yd5_fixed(y, a, as.numeric(p["b"]), as.numeric(p["c"]),
+             inv_loglogistic5_fixed(y, a, as.numeric(p["b"]), as.numeric(p["c"]),
                            as.numeric(p["d"]), as.numeric(p["g"]))
            },
            grad   = function(p) {
-             grads <- grad_Yd5(y,
+             grads <- grad_loglogistic5(y,
                                a = as.numeric(p["a"]), b = as.numeric(p["b"]),
                                c = as.numeric(p["c"]), d = as.numeric(p["d"]),
                                g = as.numeric(p["g"]))
              grads$grad_theta
            },
            grad_y = function(p) {
-             grad_Yd5(y,
+             grad_loglogistic5(y,
                       a = as.numeric(p["a"]), b = as.numeric(p["b"]),
                       c = as.numeric(p["c"]), d = as.numeric(p["d"]),
                       g = as.numeric(p["g"]))$grad_y
@@ -1221,7 +1221,7 @@ make_inv_and_grad_fixed <- function(model, y, fixed_a) {
 #' Select Model Formulas for Standard Curve Fitting
 #'
 #' Returns a named list of [stats::nls()]-compatible formulas for all
-#' candidate models (Y5, Yd5, Y4, Yd4, Ygomp4). When `fixed_constraint`
+#' candidate models (logistic5, loglogistic5, logistic4, loglogistic4, gompertz4). When `fixed_constraint`
 #' is supplied, parameter `a` (lower asymptote) is substituted as a
 #' numeric constant in every formula; otherwise `a` is a free parameter.
 #'
@@ -1238,14 +1238,14 @@ make_inv_and_grad_fixed <- function(model, y, fixed_a) {
 #'
 #' @param model_names a vector of model formulas to be considered.
 #' @return Named list of formulas keyed by model name:
-#'   `"Y5"`, `"Yd5"`, `"Y4"`, `"Yd4"`, `"Ygomp4"`.
+#'   `"logistic5"`, `"loglogistic5"`, `"logistic4"`, `"loglogistic4"`, `"gompertz4"`.
 #'
 #' @details
 #' The concentration column is hard-coded as `concentration` in all
 #' formulas. The `I()` wrappers protect complex sub-expressions from
 #' formula parsing by [stats::nls()].
 #'
-#' @seealso [Y4()], [Y5()], [Yd4()], [Yd5()], [Ygomp4()] for the
+#' @seealso [logistic4()], [logistic5()], [loglogistic4()], [loglogistic5()], [gompertz4()] for the
 #'   underlying model functions; [compute_robust_curves()] which
 #'   consumes these formulas.
 #'
@@ -1254,16 +1254,20 @@ make_inv_and_grad_fixed <- function(model, y, fixed_a) {
 #' forms <- select_model_formulas(fixed_constraint = 50,
 #'                                response_variable = "mfi",
 #'                                is_log_response = FALSE,
-#'                                model_names = c("Y4", "Y5", "Yd4", "Yd5", "Ygomp4"))
+#'                                model_names = c("logistic4", "logistic5",
+#'                                "loglogistic4", "loglogistic5",
+#'                                "gompertz4"))
 #' names(forms)
-#' forms$Y4
+#' forms$logistic4
 #'
 #' # Free lower asymptote
 #' forms_free <- select_model_formulas(fixed_constraint = NULL,
 #'                                     response_variable = "mfi",
 #'                                     is_log_response = FALSE,
-#'                                     model_names = c("Y4", "Y5", "Yd4", "Yd5", "Ygomp4"))
-#' forms_free$Y4
+#'                                     model_names = c("logistic4", "logistic5",
+#'                                      "loglogistic4", "loglogistic5",
+#'                                       "gompertz4"))
+#' forms_free$logistic4
 #'
 #' @export
 select_model_formulas <- function(fixed_constraint, response_variable, is_log_response, model_names) {
@@ -1289,27 +1293,27 @@ select_model_formulas <- function(fixed_constraint, response_variable, is_log_re
     fixed_value <- fixed_constraint
 
     standard_curve_formulas <- list(
-      Y5 = as.formula(substitute(
+      logistic5 = as.formula(substitute(
         lhs ~ d + (((fixed_a) - d) / (1 + exp((concentration - c) / b))^g),
         list(lhs = as.name(response_variable), fixed_a = fixed_value)
       ), env = parent.frame()),
 
-      Yd5 = as.formula(substitute(
+      loglogistic5 = as.formula(substitute(
         lhs ~ (fixed_a) + (d - (fixed_a)) * I((1 + g * exp(-b * (concentration - c)))^(-1 / g)),
         list(lhs = as.name(response_variable), fixed_a = fixed_value)
       ), env = parent.frame()),
 
-      Y4 = as.formula(substitute(
+      logistic4 = as.formula(substitute(
         lhs ~ d + (((fixed_a) - d) / I((1 + exp((concentration - c) / b)))),
         list(lhs = as.name(response_variable), fixed_a = fixed_value)
       ), env = parent.frame()),
 
-      Yd4 = as.formula(substitute(
+      loglogistic4 = as.formula(substitute(
         lhs ~ (fixed_a) + (d - (fixed_a)) / I((1 + (concentration / c)^b)),
         list(lhs = as.name(response_variable), fixed_a = fixed_value)
       ), env = parent.frame()),
 
-      Ygomp4 = as.formula(substitute(
+      gompertz4 = as.formula(substitute(
         lhs ~ (fixed_a) + (d - (fixed_a)) * I(exp(-exp(-b * (concentration - c)))),
         list(lhs = as.name(response_variable), fixed_a = fixed_value)
       ), env = parent.frame())
@@ -1317,36 +1321,46 @@ select_model_formulas <- function(fixed_constraint, response_variable, is_log_re
 
   } else {
     standard_curve_formulas <- list(
-      Y5 = as.formula(substitute(
+      logistic5 = as.formula(substitute(
         lhs ~ d + (a - d) / (I((1 + exp((concentration - c) / b))^g)),
         list(lhs = as.name(response_variable))),
         env = parent.frame()),
 
-      Yd5 = as.formula(substitute(
+      loglogistic5 = as.formula(substitute(
         lhs ~ a + (d - a) * I((1 + g * exp(-b * (concentration - c)))^(-1 / g)),
         list(lhs = as.name(response_variable))),
         env = parent.frame()),
 
-      Y4 = as.formula(substitute(
+      logistic4 = as.formula(substitute(
         lhs ~ d + (a - d) / I(1 + exp((concentration - c) / b)),
         list(lhs = as.name(response_variable))),
         env = parent.frame()),
 
-      Yd4 = as.formula(substitute(
+      loglogistic4 = as.formula(substitute(
         lhs ~ a + (d - a) / I(1 + (concentration / c)^b),
         list(lhs = as.name(response_variable))),
         env = parent.frame()),
 
-      Ygomp4 = as.formula(substitute(
+      gompertz4 = as.formula(substitute(
         lhs ~ a + (d - a) * I(exp(-exp(-b * (concentration - c)))),
         list(lhs = as.name(response_variable))),
         env = parent.frame())
     )
   }
 
+  model_name_map <- c(
+    "logistic5" = "logistic5",
+    "logistic4" = "logistic4",
+    "gompertz4" = "gompertz4",
+    "loglogistic5" = "loglogistic5",
+    "loglogistic4" = "loglogistic4"
+  )
+
+  # Replace user-supplied names with internal ones
+  model_names_internal <- unname(model_name_map[model_names])
 
   # Subset formulas to only the models specified
-  standard_curve_formulas <- standard_curve_formulas[model_names]
+  standard_curve_formulas <- standard_curve_formulas[model_names_internal]
 
   return(standard_curve_formulas)
 }
@@ -1356,9 +1370,9 @@ select_model_formulas <- function(fixed_constraint, response_variable, is_log_re
 # SAFE CONSTRAINT FUNCTIONS
 # ============================================================================
 
-#' Compute Safe Parameter Bounds for 5PL (Y5) Fitting
+#' Compute Safe Parameter Bounds for 5PL (logistic5) Fitting
 #'
-#' Builds lower and upper bounds for all free parameters in the [Y5()]
+#' Builds lower and upper bounds for all free parameters in the [logistic5()]
 #' model, adapted to the observed data scale via
 #' [adaptive_constraint_profile()]. Used by [compute_robust_curves()]
 #' to supply bounds to [stats::nls()] with `algorithm = "port"`.
@@ -1367,9 +1381,9 @@ select_model_formulas <- function(fixed_constraint, response_variable, is_log_re
 #'   the response column.
 #' @param y_min Numeric. Minimum observed response. Default `1`.
 #' @param y_max Numeric. Maximum observed response.
-#' @param Y5_formula Formula. The Y5 model formula from
+#' @param logistic5_formula Formula. The logistic5 model formula from
 #'   [select_model_formulas()].
-#' @param Y5_free_vars Character vector. Names of free parameters in
+#' @param logistic5_free_vars Character vector. Names of free parameters in
 #'   the formula (e.g., `c("b", "c", "d", "g")` when `a` is fixed,
 #'   or `c("a", "b", "c", "d", "g")` when free).
 #' @param is_log_response Logical. Whether the response is
@@ -1382,18 +1396,18 @@ select_model_formulas <- function(fixed_constraint, response_variable, is_log_re
 #'   [adaptive_constraint_profile()]. If `NULL`, one is built internally.
 #'
 #' @return A list with elements `lower` and `upper`, each a named
-#'   numeric vector matching `Y5_free_vars`.
+#'   numeric vector matching `logistic5_free_vars`.
 #'
 #' @family safe-constraints
-#' @seealso [adaptive_constraint_profile()], [Y5()],
+#' @seealso [adaptive_constraint_profile()], [logistic5()],
 #'   [compute_robust_curves()]
 #'
 #' @keywords internal
-Y5_safe_constraint <- function(data,
+logistic5_safe_constraint <- function(data,
                                y_min = 1,
                                y_max,
-                               Y5_formula,
-                               Y5_free_vars,
+                               logistic5_formula,
+                               logistic5_free_vars,
                                is_log_response,
                                is_log_concentration,
                                antigen_settings,
@@ -1413,7 +1427,7 @@ Y5_safe_constraint <- function(data,
   .g_min     <- constraint_profile$g_min
   .g_max     <- constraint_profile$g_max
 
-  formula_vars <- all.vars(Y5_formula)
+  formula_vars <- all.vars(logistic5_formula)
 
   # ── Lower asymptote a ──
   a_lower <- antigen_settings$l_asy_min_constraint
@@ -1454,25 +1468,25 @@ Y5_safe_constraint <- function(data,
     upper <- c(b = b_upper, c = c_upper, d = d_lower, g = g_upper)
   }
 
-  return(.make_bounds(Y5_free_vars, lower_vals = lower, upper_vals = upper))
+  return(.make_bounds(logistic5_free_vars, lower_vals = lower, upper_vals = upper))
 }
 
 
-#' Compute Safe Parameter Bounds for Yd5 Fitting
+#' Compute Safe Parameter Bounds for loglogistic5 Fitting
 #'
-#' Builds lower and upper bounds for all free parameters in the [Yd5()]
+#' Builds lower and upper bounds for all free parameters in the [loglogistic5()]
 #' model using [adaptive_constraint_profile()].
 #'
-#' @inheritParams Y5_safe_constraint
-#' @param Yd5_formula Formula. The Yd5 model formula.
-#' @param Yd5_free_vars Character vector. Names of free parameters.
+#' @inheritParams logistic5_safe_constraint
+#' @param loglogistic5_formula Formula. The loglogistic5 model formula.
+#' @param loglogistic5_free_vars Character vector. Names of free parameters.
 #'
 #' @return A list with `lower` and `upper` named numeric vectors.
 #'
 #' @family safe-constraints
 #' @keywords internal
-Yd5_safe_constraint <- function(data, y_min = 1, y_max, Yd5_formula,
-                                Yd5_free_vars, is_log_response,
+loglogistic5_safe_constraint <- function(data, y_min = 1, y_max, loglogistic5_formula,
+                                loglogistic5_free_vars, is_log_response,
                                 is_log_concentration, antigen_settings,
                                 constraint_profile = NULL) {
   .eps <- 1e-5
@@ -1490,7 +1504,7 @@ Yd5_safe_constraint <- function(data, y_min = 1, y_max, Yd5_formula,
   .g_min     <- constraint_profile$g_min
   .g_max     <- constraint_profile$g_max
 
-  formula_vars <- all.vars(Yd5_formula)
+  formula_vars <- all.vars(loglogistic5_formula)
 
   # ── Lower asymptote a ──
   a_lower <- antigen_settings$l_asy_min_constraint
@@ -1531,25 +1545,25 @@ Yd5_safe_constraint <- function(data, y_min = 1, y_max, Yd5_formula,
     upper <- c(b = b_upper, c = c_upper, d = d_upper, g = g_upper)
   }
 
-  return(.make_bounds(Yd5_free_vars, lower_vals = lower, upper_vals = upper))
+  return(.make_bounds(loglogistic5_free_vars, lower_vals = lower, upper_vals = upper))
 }
 
 
-#' Compute Safe Parameter Bounds for 4PL (Y4) Fitting
+#' Compute Safe Parameter Bounds for 4PL (logistic4) Fitting
 #'
-#' Builds lower and upper bounds for all free parameters in the [Y4()]
+#' Builds lower and upper bounds for all free parameters in the [logistic4()]
 #' model using [adaptive_constraint_profile()].
 #'
-#' @inheritParams Y5_safe_constraint
-#' @param Y4_formula Formula. The Y4 model formula.
-#' @param Y4_free_vars Character vector. Names of free parameters.
+#' @inheritParams logistic5_safe_constraint
+#' @param logistic4_formula Formula. The logistic4 model formula.
+#' @param logistic4_free_vars Character vector. Names of free parameters.
 #'
 #' @return A list with `lower` and `upper` named numeric vectors.
 #'
 #' @family safe-constraints
 #' @keywords internal
-Y4_safe_constraint <- function(data, y_min = 1, y_max, Y4_formula,
-                               Y4_free_vars, is_log_response,
+logistic4_safe_constraint <- function(data, y_min = 1, y_max, logistic4_formula,
+                               logistic4_free_vars, is_log_response,
                                is_log_concentration, antigen_settings,
                                constraint_profile = NULL) {
   .eps <- 1e-5
@@ -1565,7 +1579,7 @@ Y4_safe_constraint <- function(data, y_min = 1, y_max, Y4_formula,
   .slope_max <- constraint_profile$slope_max
   .slope_min <- constraint_profile$slope_min
 
-  formula_vars <- all.vars(Y4_formula)
+  formula_vars <- all.vars(logistic4_formula)
 
   # ── Lower asymptote a ──
   a_lower <- antigen_settings$l_asy_min_constraint
@@ -1602,25 +1616,25 @@ Y4_safe_constraint <- function(data, y_min = 1, y_max, Y4_formula,
     upper <- c(b = b_upper, c = c_upper, d = d_upper)
   }
 
-  return(.make_bounds(Y4_free_vars, lower_vals = lower, upper_vals = upper))
+  return(.make_bounds(logistic4_free_vars, lower_vals = lower, upper_vals = upper))
 }
 
 
-#' Compute Safe Parameter Bounds for Yd4 Fitting
+#' Compute Safe Parameter Bounds for loglogistic4 Fitting
 #'
-#' Builds lower and upper bounds for all free parameters in the [Yd4()]
+#' Builds lower and upper bounds for all free parameters in the [loglogistic4()]
 #' model using [adaptive_constraint_profile()].
 #'
-#' @inheritParams Y5_safe_constraint
-#' @param Yd4_formula Formula. The Yd4 model formula.
-#' @param Yd4_free_vars Character vector. Names of free parameters.
+#' @inheritParams logistic5_safe_constraint
+#' @param loglogistic4_formula Formula. The loglogistic4 model formula.
+#' @param loglogistic4_free_vars Character vector. Names of free parameters.
 #'
 #' @return A list with `lower` and `upper` named numeric vectors.
 #'
 #' @family safe-constraints
 #' @keywords internal
-Yd4_safe_constraint <- function(data, y_min = 1, y_max, Yd4_formula,
-                                Yd4_free_vars, is_log_response,
+loglogistic4_safe_constraint <- function(data, y_min = 1, y_max, loglogistic4_formula,
+                                loglogistic4_free_vars, is_log_response,
                                 is_log_concentration, antigen_settings,
                                 constraint_profile = NULL) {
   .eps <- 1e-5
@@ -1636,7 +1650,7 @@ Yd4_safe_constraint <- function(data, y_min = 1, y_max, Yd4_formula,
   .slope_max <- constraint_profile$slope_max
   .slope_min <- constraint_profile$slope_min
 
-  formula_vars <- all.vars(Yd4_formula)
+  formula_vars <- all.vars(loglogistic4_formula)
 
   # ── Lower asymptote a ──
   a_lower <- antigen_settings$l_asy_min_constraint
@@ -1673,25 +1687,25 @@ Yd4_safe_constraint <- function(data, y_min = 1, y_max, Yd4_formula,
     upper <- c(b = b_upper, c = c_upper, d = d_upper)
   }
 
-  return(.make_bounds(Yd4_free_vars, lower_vals = lower, upper_vals = upper))
+  return(.make_bounds(loglogistic4_free_vars, lower_vals = lower, upper_vals = upper))
 }
 
 
 #' Compute Safe Parameter Bounds for Gompertz Fitting
 #'
 #' Builds lower and upper bounds for all free parameters in the
-#' [Ygomp4()] model using [adaptive_constraint_profile()].
+#' [gompertz4()] model using [adaptive_constraint_profile()].
 #'
-#' @inheritParams Y5_safe_constraint
-#' @param Ygomp4_formula Formula. The Gompertz model formula.
-#' @param Ygomp4_free_vars Character vector. Names of free parameters.
+#' @inheritParams logistic5_safe_constraint
+#' @param gompertz4_formula Formula. The Gompertz model formula.
+#' @param gompertz4_free_vars Character vector. Names of free parameters.
 #'
 #' @return A list with `lower` and `upper` named numeric vectors.
 #'
 #' @family safe-constraints
 #' @keywords internal
-Ygomp4_safe_constraint <- function(data, y_min = 1, y_max, Ygomp4_formula,
-                                   Ygomp4_free_vars, is_log_response,
+gompertz4_safe_constraint <- function(data, y_min = 1, y_max, gompertz4_formula,
+                                   gompertz4_free_vars, is_log_response,
                                    is_log_concentration, antigen_settings,
                                    constraint_profile = NULL) {
   .eps <- 1e-5
@@ -1707,7 +1721,7 @@ Ygomp4_safe_constraint <- function(data, y_min = 1, y_max, Ygomp4_formula,
   .slope_max <- constraint_profile$slope_max
   .slope_min <- constraint_profile$slope_min
 
-  formula_vars <- all.vars(Ygomp4_formula)
+  formula_vars <- all.vars(gompertz4_formula)
 
   # ── Lower asymptote a ──
   a_lower <- antigen_settings$l_asy_min_constraint
@@ -1744,7 +1758,7 @@ Ygomp4_safe_constraint <- function(data, y_min = 1, y_max, Ygomp4_formula,
     upper <- c(b = b_upper, c = c_upper, d = d_upper)
   }
 
-  return(.make_bounds(Ygomp4_free_vars, lower_vals = lower, upper_vals = upper))
+  return(.make_bounds(gompertz4_free_vars, lower_vals = lower, upper_vals = upper))
 }
 
 
@@ -1795,7 +1809,7 @@ Ygomp4_safe_constraint <- function(data, y_min = 1, y_max, Ygomp4_formula,
 #' fitting.
 #'
 #' @family safe-constraints
-#' @seealso [Y5_safe_constraint()], [Y4_safe_constraint()],
+#' @seealso [logistic5_safe_constraint()], [logistic4_safe_constraint()],
 #'   [compute_robust_curves()]
 #'
 #' @examples

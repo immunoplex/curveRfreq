@@ -73,14 +73,14 @@ str(profile)
 
 }
 \seealso{
-\code{\link[=Y5_safe_constraint]{Y5_safe_constraint()}}, \code{\link[=Y4_safe_constraint]{Y4_safe_constraint()}},
+\code{\link[=logistic5_safe_constraint]{logistic5_safe_constraint()}}, \code{\link[=logistic4_safe_constraint]{logistic4_safe_constraint()}},
 \code{\link[=compute_robust_curves]{compute_robust_curves()}}
 
 Other safe-constraints: 
-\code{\link{Y4_safe_constraint}()},
-\code{\link{Y5_safe_constraint}()},
-\code{\link{Yd4_safe_constraint}()},
-\code{\link{Yd5_safe_constraint}()},
-\code{\link{Ygomp4_safe_constraint}()}
+\code{\link{gompertz4_safe_constraint}()},
+\code{\link{logistic4_safe_constraint}()},
+\code{\link{logistic5_safe_constraint}()},
+\code{\link{loglogistic4_safe_constraint}()},
+\code{\link{loglogistic5_safe_constraint}()}
 }
 \concept{safe-constraints}

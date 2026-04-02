@@ -6,7 +6,7 @@
 \usage{
 plot_model_comparisons(
   plot_data,
-  model_names = c("Y5", "Yd5", "Y4", "Yd4", "Ygomp4"),
+  model_names = c("logistic5", "loglogistic5", "logistic4", "loglogistic4", "gompertz4"),
   x_var = "concentration",
   y_var = "mfi",
   is_display_log_response = TRUE,
@@ -18,7 +18,7 @@ plot_model_comparisons(
 \item{plot_data}{Named list as returned by \code{\link{get_plot_data}}.}
 
 \item{model_names}{Character vector of model names to include in the plots.
-Default is \code{c("Y5","Yd5","Y4","Yd4","Ygomp4")}.}
+Default is \code{c("logistic5","loglogistic5","logistic4","loglogistic4","gompertz4")}.}
 
 \item{x_var}{Character string naming the independent variable. Used for
 axis labelling after passing through \code{\link{format_assay_terms}}.

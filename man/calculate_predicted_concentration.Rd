@@ -15,8 +15,8 @@ calculate_predicted_concentration(
 )
 }
 \arguments{
-\item{model_name}{Character. One of \code{"Y5"}, \code{"Yd5"},
-\code{"Y4"}, \code{"Yd4"}, \code{"Ygomp4"}.}
+\item{model_name}{Character. One of \code{"logistic5"}, \code{"loglogistic5"},
+\code{"logistic4"}, \code{"loglogistic4"}, \code{"gompertz4"}.}
 
 \item{fit}{Fitted \code{nlsLM} object.}
 

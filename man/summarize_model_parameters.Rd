@@ -7,7 +7,7 @@
 summarize_model_parameters(
   models_fit_list,
   level = 0.95,
-  model_names = c("Y5", "Yd5", "Y4", "Yd4", "Ygomp4"),
+  model_names = c("logistic5", "loglogistic5", "logistic4", "loglogistic4", "gompertz4"),
   verbose = TRUE
 )
 }

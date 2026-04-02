@@ -6,7 +6,7 @@
 \usage{
 summarize_model_fits(
   models_fit_list,
-  model_names = c("Y5", "Yd5", "Y4", "Yd4", "Ygomp4"),
+  model_names = c("logistic5", "loglogistic5", "logistic4", "loglogistic4", "gompertz4"),
   verbose = TRUE
 )
 }
@@ -14,7 +14,7 @@ summarize_model_fits(
 \item{models_fit_list}{Named list from \code{\link{compute_robust_curves}}.}
 
 \item{model_names}{Character vector of model names to include (default:
-\code{c("Y5","Yd5","Y4","Yd4","Ygomp4")}).}
+\code{c("logistic5","loglogistic5","logistic4","loglogistic4","gompertz4")}).}
 
 \item{verbose}{Logical (default \code{TRUE}).}
 }

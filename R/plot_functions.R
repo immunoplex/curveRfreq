@@ -106,7 +106,7 @@ compute_curve_ci <- function(fit, x_new, x_var, fixed_a = NULL, level = 0.95) {
 #'   coefficient vectors.
 #' @param model_names Character vector of model names to process. Must match
 #'   keys in \code{models_fit_list}. Default is
-#'   \code{c("Y5","Yd5","Y4","Yd4","Ygomp4")}.
+#'   \code{c("logistic5","loglogistic5","logistic4","loglogistic4","gompertz4")}.
 #' @param x_var Character string naming the independent variable column in
 #'   \code{prepped_data}. Default is \code{"concentration"}.
 #' @param y_var Character string naming the response variable column in
@@ -150,7 +150,7 @@ get_plot_data <- function(models_fit_list,
                           prepped_data,
                           fit_params,
                           fixed_a_result,
-                          model_names = c("Y5","Yd5","Y4","Yd4","Ygomp4"),
+                          model_names = c("logistic5","loglogistic5","logistic4","loglogistic4","gompertz4"),
                           x_var = "concentration",
                           y_var = "mfi",
                           verbose = TRUE) {
@@ -197,30 +197,30 @@ get_plot_data <- function(models_fit_list,
     }
 
     d2x_y <- tryCatch({
-      if (mname == "Y5") {
-        do.call(d2xY5, c(list(x = x_new), fit_obj_coef))
-      } else if (mname == "Y4") {
-        do.call(d2xY4, c(list(x = x_new), fit_obj_coef))
-      } else if (mname == "Yd5") {
-        do.call(d2xYd5, c(list(x = x_new), fit_obj_coef))
-      } else if (mname == "Yd4") {
-        do.call(d2xYd4, c(list(x = x_new), fit_obj_coef))
-      } else if (mname == "Ygomp4") {
-        do.call(d2xYgomp4, c(list(x = x_new), fit_obj_coef))
+      if (mname == "logistic5") {
+        do.call(d2xlogistic5, c(list(x = x_new), fit_obj_coef))
+      } else if (mname == "logistic4") {
+        do.call(d2xlogistic4, c(list(x = x_new), fit_obj_coef))
+      } else if (mname == "loglogistic5") {
+        do.call(d2xloglogistic5, c(list(x = x_new), fit_obj_coef))
+      } else if (mname == "loglogistic4") {
+        do.call(d2xloglogistic4, c(list(x = x_new), fit_obj_coef))
+      } else if (mname == "gompertz4") {
+        do.call(d2xgompertz4, c(list(x = x_new), fit_obj_coef))
       }
     }, error = function(e) rep (NA_real_, length(x_new)))
 
     dydx <- tryCatch({
-      if (mname == "Y5") {
-        do.call(dydxY5, c(list(x = x_new), fit_obj_coef))
-      } else if (mname == "Y4") {
-        do.call(dydxY4, c(list(x = x_new), fit_obj_coef))
-      } else if (mname == "Yd5") {
-        do.call(dydxYd5, c(list(x = x_new), fit_obj_coef))
-      } else if (mname == "Yd4") {
-        do.call(dydxYd4, c(list(x = x_new), fit_obj_coef))
-      } else if (mname == "Ygomp4") {
-        do.call(dydxYgomp4, c(list(x = x_new), fit_obj_coef))
+      if (mname == "logistic5") {
+        do.call(dydxlogistic5, c(list(x = x_new), fit_obj_coef))
+      } else if (mname == "logistic4") {
+        do.call(dydxlogistic4, c(list(x = x_new), fit_obj_coef))
+      } else if (mname == "loglogistic5") {
+        do.call(dydxloglogistic5, c(list(x = x_new), fit_obj_coef))
+      } else if (mname == "loglogistic4") {
+        do.call(dydxloglogistic4, c(list(x = x_new), fit_obj_coef))
+      } else if (mname == "gompertz4") {
+        do.call(dydxgompertz4, c(list(x = x_new), fit_obj_coef))
       }
     }, error = function(e) rep (NA_real_, length(x_new)))
 
@@ -313,7 +313,7 @@ get_plot_data <- function(models_fit_list,
 #'
 #' @param plot_data Named list as returned by \code{\link{get_plot_data}}.
 #' @param model_names Character vector of model names to include in the plots.
-#'   Default is \code{c("Y5","Yd5","Y4","Yd4","Ygomp4")}.
+#'   Default is \code{c("logistic5","loglogistic5","logistic4","loglogistic4","gompertz4")}.
 #' @param x_var Character string naming the independent variable. Used for
 #'   axis labelling after passing through \code{\link{format_assay_terms}}.
 #'   Default is \code{"concentration"}.
@@ -343,7 +343,7 @@ get_plot_data <- function(models_fit_list,
 #' @seealso \code{\link{get_plot_data}}, \code{\link{format_assay_terms}}
 #' @export
 plot_model_comparisons <- function(plot_data,
-                                   model_names = c("Y5","Yd5","Y4","Yd4","Ygomp4"),
+                                   model_names = c("logistic5","loglogistic5","logistic4","loglogistic4","gompertz4"),
                                    x_var = "concentration",
                                    y_var = "mfi",
                                    is_display_log_response = TRUE,

@@ -11,7 +11,7 @@
 #'   \describe{
 #'     \item{best_fit}{A converged \code{nlsLM} fit object.}
 #'     \item{best_model_name}{Character string naming the selected model
-#'       (e.g. \code{"Y5"}).}
+#'       (e.g. \code{"logistic5"}).}
 #'     \item{best_data}{A \code{data.frame} of the data used for fitting,
 #'       containing columns \code{study_accession}, \code{experiment_accession},
 #'       \code{nominal_sample_dilution}, \code{antigen}, \code{plateid},

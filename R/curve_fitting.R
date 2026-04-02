@@ -668,7 +668,7 @@ obtain_response_variable <- function(formulas) {
 #'
 #' @param data                 Data frame of preprocessed standard curve data.
 #' @param formulas             Named list of model formulae
-#'                             (\code{Y5, Yd5, Y4, Yd4, Ygomp4}).
+#'                             (\code{logistic5, loglogistic5, logistic4, loglogistic4, gompertz4}).
 #' @param response_variable    Character. Response column name.
 #' @param independent_variable Character. Concentration column name.
 #' @param is_log_response      Logical. Is the response log10-transformed?
@@ -715,11 +715,11 @@ obtain_model_constraints <- function(data, formulas,
   active_models  <- names(formulas)
   constraint_models <- list()
 
-  if ("Y5" %in% active_models) {
-    constraint_models$Y5 <- Y5_safe_constraint(
+  if ("logistic5" %in% active_models) {
+    constraint_models$logistic5 <- logistic5_safe_constraint(
       data, y_min = min_response, y_max = max_response,
-      Y5_formula   = formulas$Y5,
-      Y5_free_vars = free_variables$Y5,
+      logistic5_formula   = formulas$logistic5,
+      logistic5_free_vars = free_variables$logistic5,
       is_log_response      = is_log_response,
       is_log_concentration = is_log_concentration,
       antigen_settings     = antigen_settings,
@@ -727,11 +727,11 @@ obtain_model_constraints <- function(data, formulas,
     )
   }
 
-  if ("Yd5" %in% active_models) {
-    constraint_models$Yd5 <- Yd5_safe_constraint(
+  if ("loglogistic5" %in% active_models) {
+    constraint_models$loglogistic5 <- loglogistic5_safe_constraint(
       data, y_min = min_response, y_max = max_response,
-      Yd5_formula   = formulas$Yd5,
-      Yd5_free_vars = free_variables$Yd5,
+      loglogistic5_formula   = formulas$loglogistic5,
+      loglogistic5_free_vars = free_variables$loglogistic5,
       is_log_response      = is_log_response,
       is_log_concentration = is_log_concentration,
       antigen_settings     = antigen_settings,
@@ -739,11 +739,11 @@ obtain_model_constraints <- function(data, formulas,
     )
   }
 
-  if ("Y4" %in% active_models) {
-    constraint_models$Y4 <- Y4_safe_constraint(
+  if ("logistic4" %in% active_models) {
+    constraint_models$logistic4 <- logistic4_safe_constraint(
       data, y_min = min_response, y_max = max_response,
-      Y4_formula   = formulas$Y4,
-      Y4_free_vars = free_variables$Y4,
+      logistic4_formula   = formulas$logistic4,
+      logistic4_free_vars = free_variables$logistic4,
       is_log_response      = is_log_response,
       is_log_concentration = is_log_concentration,
       antigen_settings     = antigen_settings,
@@ -751,11 +751,11 @@ obtain_model_constraints <- function(data, formulas,
     )
   }
 
-  if ("Yd4" %in% active_models) {
-    constraint_models$Yd4 <- Yd4_safe_constraint(
+  if ("loglogistic4" %in% active_models) {
+    constraint_models$loglogistic4 <- loglogistic4_safe_constraint(
       data, y_min = min_response, y_max = max_response,
-      Yd4_formula   = formulas$Yd4,
-      Yd4_free_vars = free_variables$Yd4,
+      loglogistic4_formula   = formulas$loglogistic4,
+      loglogistic4_free_vars = free_variables$loglogistic4,
       is_log_response      = is_log_response,
       is_log_concentration = is_log_concentration,
       antigen_settings     = antigen_settings,
@@ -763,11 +763,11 @@ obtain_model_constraints <- function(data, formulas,
     )
   }
 
-  if ("Ygomp4" %in% active_models) {
-    constraint_models$Ygomp4 <- Ygomp4_safe_constraint(
+  if ("gompertz4" %in% active_models) {
+    constraint_models$gompertz4 <- gompertz4_safe_constraint(
       data, y_min = min_response, y_max = max_response,
-      Ygomp4_formula   = formulas$Ygomp4,
-      Ygomp4_free_vars = free_variables$Ygomp4,
+      gompertz4_formula   = formulas$gompertz4,
+      gompertz4_free_vars = free_variables$gompertz4,
       is_log_response      = is_log_response,
       is_log_concentration = is_log_concentration,
       antigen_settings     = antigen_settings,
@@ -775,35 +775,6 @@ obtain_model_constraints <- function(data, formulas,
     )
   }
 
-  #
-  # Y5_nls_constraint   <- Y5_safe_constraint(data, y_min = min_response, y_max = max_response,
-  #                                           Y5_formula = formulas$Y5,   Y5_free_vars = free_variables$Y5,
-  #                                           is_log_response = is_log_response, is_log_concentration = is_log_concentration,
-  #                                           antigen_settings = antigen_settings, constraint_profile = constraint_profile)
-  #
-  # Yd5_constraint      <- Yd5_safe_constraint(data, y_min = min_response, y_max = max_response,
-  #                                            Yd5_formula = formulas$Yd5, Yd5_free_vars = free_variables$Yd5,
-  #                                            is_log_response = is_log_response, is_log_concentration = is_log_concentration,
-  #                                            antigen_settings = antigen_settings, constraint_profile = constraint_profile)
-  #
-  # Y4_nls_constraint   <- Y4_safe_constraint(data, y_min = min_response, y_max = max_response,
-  #                                           Y4_formula = formulas$Y4,   Y4_free_vars = free_variables$Y4,
-  #                                           is_log_response = is_log_response, is_log_concentration = is_log_concentration,
-  #                                           antigen_settings = antigen_settings, constraint_profile = constraint_profile)
-  #
-  # Yd4_constraint      <- Yd4_safe_constraint(data, y_min = min_response, y_max = max_response,
-  #                                            Yd4_formula = formulas$Yd4, Yd4_free_vars = free_variables$Yd4,
-  #                                            is_log_response = is_log_response, is_log_concentration = is_log_concentration,
-  #                                            antigen_settings = antigen_settings, constraint_profile = constraint_profile)
-  #
-  # Ygomp4_constraint   <- Ygomp4_safe_constraint(data, y_min = min_response, y_max = max_response,
-  #                                               Ygomp4_formula = formulas$Ygomp4, Ygomp4_free_vars = free_variables$Ygomp4,
-  #                                               is_log_response = is_log_response, is_log_concentration = is_log_concentration,
-  #                                               antigen_settings = antigen_settings, constraint_profile = constraint_profile)
-  #
-  # constraint_models <- list(Y5 = Y5_nls_constraint, Yd5 = Yd5_constraint,
-  #                           Y4 = Y4_nls_constraint,  Yd4 = Yd4_constraint,
-  #                           Ygomp4 = Ygomp4_constraint)
 
   attr(constraint_models, "constraint_profile") <- constraint_profile
 
@@ -872,8 +843,8 @@ make_start_lists <- function(model_constraints,
 
 #' Fit All Candidate Sigmoid Models Using Robust Multi-Start Strategy
 #'
-#' Attempts to fit each of the five candidate models (Y5, Yd5, Y4, Yd4,
-#' Ygomp4) using \code{\link[minpack.lm]{nlsLM}}.  Multiple start vectors
+#' Attempts to fit each of the five candidate models (logistic5, loglogistic5, logistic4, loglogistic4,
+#' gompertz4) using \code{\link[minpack.lm]{nlsLM}}.  Multiple start vectors
 #' are tried; the fit with the lowest AIC is retained.  For low-signal data
 #' two fallback strategies are attempted when all primary starts fail:
 #' \enumerate{
@@ -1196,7 +1167,7 @@ preprocess_robust_curves <- function(data, antigen_settings, response_variable,
 #' optionally handles the case where the lower asymptote (`a`) is fixed.
 #'
 #' @param model Character string specifying the model form.
-#'   One of `"Y4"`, `"Yd4"`, `"Ygomp4"`, `"Y5"`, `"Yd5"`.
+#'   One of `"logistic4"`, `"loglogistic4"`, `"gompertz4"`, `"logistic5"`, `"loglogistic5"`.
 #' @param fit A fitted `nlsLM` model object (from `minpack.lm`).
 #' @param y Numeric scalar. Observed response value.
 #' @param se_y Numeric scalar. Standard error of the response `y`.
@@ -1221,7 +1192,7 @@ preprocess_robust_curves <- function(data, antigen_settings, response_variable,
 #' If `fixed_a` is supplied, gradients are computed using reduced parameter space.
 #'
 #' @export
-propagate_error_analytic <- function(model,         # character: "Y4","Yd4","Ygomp4","Y5","Yd5"
+propagate_error_analytic <- function(model,         # character: "logistic4","loglogistic4","gompertz4","logistic5","loglogistic5"
                                      fit,           # nlsLM object (already fitted)
                                      y,             # observed response
                                      se_y = 0,     # standard error of y (0 if unknown)
@@ -1244,20 +1215,20 @@ propagate_error_analytic <- function(model,         # character: "Y4","Yd4","Ygo
   } else {
     # ----- 2. Evaluate inverse (point estimate) ------------------------------
     x_hat <- switch(model,
-                    Y4      = inv_Y4(y, a = theta["a"], b = theta["b"], c = theta["c"], d = theta["d"]),
-                    Yd4     = inv_Yd4(y, a = theta["a"], b = theta["b"], c = theta["c"], d = theta["d"]),
-                    Ygomp4  = inv_Ygomp4(y, a = theta["a"], b = theta["b"], c = theta["c"], d = theta["d"]),
-                    Y5      = inv_Y5(y, a = theta["a"], b = theta["b"], c = theta["c"], d = theta["d"], g = theta["g"]),
-                    Yd5     = inv_Yd5(y, a = theta["a"], b = theta["b"], c = theta["c"], d = theta["d"], g = theta["g"]),
+                    logistic4      = inv_logistic4(y, a = theta["a"], b = theta["b"], c = theta["c"], d = theta["d"]),
+                    loglogistic4     = inv_loglogistic4(y, a = theta["a"], b = theta["b"], c = theta["c"], d = theta["d"]),
+                    gompertz4  = inv_gompertz4(y, a = theta["a"], b = theta["b"], c = theta["c"], d = theta["d"]),
+                    logistic5      = inv_logistic5(y, a = theta["a"], b = theta["b"], c = theta["c"], d = theta["d"], g = theta["g"]),
+                    loglogistic5     = inv_loglogistic5(y, a = theta["a"], b = theta["b"], c = theta["c"], d = theta["d"], g = theta["g"]),
                     stop("Unsupported model name"))
 
     # ----- 3. Analytic gradient w.r.t. parameters & y -----------------------
     grads <- switch(model,
-                    Y4     = grad_Y4(y, a = theta["a"], b = theta["b"], c = theta["c"], d = theta["d"]),
-                    Yd4    = grad_Yd4(y, a = theta["a"], b = theta["b"], c = theta["c"], d = theta["d"]),
-                    Ygomp4 = grad_Ygomp4(y, a = theta["a"], b = theta["b"], c = theta["c"], d = theta["d"]),
-                    Y5     = grad_Y5(y, a = theta["a"], b = theta["b"], c = theta["c"], d = theta["d"], g = theta["g"]),
-                    Yd5    = grad_Yd5(y, a = theta["a"], b = theta["b"], c = theta["c"], d = theta["d"], g = theta["g"]))
+                    logistic4     = grad_logistic4(y, a = theta["a"], b = theta["b"], c = theta["c"], d = theta["d"]),
+                    loglogistic4    = grad_loglogistic4(y, a = theta["a"], b = theta["b"], c = theta["c"], d = theta["d"]),
+                    gompertz4 = grad_gompertz4(y, a = theta["a"], b = theta["b"], c = theta["c"], d = theta["d"]),
+                    logistic5     = grad_logistic5(y, a = theta["a"], b = theta["b"], c = theta["c"], d = theta["d"], g = theta["g"]),
+                    loglogistic5    = grad_loglogistic5(y, a = theta["a"], b = theta["b"], c = theta["c"], d = theta["d"], g = theta["g"]))
 
     grad_theta <- grads$grad_theta   # named vector (same order as theta)
     grad_y     <- grads$grad_y
@@ -1364,7 +1335,7 @@ diagnose_propagation_inputs <- function(fit, model, fixed_a, y_test = NULL) {
 #' @param pred_df Data frame containing observed responses and their errors.
 #' @param fit A fitted `nlsLM` model object.
 #' @param model Character string specifying the model form.
-#'   One of `"Y4"`, `"Yd4"`, `"Ygomp4"`, `"Y5"`, `"Yd5"`.
+#'   One of `"logistic4"`, `"loglogistic4"`, `"gompertz4"`, `"logistic5"`, `"loglogistic5"`.
 #' @param y_col Character. Column name containing observed responses.
 #' @param se_col Character. Column name containing standard errors of responses.
 #' @param fixed_a Optional numeric scalar. Fixed lower asymptote.
@@ -1396,7 +1367,7 @@ diagnose_propagation_inputs <- function(fit, model, fixed_a, y_test = NULL) {
 #' @export
 propagate_error_dataframe <- function(pred_df,
                                       fit,
-                                      model = c("Y4","Yd4","Ygomp4","Y5","Yd5"),
+                                      model = c("logistic4","loglogistic4","gompertz4","logistic5","loglogistic5"),
                                       y_col,
                                       se_col,
                                       fixed_a,
@@ -1800,8 +1771,8 @@ diagnose_cv_x <- function(df, label = "pred_se",
 #' observed response value in \code{plate_samples} to estimate the
 #' corresponding concentration.
 #'
-#' @param model_name         Character. One of \code{"Y5"}, \code{"Yd5"},
-#'                           \code{"Y4"}, \code{"Yd4"}, \code{"Ygomp4"}.
+#' @param model_name         Character. One of \code{"logistic5"}, \code{"loglogistic5"},
+#'                           \code{"logistic4"}, \code{"loglogistic4"}, \code{"gompertz4"}.
 #' @param fit                Fitted \code{nlsLM} object.
 #' @param plate_samples      Data frame of sample wells with the response
 #'                           column.
@@ -1845,11 +1816,11 @@ calculate_predicted_concentration <- function(model_name, fit,
 
     plate_samples$predicted_concentration <- tryCatch({
       switch(model_name,
-             Y5     = inv_Y5_fixed(plate_samples[[response_variable]], fixed_a=a, b=b, c=c, d=d, g=g),
-             Yd5    = inv_Yd5_fixed(plate_samples[[response_variable]], fixed_a=a, b=b, c=c, d=d, g=g),
-             Y4     = inv_Y4_fixed(plate_samples[[response_variable]],  fixed_a=a, b=b, c=c, d=d),
-             Yd4    = inv_Yd4_fixed(plate_samples[[response_variable]], fixed_a=a, b=b, c=c, d=d),
-             Ygomp4 = inv_Ygomp4_fixed(plate_samples[[response_variable]], fixed_a=a, b=b, c=c, d=d)
+             logistic5     = inv_logistic5_fixed(plate_samples[[response_variable]], fixed_a=a, b=b, c=c, d=d, g=g),
+             loglogistic5    = inv_loglogistic5_fixed(plate_samples[[response_variable]], fixed_a=a, b=b, c=c, d=d, g=g),
+             logistic4     = inv_logistic4_fixed(plate_samples[[response_variable]],  fixed_a=a, b=b, c=c, d=d),
+             loglogistic4    = inv_loglogistic4_fixed(plate_samples[[response_variable]], fixed_a=a, b=b, c=c, d=d),
+             gompertz4 = inv_gompertz4_fixed(plate_samples[[response_variable]], fixed_a=a, b=b, c=c, d=d)
       )
     }, error = function(e) { message("Error: ", e$message); rep(NA_real_, nrow(plate_samples)) })
 
@@ -1858,12 +1829,12 @@ calculate_predicted_concentration <- function(model_name, fit,
 
     plate_samples$predicted_concentration <- tryCatch({
       switch(model_name,
-             Y5     = inv_Y5(plate_samples[[response_variable]],  a=a, b=b, c=c, d=d, g=g),
-             Yd5    = inv_Yd5(plate_samples[[response_variable]], a=a, b=b, c=c, d=d, g=g),
-             Y4     = inv_Y4(plate_samples[[response_variable]],  a=a, b=b, c=c, d=d),
-             Yd4    = inv_Yd4(plate_samples[[response_variable]], a=a, b=b, c=c, d=d),
-             Ygomp4 = { message("Ygomp4 predicted")
-               inv_Ygomp4(plate_samples[[response_variable]], a=a, b=b, c=c, d=d) }
+             logistic5     = inv_logistic5(plate_samples[[response_variable]],  a=a, b=b, c=c, d=d, g=g),
+             loglogistic5    = inv_loglogistic5(plate_samples[[response_variable]], a=a, b=b, c=c, d=d, g=g),
+             logistic4     = inv_logistic4(plate_samples[[response_variable]],  a=a, b=b, c=c, d=d),
+             loglogistic4    = inv_loglogistic4(plate_samples[[response_variable]], a=a, b=b, c=c, d=d),
+             gompertz4 = { message("gompertz4 predicted")
+               inv_gompertz4(plate_samples[[response_variable]], a=a, b=b, c=c, d=d) }
       )
     }, error = function(e) { message("Error: ", e$message); rep(NA_real_, nrow(plate_samples)) })
   }
@@ -1942,7 +1913,7 @@ select_model_fit_AIC <- function(fit_summary,
 #'
 #' @param models_fit_list Named list from \code{\link{compute_robust_curves}}.
 #' @param model_names     Character vector of model names to include (default:
-#'                        \code{c("Y5","Yd5","Y4","Yd4","Ygomp4")}).
+#'                        \code{c("logistic5","loglogistic5","logistic4","loglogistic4","gompertz4")}).
 #' @param verbose         Logical (default \code{TRUE}).
 #'
 #' @return A data frame with columns: \code{model}, \code{converged},
@@ -1950,7 +1921,7 @@ select_model_fit_AIC <- function(fit_summary,
 #'
 #' @export
 summarize_model_fits <- function(models_fit_list,
-                                 model_names = c("Y5","Yd5","Y4","Yd4","Ygomp4"),
+                                 model_names = c("logistic5","loglogistic5","logistic4","loglogistic4","gompertz4"),
                                  verbose = TRUE) {
 
   all_models <- unique(c(model_names, names(models_fit_list)))
@@ -1998,7 +1969,7 @@ summarize_model_fits <- function(models_fit_list,
 #' @export
 summarize_model_parameters <- function(models_fit_list,
                                        level       = 0.95,
-                                       model_names = c("Y5","Yd5","Y4","Yd4","Ygomp4"),
+                                       model_names = c("logistic5","loglogistic5","logistic4","loglogistic4","gompertz4"),
                                        verbose     = TRUE) {
 
   all_models <- unique(names(models_fit_list))

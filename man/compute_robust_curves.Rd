@@ -36,8 +36,8 @@ Named list (one element per model).  Each element is a list with:
 \item{data}{The data used for fitting.}
 }
 \description{
-Attempts to fit each of the five candidate models (Y5, Yd5, Y4, Yd4,
-Ygomp4) using \code{\link[minpack.lm]{nlsLM}}.  Multiple start vectors
+Attempts to fit each of the five candidate models (logistic5, loglogistic5, logistic4, loglogistic4,
+gompertz4) using \code{\link[minpack.lm]{nlsLM}}.  Multiple start vectors
 are tried; the fit with the lowest AIC is retained.  For low-signal data
 two fallback strategies are attempted when all primary starts fail:
 \enumerate{

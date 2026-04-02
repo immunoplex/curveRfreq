@@ -21,7 +21,7 @@ obtain_model_constraints(
 \item{data}{Data frame of preprocessed standard curve data.}
 
 \item{formulas}{Named list of model formulae
-(\code{Y5, Yd5, Y4, Yd4, Ygomp4}).}
+(\code{logistic5, loglogistic5, logistic4, loglogistic4, gompertz4}).}
 
 \item{response_variable}{Character. Response column name.}
 

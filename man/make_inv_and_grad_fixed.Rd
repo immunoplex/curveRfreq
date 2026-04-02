@@ -7,8 +7,8 @@
 make_inv_and_grad_fixed(model, y, fixed_a)
 }
 \arguments{
-\item{model}{Character. One of \code{"Y4"}, \code{"Y5"}, \code{"Yd4"}, \code{"Yd5"},
-\code{"Ygomp4"}.}
+\item{model}{Character. One of \code{"logistic4"}, \code{"logistic5"}, \code{"loglogistic4"}, \code{"loglogistic5"},
+\code{"gompertz4"}.}
 
 \item{y}{Numeric scalar. The observed response value at which to
 evaluate the inverse and its derivatives.}
@@ -51,20 +51,20 @@ partials for \code{a}, \code{b}, \code{c}, \code{d} (and \code{g}).}
 
 \examples{
 # Free-a example
-fns <- make_inv_and_grad_fixed("Y4", y = 5000, fixed_a = NULL)
+fns <- make_inv_and_grad_fixed("logistic4", y = 5000, fixed_a = NULL)
 p <- c(a = 100, b = 1.5, c = 2, d = 20000)
 fns$inv(p)
 fns$grad(p)
 fns$grad_y(p)
 
 # Fixed-a example
-fns2 <- make_inv_and_grad_fixed("Y4", y = 5000, fixed_a = 100)
+fns2 <- make_inv_and_grad_fixed("logistic4", y = 5000, fixed_a = 100)
 p2 <- c(b = 1.5, c = 2, d = 20000)
 fns2$inv(p2)
 fns2$grad(p2)
 
 }
 \seealso{
-\code{\link[=propagate_error_analytic]{propagate_error_analytic()}}, \code{\link[=inv_Y4]{inv_Y4()}}, \code{\link[=grad_Y4]{grad_Y4()}},
-\code{\link[=inv_Y4_fixed]{inv_Y4_fixed()}}, \code{\link[=grad_inv_Y4_fixed]{grad_inv_Y4_fixed()}}
+\code{\link[=propagate_error_analytic]{propagate_error_analytic()}}, \code{\link[=inv_logistic4]{inv_logistic4()}}, \code{\link[=grad_logistic4]{grad_logistic4()}},
+\code{\link[=inv_logistic4_fixed]{inv_logistic4_fixed()}}, \code{\link[=grad_inv_logistic4_fixed]{grad_inv_logistic4_fixed()}}
 }

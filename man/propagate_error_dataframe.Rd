@@ -7,7 +7,7 @@
 propagate_error_dataframe(
   pred_df,
   fit,
-  model = c("Y4", "Yd4", "Ygomp4", "Y5", "Yd5"),
+  model = c("logistic4", "loglogistic4", "gompertz4", "logistic5", "loglogistic5"),
   y_col,
   se_col,
   fixed_a,
@@ -22,7 +22,7 @@ propagate_error_dataframe(
 \item{fit}{A fitted \code{nlsLM} model object.}
 
 \item{model}{Character string specifying the model form.
-One of \code{"Y4"}, \code{"Yd4"}, \code{"Ygomp4"}, \code{"Y5"}, \code{"Yd5"}.}
+One of \code{"logistic4"}, \code{"loglogistic4"}, \code{"gompertz4"}, \code{"logistic5"}, \code{"loglogistic5"}.}
 
 \item{y_col}{Character. Column name containing observed responses.}
 

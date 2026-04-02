@@ -32,26 +32,31 @@ param_user = "seamus.owen.stein@dartmouth.edu"
 library(glue)
 verbose = TRUE
 # models to be considered in the algorithm. If one is not included, it is not considered in the model candidates.
-model_names = c("Y5", "Yd5", "Y4", "Ygomp4") #- no Yd4
+model_names = c("logistic5", "loglogistic5", "logistic4", "loglogistic4", "gompertz4") 
 param_group = "standard_curve_options"
 is_display_log_response = TRUE
 is_display_log_independent = TRUE
 
 project_id = 17
 study_accession = "MADI_01"
-experiment_accession = "IgG1"
+experiment_accession ="IgG1"
+feature = "IgG1"
+# plate = "plate_3"
+# nominal_sample_dilution <- "1000"
 
 ## controls next to figure
 source = "Standard"
 antigen = "victoria"
-plate_nom = "plate_3-1000"
+ plate_nom = "plate_3-1000"
 
 ```
 
 ```{r, load data}
 
-loaded_data <- pull_data(study_accession = study_accession, experiment_accession = experiment_accession, project_id = 17, conn = conn)
-nominal_sample_dilution = unique(loaded_data$standards$nominal_sample_dilution)[1]
+
+
+loaded_data <- pull_data(study_accession = study_accession, experiment_accession = experiment_accession, project_id = project_id, conn = conn)
+#nominal_sample_dilution = unique(loaded_data$standards$nominal_sample_dilution)[1]
 ```
 
 ```{r, response and independent variables}
@@ -72,6 +77,25 @@ study_params <- fetch_study_parameters(study_accession=study_accession, param_us
 print(study_params)
 ```
 
+
+```{r}
+# # Build curve_id in configuration
+# curve_id_selected <- paste(
+#   project_id, study_accession, experiment_accession,
+#   feature, source, antigen,
+#   plate, nominal_sample_dilution,
+#   sep = "|"
+# )
+# 
+# # One-line filter
+# antigen_plate <- select_antigen_plate(
+#   loaded_data         = loaded_data,
+#   curve_id            = curve_id_selected,
+#   antigen_constraints = loaded_data$antigen_constraints,
+#   verbose             = TRUE
+# )
+```
+
 ```{r, select antigen on the plate}
 antigen_plate <-  select_antigen_plate(
         loaded_data          = loaded_data,
@@ -82,6 +106,8 @@ antigen_plate <-  select_antigen_plate(
         plate                = plate_nom,
         antigen_constraints  = antigen_constraints
       )
+
+# antigen_plate$plate_standard
 ```
 
 ```{r, preproccess data}
@@ -182,5 +208,48 @@ best_fit <- tidy.nlsLM(best_fit = best_fit, fixed_a_result = antigen_plate$fixed
                antigen_fit_options = prepped_data$antigen_fit_options, verbose = verbose)
 
 best_fit$best_tidy
+```
+
+```{r}
+se_antigen_table <- compute_antigen_se_table(
+      standards_data = loaded_data$standards,
+      response_col   = response_var,
+      dilution_col   = "dilution",
+      plate_col      = "plate",
+      grouping_cols  = c("project_id", "study_accession", "experiment_accession", 
+                         "source_nom", "antigen", "feature"),
+      verbose        = TRUE
+    )
+
+se_antigen_table
+```
+
+```{r}
+current_se <-  lookup_antigen_se(
+        se_table             = se_antigen_table,
+        study_accession      = study_accession,
+        experiment_accession = experiment_accession,
+        source = source,
+        antigen = antigen,
+        feature = unique(best_fit$best_data$feature)
+      )
+
+current_se
+
+```
+
+
+```{r}
+best_fit <- predict_and_propagate_error(
+        best_fit        = best_fit,
+        response_var    = response_var,
+        antigen_plate   = antigen_plate,
+        study_params    = study_params,
+        se_std_response = current_se,
+        verbose         = verbose
+      )
+
+
+print(head(best_fit$sample_se))
 ```
 

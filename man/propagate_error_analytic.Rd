@@ -8,7 +8,7 @@ propagate_error_analytic(model, fit, y, se_y = 0, fixed_a, verbose = TRUE)
 }
 \arguments{
 \item{model}{Character string specifying the model form.
-One of \code{"Y4"}, \code{"Yd4"}, \code{"Ygomp4"}, \code{"Y5"}, \code{"Yd5"}.}
+One of \code{"logistic4"}, \code{"loglogistic4"}, \code{"gompertz4"}, \code{"logistic5"}, \code{"loglogistic5"}.}
 
 \item{fit}{A fitted \code{nlsLM} model object (from \code{minpack.lm}).}
 

@@ -29,11 +29,11 @@ epsilon to avoid \eqn{\log(0)}).}
 }
 \value{
 Named list of formulas keyed by model name:
-\code{"Y5"}, \code{"Yd5"}, \code{"Y4"}, \code{"Yd4"}, \code{"Ygomp4"}.
+\code{"logistic5"}, \code{"loglogistic5"}, \code{"logistic4"}, \code{"loglogistic4"}, \code{"gompertz4"}.
 }
 \description{
 Returns a named list of \code{\link[stats:nls]{stats::nls()}}-compatible formulas for all
-candidate models (Y5, Yd5, Y4, Yd4, Ygomp4). When \code{fixed_constraint}
+candidate models (logistic5, loglogistic5, logistic4, loglogistic4, gompertz4). When \code{fixed_constraint}
 is supplied, parameter \code{a} (lower asymptote) is substituted as a
 numeric constant in every formula; otherwise \code{a} is a free parameter.
 }
@@ -47,20 +47,24 @@ formula parsing by \code{\link[stats:nls]{stats::nls()}}.
 forms <- select_model_formulas(fixed_constraint = 50,
                                response_variable = "mfi",
                                is_log_response = FALSE,
-                               model_names = c("Y4", "Y5", "Yd4", "Yd5", "Ygomp4"))
+                               model_names = c("logistic4", "logistic5",
+                               "loglogistic4", "loglogistic5",
+                               "gompertz4"))
 names(forms)
-forms$Y4
+forms$logistic4
 
 # Free lower asymptote
 forms_free <- select_model_formulas(fixed_constraint = NULL,
                                     response_variable = "mfi",
                                     is_log_response = FALSE,
-                                    model_names = c("Y4", "Y5", "Yd4", "Yd5", "Ygomp4"))
-forms_free$Y4
+                                    model_names = c("logistic4", "logistic5",
+                                     "loglogistic4", "loglogistic5",
+                                      "gompertz4"))
+forms_free$logistic4
 
 }
 \seealso{
-\code{\link[=Y4]{Y4()}}, \code{\link[=Y5]{Y5()}}, \code{\link[=Yd4]{Yd4()}}, \code{\link[=Yd5]{Yd5()}}, \code{\link[=Ygomp4]{Ygomp4()}} for the
+\code{\link[=logistic4]{logistic4()}}, \code{\link[=logistic5]{logistic5()}}, \code{\link[=loglogistic4]{loglogistic4()}}, \code{\link[=loglogistic5]{loglogistic5()}}, \code{\link[=gompertz4]{gompertz4()}} for the
 underlying model functions; \code{\link[=compute_robust_curves]{compute_robust_curves()}} which
 consumes these formulas.
 }
