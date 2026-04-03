@@ -33,7 +33,7 @@ library(glue)
 verbose = TRUE
 # models to be considered in the algorithm. If one is not included, it is not considered in the model candidates.
 model_names = c("logistic5", "loglogistic5", "logistic4", "loglogistic4", "gompertz4") 
-param_group = "standard_curve_options"
+# param_group = "standard_curve_options"
 is_display_log_response = TRUE
 is_display_log_independent = TRUE
 
@@ -67,13 +67,31 @@ cat("independent variable:", indep_var)
 ```
 
 ```{r, antigen constraints}
-antigen_constraints <- loaded_data$antigen_constraints
-antigen_constraints <- antigen_constraints[antigen_constraints$antigen == antigen,]
+antigen_constraints <- data.frame(
+  study_accession              = "MADI_01",
+  experiment_accession         = "IgG1",
+  antigen                      = "victoria",
+  l_asy_min_constraint         = 0,
+  l_asy_max_constraint         = 0,
+  l_asy_constraint_method      = "default",
+  standard_curve_concentration = 10000,
+  pcov_threshold               = 15,
+  stringsAsFactors             = FALSE
+)
+
 print(antigen_constraints)
 ```
+
 ```{r, study parameters}
-study_params <- fetch_study_parameters(study_accession=study_accession, param_user=param_user, param_group=param_group,
-                                       project_id = project_id, conn)
+study_params <- list(
+  applyProzone       = TRUE,
+  blank_option       = "ignored",
+  #standard_source    = "Standard",
+  is_log_response    = TRUE,
+  is_log_independent = TRUE,
+  mean_mfi           = TRUE
+)
+
 print(study_params)
 ```
 
