@@ -15,7 +15,8 @@ Imports:
     ggplot2,
     patchwork,
     reshape2,
-    dplyr
+    dplyr,
+    plotly
 License: AGPL (>= 3)
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)

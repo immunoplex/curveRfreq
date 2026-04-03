@@ -47,7 +47,7 @@ feature = "IgG1"
 ## controls next to figure
 source = "Standard"
 antigen = "victoria"
- plate_nom = "plate_3-1000"
+plate_nom = "plate_3-1000"
 
 ```
 
@@ -253,3 +253,12 @@ best_fit <- predict_and_propagate_error(
 print(head(best_fit$sample_se))
 ```
 
+```{r, fig.width=14, fig.height= 8, out.width="100%"}
+plot_standard_curve(best_fit = best_fit, is_display_log_independent = is_display_log_independent,
+                    is_display_log_response = is_display_log_response,
+                    pcov_threshold = 15,
+                    study_params = study_params,
+                    response_variable = response_var,
+                    independent_variable = indep_var)
+```
+ 

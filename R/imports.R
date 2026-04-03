@@ -11,4 +11,5 @@ utils::globalVariables(c(
 #' @importFrom patchwork plot_annotation
 #' @importFrom reshape2 melt
 #' @import dplyr
+#' @import plotly
 "_PACKAGE"
