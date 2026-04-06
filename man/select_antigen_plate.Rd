@@ -2,88 +2,114 @@
 % Please edit documentation in R/select_antigen_plate.R
 \name{select_antigen_plate}
 \alias{select_antigen_plate}
-\title{Select and Filter Data for a Specific Antigen-Plate Combination}
+\title{Select and Prepare Antigen Plate Data}
 \usage{
 select_antigen_plate(
   loaded_data,
+  project_id,
   study_accession,
   experiment_accession,
+  feature,
   source,
   antigen,
   plate,
+  nominal_sample_dilution,
+  curve_id_element_order,
   wavelength = WL_NONE,
   antigen_constraints,
   verbose = TRUE
 )
 }
 \arguments{
-\item{loaded_data}{A named list as returned by \code{pull_data()}, containing
-elements \code{standards}, \code{blanks}, \code{samples},
-\code{mcmc_samples}, and \code{mcmc_pred}.}
+\item{loaded_data}{A list containing datasets: \code{standards}, \code{blanks}, \code{samples},
+\code{mcmc_samples}, \code{mcmc_pred}, and \code{antigen_constraints}.}
 
-\item{study_accession}{Character. Study accession identifier.}
+\item{project_id}{Character. Project identifier (used if \code{curve_id} is NULL).}
 
-\item{experiment_accession}{Character. Experiment accession identifier.}
+\item{study_accession}{Character. Study identifier (used if \code{curve_id} is NULL).}
 
-\item{source}{Character. Source label used to filter standards
-(matched against \code{source_nom} if present, otherwise \code{source}).}
+\item{experiment_accession}{Character. Experiment identifier.}
 
-\item{antigen}{Character. Antigen identifier.}
+\item{feature}{Character. Feature name (e.g., IgG1).}
 
-\item{plate}{Character. Plate label in \code{plate_nom} format
-(e.g. \code{"plate_13-1"}).}
+\item{source}{Character. Sample source.}
 
-\item{wavelength}{Character. Wavelength filter for ELISA multi-channel data.
-Defaults to \code{WL_NONE}, which skips wavelength filtering.}
+\item{antigen}{Character. Antigen name.}
 
-\item{antigen_constraints}{Data frame of antigen-level constraints,
-pre-filtered to the relevant antigen. See \code{fetch_antigen_parameters()}.}
+\item{plate}{Character. Plate identifier.}
 
-\item{verbose}{Logical. If \code{TRUE}, prints diagnostic information
-during filtering and constraint resolution. Default \code{TRUE}.}
+\item{nominal_sample_dilution}{Numeric or character. Nominal dilution.}
+
+\item{curve_id_element_order}{named vector of order of curve identifier.}
+
+\item{wavelength}{Optional wavelength filter. Defaults to \code{WL_NONE}.}
+
+\item{antigen_constraints}{Data frame or list containing antigen constraint rules.}
+
+\item{verbose}{Logical. If \code{TRUE}, prints diagnostic messages.}
 }
 \value{
-A named list with the following elements:
-\describe{
-\item{plate_standard}{Data frame of filtered standard curve wells.}
-\item{plate_blanks}{Data frame of filtered blank (buffer) wells.}
-\item{plate_samples}{Data frame of filtered sample wells.}
-\item{plate_mcmc_samples}{Data frame of filtered MCMC sample
-concentration estimates, or an empty data frame if unavailable.}
-\item{plate_mcmc_pred}{Data frame of filtered MCMC prediction grid,
-sorted by \code{x}, or an empty data frame if unavailable.}
-\item{antigen_settings}{Named list of lower asymptote constraint
-parameters from \code{\link{obtain_lower_constraint}}.}
-\item{fixed_a_result}{Numeric scalar if the lower asymptote is fixed,
-or \code{NULL} if it is a free parameter.}
-\item{std_error_blank}{Numeric. Standard error of blank responses.}
+A list containing:
+\itemize{
+\item \code{plate_standard} Filtered standard curve data.
+\item \code{plate_blanks} Filtered blank data.
+\item \code{plate_samples} Filtered sample data.
+\item \code{plate_mcmc_samples} Filtered MCMC samples (if available).
+\item \code{plate_mcmc_pred} Filtered and sorted MCMC predictions (if available).
+\item \code{antigen_settings} Output of \code{obtain_lower_constraint()}.
+\item \code{fixed_a_result} Validated lower asymptote.
+\item \code{std_error_blank} Standard error of blank measurements.
+\item \code{curve_id} curve id object with attributes of the parts it uses to be constructed.
 }
-Returns \code{NULL} if no standard curve data is found for the specified
-combination of \code{source}, \code{antigen}, and \code{plate}.
 }
 \description{
-Filters standards, blanks, samples, MCMC samples, and MCMC predictions
-from a loaded data object for a specific antigen, source, and plate
-combination. Also resolves antigen settings, the fixed lower asymptote,
-and blank standard error for downstream curve fitting.
+Filters and prepares standard curves, blanks, samples, and optional MCMC outputs
+for a specific antigen plate, identified either by a full \code{curve_id} or by its
+component fields.
 }
 \details{
-Filtering uses \code{source_nom} over \code{source} when available, which
-is important for ELISA data where the source label encodes wavelength
-information (e.g. \code{"Sando|450_nm"}).
-
-For ELISA data with multiple wavelength channels, pass the relevant
-\code{wavelength} value to filter all data frames consistently.
-
-The \code{plate} argument should match the \code{plate_nom} column, which
-is constructed as \code{paste(plate, nominal_sample_dilution, sep = "-")}.
-The nominal dilution suffix is stripped internally when calling
-\code{\link{obtain_lower_constraint}}.
+This function supports two input modes:
+\itemize{
+\item \strong{curve_id mode (preferred):} Provide a full \code{curve_id} string.
+\item \strong{component mode:} Provide all individual fields used to construct
+the \code{curve_id}.
 }
-\seealso{
-\code{pull_data},
-\code{\link{obtain_lower_constraint}},
-\code{\link{resolve_fixed_lower_asymptote}},
-\code{\link{validate_fixed_lower_asymptote}},
-\code{\link{get_blank_se}}
+
+If both are supplied, \code{curve_id} takes precedence and missing component arguments
+are automatically backfilled.
+
+\strong{Deprecated behavior:}
+Passing a \code{curve_id} string via \code{study_accession} is deprecated and will trigger
+a warning. Use the \code{curve_id} argument instead.
+
+\strong{Matching logic:}
+Filtering is performed using exact string matching on the \code{curve_id} column.
+Attributes on \code{curve_id} are ignored, ensuring compatibility with database inputs.
+}
+\examples{
+# Preferred usage
+\dontrun{
+select_antigen_plate(
+  loaded_data = loaded_data,
+  curve_id = "proj|study|exp|IgG1|serum|pt|plate1|100",
+  antigen_constraints = loaded_data$antigen_constraints
+)
+}
+
+# Component-based usage
+\dontrun{
+select_antigen_plate(
+  loaded_data = loaded_data,
+  project_id = "proj",
+  study_accession = "study",
+  experiment_accession = "exp",
+  feature = "IgG1",
+  source = "serum",
+  antigen = "pt",
+  plate = "plate1",
+  nominal_sample_dilution = 100,
+  antigen_constraints = loaded_data$antigen_constraints
+)
+}
+
 }

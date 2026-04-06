@@ -97,7 +97,7 @@
 #'
 #' @export
 
-tidy.nlsLM <- function(best_fit, fixed_a_result, model_constraints, antigen_settings, antigen_fit_options,  verbose = TRUE) {
+tidy.nlsLM <- function(best_fit, fixed_a_result, model_constraints, antigen_settings, antigen_fit_options, verbose = TRUE) {
 
   if (antigen_settings$l_asy_constraint_method == "range_of_blanks" &&
       antigen_fit_options$is_log_response) {
@@ -148,16 +148,23 @@ tidy.nlsLM <- function(best_fit, fixed_a_result, model_constraints, antigen_sett
     estimate = out[, "Estimate"],
     std.error = out[, "Std. Error"],
     statistic = out[, "t value"],
-    p.value = out[, "Pr(>|t|)"]
+    p.value = out[, "Pr(>|t|)"],
+    curve_id =  unique(best_fit$best_data$curve_id)
   )
 
-  tidy_df$study_accession <- unique(best_fit$best_data$study_accession)
-  tidy_df$experiment_accession <- unique(best_fit$best_data$experiment_accession)
-  tidy_df$nominal_sample_dilution <- unique(best_fit$best_data$nominal_sample_dilution)
-  tidy_df$antigen <- unique(best_fit$best_data$antigen)
-  tidy_df$plateid <- unique(best_fit$best_data$plateid)
-  tidy_df$plate <- unique(best_fit$best_data$plate)
-  tidy_df$source <- unique(best_fit$best_data$source)
+  # tidy_df$curve_id <- unique(best_fit$best_data$curve_id)
+  # best_fit$best_data <- parse_curve_id(best_fit$best_data, order = curve_id_element_order,
+  #                                      keep = c("study_accession", "experiment_accession", "nominal_sample_dilution",
+  #                                               "plate", "antigen", "source", "wavelength")
+  # )
+
+  # tidy_df$study_accession <- unique(best_fit$best_data$study_accession)
+  # tidy_df$experiment_accession <- unique(best_fit$best_data$experiment_accession)
+  # tidy_df$nominal_sample_dilution <- unique(best_fit$best_data$nominal_sample_dilution)
+  # tidy_df$antigen <- unique(best_fit$best_data$antigen)
+  # #tidy_df$plateid <- unique(best_fit$best_data$plateid)
+  # tidy_df$plate <- unique(best_fit$best_data$plate)
+  # tidy_df$source <- unique(best_fit$best_data$source)
 
   if (!is.null(fixed_a_result)) {
     a_fixed <- tibble::tibble(
@@ -166,13 +173,14 @@ tidy.nlsLM <- function(best_fit, fixed_a_result, model_constraints, antigen_sett
       std.error = 0,
       statistic = NA_real_,
       p.value = NA_real_,
-      study_accession = unique(best_fit$best_data$study_accession),
-      experiment_accession = unique(best_fit$best_data$experiment_accession),
-      nominal_sample_dilution = unique(best_fit$best_data$nominal_sample_dilution),
-      antigen = unique(best_fit$best_data$antigen),
-      plateid = unique(best_fit$best_data$plateid),
-      plate = unique(best_fit$best_data$plate),
-      source = unique(best_fit$best_data$source)
+      curve_id = unique(best_fit$best_data$curve_id)
+      # study_accession = unique(best_fit$best_data$study_accession),
+      # experiment_accession = unique(best_fit$best_data$experiment_accession),
+      # nominal_sample_dilution = unique(best_fit$best_data$nominal_sample_dilution),
+      # antigen = unique(best_fit$best_data$antigen),
+      # #plateid = unique(best_fit$best_data$plateid),
+      # plate = unique(best_fit$best_data$plate),
+      # source = unique(best_fit$best_data$source)
     )
     tidy_df <- rbind(a_fixed, tidy_df)
   }

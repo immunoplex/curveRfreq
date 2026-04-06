@@ -6,6 +6,8 @@
 \usage{
 compute_antigen_se_table(
   standards_data,
+  curve_id_element_order,
+  curve_col = "curve_id",
   response_col = "mfi",
   dilution_col = "dilution",
   plate_col = "plate_nom",
@@ -17,6 +19,10 @@ compute_antigen_se_table(
 }
 \arguments{
 \item{standards_data}{data.frame containing all standard curve data}
+
+\item{curve_id_element_order}{the string of the names in order of the elements in the curve_id}
+
+\item{curve_col}{name of the curve identifier colummn (default = "curve_id")}
 
 \item{response_col}{name of the response column (e.g., "mfi")}
 

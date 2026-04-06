@@ -1,226 +1,708 @@
-
-
-
-#' Select and Filter Data for a Specific Antigen-Plate Combination
+#' Select and Prepare Antigen Plate Data
 #'
-#' Filters standards, blanks, samples, MCMC samples, and MCMC predictions
-#' from a loaded data object for a specific antigen, source, and plate
-#' combination. Also resolves antigen settings, the fixed lower asymptote,
-#' and blank standard error for downstream curve fitting.
+#' Filters and prepares standard curves, blanks, samples, and optional MCMC outputs
+#' for a specific antigen plate, identified either by a full `curve_id` or by its
+#' component fields.
 #'
-#' @param loaded_data A named list as returned by \code{pull_data()}, containing
-#'   elements \code{standards}, \code{blanks}, \code{samples},
-#'   \code{mcmc_samples}, and \code{mcmc_pred}.
-#' @param study_accession Character. Study accession identifier.
-#' @param experiment_accession Character. Experiment accession identifier.
-#' @param source Character. Source label used to filter standards
-#'   (matched against \code{source_nom} if present, otherwise \code{source}).
-#' @param antigen Character. Antigen identifier.
-#' @param plate Character. Plate label in \code{plate_nom} format
-#'   (e.g. \code{"plate_13-1"}).
-#' @param wavelength Character. Wavelength filter for ELISA multi-channel data.
-#'   Defaults to \code{WL_NONE}, which skips wavelength filtering.
-#' @param antigen_constraints Data frame of antigen-level constraints,
-#'   pre-filtered to the relevant antigen. See \code{fetch_antigen_parameters()}.
-#' @param verbose Logical. If \code{TRUE}, prints diagnostic information
-#'   during filtering and constraint resolution. Default \code{TRUE}.
+#' This function supports two input modes:
+#' \itemize{
+#'   \item \strong{curve_id mode (preferred):} Provide a full `curve_id` string.
+#'   \item \strong{component mode:} Provide all individual fields used to construct
+#'         the `curve_id`.
+#' }
 #'
-#' @return A named list with the following elements:
-#'   \describe{
-#'     \item{plate_standard}{Data frame of filtered standard curve wells.}
-#'     \item{plate_blanks}{Data frame of filtered blank (buffer) wells.}
-#'     \item{plate_samples}{Data frame of filtered sample wells.}
-#'     \item{plate_mcmc_samples}{Data frame of filtered MCMC sample
-#'       concentration estimates, or an empty data frame if unavailable.}
-#'     \item{plate_mcmc_pred}{Data frame of filtered MCMC prediction grid,
-#'       sorted by \code{x}, or an empty data frame if unavailable.}
-#'     \item{antigen_settings}{Named list of lower asymptote constraint
-#'       parameters from \code{\link{obtain_lower_constraint}}.}
-#'     \item{fixed_a_result}{Numeric scalar if the lower asymptote is fixed,
-#'       or \code{NULL} if it is a free parameter.}
-#'     \item{std_error_blank}{Numeric. Standard error of blank responses.}
-#'   }
-#'   Returns \code{NULL} if no standard curve data is found for the specified
-#'   combination of \code{source}, \code{antigen}, and \code{plate}.
+#' If both are supplied, `curve_id` takes precedence and missing component arguments
+#' are automatically backfilled.
+#'
+#' @param loaded_data A list containing datasets: `standards`, `blanks`, `samples`,
+#' `mcmc_samples`, `mcmc_pred`, and `antigen_constraints`.
+#' @param project_id Character. Project identifier (used if `curve_id` is NULL).
+#' @param study_accession Character. Study identifier (used if `curve_id` is NULL).
+#' @param experiment_accession Character. Experiment identifier.
+#' @param feature Character. Feature name (e.g., IgG1).
+#' @param source Character. Sample source.
+#' @param antigen Character. Antigen name.
+#' @param plate Character. Plate identifier.
+#' @param nominal_sample_dilution Numeric or character. Nominal dilution.
+#' @param curve_id_element_order named vector of order of curve identifier.
+#' @param wavelength Optional wavelength filter. Defaults to `WL_NONE`.
+#' @param antigen_constraints Data frame or list containing antigen constraint rules.
+#' @param verbose Logical. If `TRUE`, prints diagnostic messages.
+#'
+#' @return A list containing:
+#' \itemize{
+#'   \item `plate_standard` Filtered standard curve data.
+#'   \item `plate_blanks` Filtered blank data.
+#'   \item `plate_samples` Filtered sample data.
+#'   \item `plate_mcmc_samples` Filtered MCMC samples (if available).
+#'   \item `plate_mcmc_pred` Filtered and sorted MCMC predictions (if available).
+#'   \item `antigen_settings` Output of `obtain_lower_constraint()`.
+#'   \item `fixed_a_result` Validated lower asymptote.
+#'   \item `std_error_blank` Standard error of blank measurements.
+#'   \item `curve_id` curve id object with attributes of the parts it uses to be constructed.
+#' }
 #'
 #' @details
-#' Filtering uses \code{source_nom} over \code{source} when available, which
-#' is important for ELISA data where the source label encodes wavelength
-#' information (e.g. \code{"Sando|450_nm"}).
+#' \strong{Deprecated behavior:}
+#' Passing a `curve_id` string via `study_accession` is deprecated and will trigger
+#' a warning. Use the `curve_id` argument instead.
 #'
-#' For ELISA data with multiple wavelength channels, pass the relevant
-#' \code{wavelength} value to filter all data frames consistently.
+#' \strong{Matching logic:}
+#' Filtering is performed using exact string matching on the `curve_id` column.
+#' Attributes on `curve_id` are ignored, ensuring compatibility with database inputs.
 #'
-#' The \code{plate} argument should match the \code{plate_nom} column, which
-#' is constructed as \code{paste(plate, nominal_sample_dilution, sep = "-")}.
-#' The nominal dilution suffix is stripped internally when calling
-#' \code{\link{obtain_lower_constraint}}.
+#' @examples
+#' # Preferred usage
+#' \dontrun{
+#' select_antigen_plate(
+#'   loaded_data = loaded_data,
+#'   curve_id = "proj|study|exp|IgG1|serum|pt|plate1|100",
+#'   antigen_constraints = loaded_data$antigen_constraints
+#' )
+#' }
 #'
-#' @seealso
-#'   \code{pull_data},
-#'   \code{\link{obtain_lower_constraint}},
-#'   \code{\link{resolve_fixed_lower_asymptote}},
-#'   \code{\link{validate_fixed_lower_asymptote}},
-#'   \code{\link{get_blank_se}}
+#' # Component-based usage
+#' \dontrun{
+#' select_antigen_plate(
+#'   loaded_data = loaded_data,
+#'   project_id = "proj",
+#'   study_accession = "study",
+#'   experiment_accession = "exp",
+#'   feature = "IgG1",
+#'   source = "serum",
+#'   antigen = "pt",
+#'   plate = "plate1",
+#'   nominal_sample_dilution = 100,
+#'   antigen_constraints = loaded_data$antigen_constraints
+#' )
+#' }
+#'
 #' @export
-select_antigen_plate <- function(loaded_data,
-                                 study_accession,
-                                 experiment_accession,
-                                 source,
-                                 antigen,
-                                 plate,
-                                 wavelength          = WL_NONE,
-                                 antigen_constraints,
-                                 verbose             = TRUE) {
+select_antigen_plate <- function(
+    loaded_data,
+    # curve_id = NULL,
 
-  if (verbose) {
-    message("[select_antigen_plate] plate: ", plate)
-    message("[select_antigen_plate] wavelength: ", wavelength)
-    message("[select_antigen_plate] antigens in standards: ",
-            paste(unique(loaded_data$standards$antigen), collapse = ", "))
-    message("[select_antigen_plate] source_nom values: ",
-            paste(unique(loaded_data$standards$source_nom), collapse = ", "))
-    message("[select_antigen_plate] plate_nom values: ",
-            paste(unique(loaded_data$standards$plate_nom), collapse = ", "))
-  }
+    # Component fields (used if curve_id is NULL)
+    project_id,
+    study_accession,
+    experiment_accession,
+    feature,
+    source,
+    antigen,
+    plate,
+    nominal_sample_dilution,
+    curve_id_element_order,
 
-  # ── Filter standards ───────────────────────────────────────────────
-  if ("source_nom" %in% names(loaded_data$standards)) {
-    plate_standard <- loaded_data$standards[
-      loaded_data$standards$source_nom == source &
-        loaded_data$standards$antigen    == antigen &
-        loaded_data$standards$plate_nom  == plate, ]
-  } else {
-    plate_standard <- loaded_data$standards[
-      loaded_data$standards$source    == source &
-        loaded_data$standards$antigen   == antigen &
-        loaded_data$standards$plate_nom == plate, ]
-  }
+    wavelength          = WL_NONE,
+    antigen_constraints,
+    verbose             = TRUE
+    ) {
 
-  # ── Filter by wavelength for standards ────────────────────────────
-  if ("wavelength" %in% names(plate_standard) &&
-      !is.null(wavelength) && wavelength != WL_NONE) {
-    plate_standard$wavelength <- normalize_wavelength(plate_standard$wavelength)
-    wl_filter <- plate_standard$wavelength == normalize_wavelength(wavelength)
-    if (any(wl_filter)) {
-      plate_standard <- plate_standard[wl_filter, , drop = FALSE]
-    } else {
-      message(sprintf(
-        "[select_antigen_plate] WARNING: wavelength '%s' matched 0 rows; keeping all %d rows. Wavelengths in data: %s",
-        wavelength, nrow(plate_standard),
-        paste(unique(plate_standard$wavelength), collapse = ", ")
+      # ── Backward compatibility: deprecated usage ─────────────────────
+  curve_id <-  make_curve_id_string(
+    project_id              = project_id,
+    study_accession         = study_accession,
+    experiment_accession    = experiment_accession,
+    feature                 = feature,
+    source                  = source,
+    antigen                 = antigen,
+    plate                   = plate,
+    nominal_sample_dilution = nominal_sample_dilution,
+    wavelength              = wavelength,
+    order                   = curve_id_element_order
+  )
+      # if (is.null(curve_id) &&
+      #     !missing(study_accession) &&
+      #     is.character(study_accession) &&
+      #     length(study_accession) == 1 &&
+      #     grepl("\\:", study_accession)) {
+      #
+      #   warning("[select_antigen_plate] Passing curve_id via `study_accession` is deprecated. Use `curve_id=` instead.")
+      #   curve_id <- study_accession
+      # }
+
+      target_curve_id <- NULL
+      parsed <- NULL
+
+      # ── Mode 1: curve_id provided ────────────────────────────────────
+      if (!is.null(curve_id)) {
+
+        parsed_df <- tryCatch(
+          parse_curve_id(
+            data = data.frame(curve_id = curve_id, stringsAsFactors = FALSE),
+            order = curve_id_element_order,
+            validate = TRUE
+          ),
+          error = function(e) {
+            stop("[select_antigen_plate] Invalid curve_id: ", conditionMessage(e))
+          }
+        )
+
+        parsed <- as.list(parsed_df[1, , drop = TRUE])
+        target_curve_id <- as.character(curve_id)
+
+        if (verbose) {
+          message("[select_antigen_plate] Using curve_id; parsed fields: ",
+                  paste(names(parsed), parsed, sep = "=", collapse = ", "))
+        }
+
+        # Backfill missing args from parsed values
+        if (missing(project_id))              project_id              <- parsed[["project_id"]]
+        if (missing(study_accession))         study_accession         <- parsed[["study_accession"]]
+        if (missing(experiment_accession))    experiment_accession    <- parsed[["experiment_accession"]]
+        if (missing(feature))                 feature                 <- parsed[["feature"]]
+        if (missing(source))                  source                  <- parsed[["source"]]
+        if (missing(antigen))                 antigen                 <- parsed[["antigen"]]
+        if (missing(plate))                   plate                   <- parsed[["plate"]]
+        if (missing(nominal_sample_dilution)) nominal_sample_dilution <- parsed[["nominal_sample_dilution"]]
+        if (missing(wavelength))              wavelength              <- parsed[["wavelength"]]
+
+      } else {
+
+        # ── Mode 2: build curve_id from components ─────────────────────
+        required_args <- c(
+          "project_id", "study_accession", "experiment_accession",
+          "feature", "source", "antigen", "plate", "nominal_sample_dilution"
+        )
+
+        missing_args <- required_args[!vapply(required_args, exists, logical(1), inherits = FALSE)]
+
+        if (length(missing_args) > 0) {
+          stop("[select_antigen_plate] Missing required arguments: ",
+               paste(missing_args, collapse = ", "))
+        }
+
+        # ensure wavelength is defined
+        if (missing(wavelength) || is.null(wavelength)) {
+          wavelength <- WL_NONE
+        }
+
+        target_curve_id <- make_curve_id_string(
+          project_id              = project_id,
+          study_accession         = study_accession,
+          experiment_accession    = experiment_accession,
+          feature                 = feature,
+          source                  = source,
+          antigen                 = antigen,
+          plate                   = plate,
+          nominal_sample_dilution = nominal_sample_dilution,
+          wavelength              = wavelength,
+          order                   = curve_id_element_order
+        )
+
+        # also construct parsed list for consistency
+        parsed <- as.list(setNames(
+          strsplit(target_curve_id, ":", fixed = TRUE)[[1]],
+          curve_id_element_order
+        ))
+      }
+
+      # ── Logging ──────────────────────────────────────────────────────
+      if (verbose) {
+        message("[select_antigen_plate] target curve_id: ", target_curve_id)
+        message("[select_antigen_plate] wavelength: ", wavelength)
+      }
+
+      # ── Helper: filter by curve_id ───────────────────────────────────
+      .filter_by_curve_id <- function(df, cid) {
+        if (is.null(df) || nrow(df) == 0 || !"curve_id" %in% names(df)) {
+          return(df)
+        }
+        df[df$curve_id == cid, , drop = FALSE]
+      }
+
+      # ── Filter datasets ──────────────────────────────────────────────
+      plate_standard     <- .filter_by_curve_id(loaded_data$standards, target_curve_id)
+      plate_blanks       <- .filter_by_curve_id(loaded_data$blanks, target_curve_id)
+      plate_samples      <- .filter_by_curve_id(loaded_data$samples, target_curve_id)
+
+      plate_mcmc_samples <- if (!is.null(loaded_data$mcmc_samples) &&
+                                nrow(loaded_data$mcmc_samples) > 0) {
+        .filter_by_curve_id(loaded_data$mcmc_samples, target_curve_id)
+      } else {
+        data.frame()
+      }
+
+      plate_mcmc_pred <- if (!is.null(loaded_data$mcmc_pred) &&
+                             nrow(loaded_data$mcmc_pred) > 0) {
+        .filter_by_curve_id(loaded_data$mcmc_pred, target_curve_id)
+      } else {
+        data.frame()
+      }
+
+      # ── Wavelength filtering ─────────────────────────────────────────
+      if (!is.null(wavelength) && wavelength != WL_NONE) {
+
+        .filter_wl <- function(df) {
+          if ("wavelength" %in% names(df) && nrow(df) > 0) {
+            df$wavelength <- normalize_wavelength(df$wavelength)
+            mask <- df$wavelength == normalize_wavelength(wavelength)
+            if (any(mask)) return(df[mask, , drop = FALSE])
+          }
+          df
+        }
+
+        plate_standard     <- .filter_wl(plate_standard)
+        plate_blanks       <- .filter_wl(plate_blanks)
+        plate_samples      <- .filter_wl(plate_samples)
+        plate_mcmc_samples <- .filter_wl(plate_mcmc_samples)
+        plate_mcmc_pred    <- .filter_wl(plate_mcmc_pred)
+      }
+
+      # ── Guard: no standard data ──────────────────────────────────────
+      if (is.null(plate_standard) || nrow(plate_standard) == 0) {
+        warning("[select_antigen_plate] No standard curve data found for curve_id: ",
+                target_curve_id)
+        return(NULL)
+      }
+
+      # ── Strip dilution suffix ────────────────────────────────────────
+      plate_c <- sub("-.*$", "", plate)
+
+      # ── Resolve response column ──────────────────────────────────────
+      response_col <- resolve_response_col(plate_standard)
+
+      # ── Antigen settings ─────────────────────────────────────────────
+      antigen_settings <- obtain_lower_constraint(
+        dat                  = plate_standard,
+        antigen              = antigen,
+        study_accession      = study_accession,
+        experiment_accession = experiment_accession,
+        plate                = plate_c,
+        plate_blanks         = plate_blanks,
+        antigen_constraints  = antigen_constraints,
+        response_col         = response_col
+      )
+
+      # ── Fixed lower asymptote ────────────────────────────────────────
+      fixed_a_result <- resolve_fixed_lower_asymptote(antigen_settings)
+      fixed_a_result <- validate_fixed_lower_asymptote(
+        fixed_a_result_raw = fixed_a_result,
+        verbose            = verbose
+      )
+
+      # ── Blank SE ─────────────────────────────────────────────────────
+      std_error_blank <- get_blank_se(antigen_settings = antigen_settings)
+
+      # ── Sort predictions ─────────────────────────────────────────────
+      if (nrow(plate_mcmc_pred) > 0 && "x" %in% names(plate_mcmc_pred)) {
+        plate_mcmc_pred <- plate_mcmc_pred[order(plate_mcmc_pred$x), , drop = FALSE]
+      }
+
+      # ── Logging counts ───────────────────────────────────────────────
+      if (verbose) {
+        counts <- c(
+          standard     = nrow(plate_standard),
+          blanks       = nrow(plate_blanks),
+          samples      = nrow(plate_samples),
+          mcmc_samples = nrow(plate_mcmc_samples),
+          mcmc_pred    = nrow(plate_mcmc_pred)
+        )
+
+        message(
+          " | counts: ",
+          paste(names(counts), counts, sep = "=", collapse = ", "),
+          " \nCompleted"
+        )
+      }
+
+      # ── Return ───────────────────────────────────────────────────────
+      return(list(
+        plate_standard     = plate_standard,
+        plate_blanks       = plate_blanks,
+        plate_samples      = plate_samples,
+        plate_mcmc_samples = plate_mcmc_samples,
+        plate_mcmc_pred    = plate_mcmc_pred,
+        antigen_settings   = antigen_settings,
+        fixed_a_result     = fixed_a_result,
+        std_error_blank    = std_error_blank,
+
+        curve_id           = target_curve_id,
+        curve_id_fields    = parsed
       ))
     }
+# select_antigen_plate <- function(
+#     loaded_data,
+#     curve_id = NULL,
+#
+#     # Component fields (used if curve_id is NULL)
+#     project_id,
+#     study_accession,
+#     experiment_accession,
+#     feature,
+#     source,
+#     antigen,
+#     plate,
+#     nominal_sample_dilution,
+#
+#     wavelength          = WL_NONE,
+#     antigen_constraints,
+#     verbose             = TRUE
+# ) {
+#
+#   # ── Backward compatibility: detect deprecated usage ──────────────
+#   if (is.null(curve_id) &&
+#       !missing(study_accession) &&
+#       is.character(study_accession) &&
+#       length(study_accession) == 1 &&
+#       grepl("\\:", study_accession)) {
+#
+#     warning("[select_antigen_plate] Passing curve_id via `study_accession` is deprecated. Use `curve_id=` instead.")
+#     curve_id <- study_accession
+#   }
+#
+#   target_curve_id <- NULL
+#
+#   # ── Mode 1: curve_id provided ────────────────────────────────────
+#   if (!is.null(curve_id)) {
+#
+#     parsed_df <- parse_curve_id(
+#       data = data.frame(curve_id = curve_id, stringsAsFactors = FALSE),
+#       order = curve_id_element_order,
+#       validate = TRUE
+#     )
+#
+#     parsed <- as.list(parsed_df[1, curve_id_element_order])
+#
+#     # parsed <- tryCatch(
+#     #   # parse_curve_id_string(curve_id),
+#     #   error = function(e) {
+#     #     stop("[select_antigen_plate] Invalid curve_id: ", conditionMessage(e))
+#     #   }
+#     # )
+#
+#     if (verbose) {
+#       message("[select_antigen_plate] Using curve_id; parsed fields: ",
+#               paste(names(parsed), parsed, sep = "=", collapse = ", "))
+#     }
+#
+#     # preserve its attributes
+#     curve_id_object <- curve_id
+#     target_curve_id <- as.character(curve_id)
+#
+#     # Backfill only missing args
+#     if (missing(project_id))              project_id              <- parsed[["project_id"]]
+#     if (missing(study_accession))         study_accession         <- parsed[["study_accession"]]
+#     if (missing(experiment_accession))    experiment_accession    <- parsed[["experiment_accession"]]
+#     if (missing(feature))                 feature                 <- parsed[["feature"]]
+#     if (missing(source))                  source                  <- parsed[["source"]]
+#     if (missing(antigen))                 antigen                 <- parsed[["antigen"]]
+#     if (missing(plate))                   plate                   <- parsed[["plate"]]
+#     if (missing(nominal_sample_dilution)) nominal_sample_dilution <- parsed[["nominal_sample_dilution"]]
+#
+#   } else {
+#
+#     # ── Mode 2: build curve_id from components ─────────────────────
+#     required_args <- c(
+#       "project_id", "study_accession", "experiment_accession",
+#       "feature", "source", "antigen", "plate", "nominal_sample_dilution"
+#     )
+#
+#     missing_args <- required_args[!vapply(required_args, exists, logical(1), inherits = FALSE)]
+#
+#     if (length(missing_args) > 0) {
+#       stop("[select_antigen_plate] Missing required arguments: ",
+#            paste(missing_args, collapse = ", "))
+#     }
+#
+#     target_curve_id <- as.character(make_curve_id_string(
+#       project_id              = project_id,
+#       study_accession         = study_accession,
+#       experiment_accession    = experiment_accession,
+#       feature                 = feature,
+#       source                  = source,
+#       antigen                 = antigen,
+#       plate                   = plate,
+#       nominal_sample_dilution = nominal_sample_dilution
+#     ))
+#   }
+#
+#   # ── Logging ──────────────────────────────────────────────────────
+#   if (verbose) {
+#     message("[select_antigen_plate] target curve_id: ", target_curve_id)
+#     message("[select_antigen_plate] wavelength: ", wavelength)
+#   }
+#
+#   # ── Helper: filter by curve_id ───────────────────────────────────
+#   .filter_by_curve_id <- function(df, cid) {
+#     if (is.null(df) || nrow(df) == 0 || !"curve_id" %in% names(df)) {
+#       return(df)
+#     }
+#     df[df$curve_id == cid, , drop = FALSE]
+#   }
+#
+#   # ── Filter datasets ──────────────────────────────────────────────
+#   plate_standard     <- .filter_by_curve_id(loaded_data$standards, target_curve_id)
+#   plate_blanks       <- .filter_by_curve_id(loaded_data$blanks, target_curve_id)
+#   plate_samples      <- .filter_by_curve_id(loaded_data$samples, target_curve_id)
+#
+#   plate_mcmc_samples <- if (!is.null(loaded_data$mcmc_samples) &&
+#                             nrow(loaded_data$mcmc_samples) > 0) {
+#     .filter_by_curve_id(loaded_data$mcmc_samples, target_curve_id)
+#   } else {
+#     data.frame()
+#   }
+#
+#   plate_mcmc_pred <- if (!is.null(loaded_data$mcmc_pred) &&
+#                          nrow(loaded_data$mcmc_pred) > 0) {
+#     .filter_by_curve_id(loaded_data$mcmc_pred, target_curve_id)
+#   } else {
+#     data.frame()
+#   }
+#
+#   # ── Wavelength filtering ─────────────────────────────────────────
+#   if (!is.null(wavelength) && wavelength != WL_NONE) {
+#
+#     .filter_wl <- function(df) {
+#       if ("wavelength" %in% names(df) && nrow(df) > 0) {
+#         df$wavelength <- normalize_wavelength(df$wavelength)
+#         mask <- df$wavelength == normalize_wavelength(wavelength)
+#         if (any(mask)) return(df[mask, , drop = FALSE])
+#       }
+#       df
+#     }
+#
+#     plate_standard     <- .filter_wl(plate_standard)
+#     plate_blanks       <- .filter_wl(plate_blanks)
+#     plate_samples      <- .filter_wl(plate_samples)
+#     plate_mcmc_samples <- .filter_wl(plate_mcmc_samples)
+#     plate_mcmc_pred    <- .filter_wl(plate_mcmc_pred)
+#   }
+#
+#   # ── Guard: no standard data ──────────────────────────────────────
+#   if (is.null(plate_standard) || nrow(plate_standard) == 0) {
+#     warning("[select_antigen_plate] No standard curve data found for curve_id: ",
+#             target_curve_id)
+#     return(NULL)
+#   }
+#
+#   # ── Strip dilution suffix ────────────────────────────────────────
+#   plate_c <- sub("-.*$", "", plate)
+#
+#   # ── Resolve response column ──────────────────────────────────────
+#   response_col <- resolve_response_col(plate_standard)
+#
+#   # ── Antigen settings ─────────────────────────────────────────────
+#   antigen_settings <- obtain_lower_constraint(
+#     dat                  = plate_standard,
+#     antigen              = antigen,
+#     study_accession      = study_accession,
+#     experiment_accession = experiment_accession,
+#     plate                = plate_c,
+#     plate_blanks         = plate_blanks,
+#     antigen_constraints  = antigen_constraints,
+#     response_col         = response_col
+#   )
+#
+#   # ── Fixed lower asymptote ────────────────────────────────────────
+#   fixed_a_result <- resolve_fixed_lower_asymptote(antigen_settings)
+#   fixed_a_result <- validate_fixed_lower_asymptote(
+#     fixed_a_result_raw = fixed_a_result,
+#     verbose            = verbose
+#   )
+#
+#   # ── Blank SE ─────────────────────────────────────────────────────
+#   std_error_blank <- get_blank_se(antigen_settings = antigen_settings)
+#
+#   # ── Sort predictions ─────────────────────────────────────────────
+#   if (nrow(plate_mcmc_pred) > 0 && "x" %in% names(plate_mcmc_pred)) {
+#     plate_mcmc_pred <- plate_mcmc_pred[order(plate_mcmc_pred$x), , drop = FALSE]
+#   }
+#
+#   if (verbose) {
+#     counts <- c(
+#       standard     = nrow(plate_standard),
+#       blanks       = nrow(plate_blanks),
+#       samples      = nrow(plate_samples),
+#       mcmc_samples = nrow(plate_mcmc_samples),
+#       mcmc_pred    = nrow(plate_mcmc_pred)
+#     )
+#
+#     message(
+#       " | counts: ",
+#       paste(names(counts), counts, sep = "=", collapse = ", "),
+#       " \n Completed"
+#     )
+#   }
+#
+#   # ── Return ───────────────────────────────────────────────────────
+#   return(list(
+#     plate_standard     = plate_standard,
+#     plate_blanks       = plate_blanks,
+#     plate_samples      = plate_samples,
+#     plate_mcmc_samples = plate_mcmc_samples,
+#     plate_mcmc_pred    = plate_mcmc_pred,
+#     antigen_settings   = antigen_settings,
+#     fixed_a_result     = fixed_a_result,
+#     std_error_blank    = std_error_blank,
+#
+#     curve_id           = curve_id_object,
+#     curve_id_fields    = parsed
+#     # curve_id_fields    = if (!is.null(attr(curve_id_object, "fields"))) {
+#     #   tryCatch(parse_curve_id_string(curve_id_object), error = function(e) NULL)
+#     # } else {
+#     #   NULL
+#    # }
+#   ))
+# }
+
+
+
+#' Construct a Standardized curve_id String
+#'
+#' Builds a colon-separated (`:`) `curve_id` string from named components,
+#' enforcing a consistent field order defined by `order`. This ensures that
+#' `curve_id` values are reproducible and schema-compliant regardless of the
+#' order in which arguments are supplied.
+#'
+#' All required fields defined in `order` must be provided as named arguments.
+#' The function will reorder inputs internally to match the specified schema.
+#'
+#' @param ... Named components used to construct the `curve_id`. Names must match
+#'   the elements of `order`. All fields in `order` are required unless handled
+#'   externally (e.g., optional defaults).
+#' @param sep Character separator used to join components. Defaults to `":"`.
+#' @param order Character vector defining the required fields and their order
+#'   in the resulting `curve_id`.
+#'
+#' @return A single character string representing the standardized `curve_id`.
+#'
+#' @details
+#' This function does not attach attributes to the returned string. Instead,
+#' parsing should be performed using \code{\link{parse_curve_id}}, which relies
+#' on an explicit schema (`order`) for robustness and reproducibility.
+#'
+#' This design avoids issues with attribute loss during data manipulation,
+#' storage, or serialization (e.g., database writes, CSV export).
+#'
+#' @examples
+#' make_curve_id_string(
+#'   project_id = "17",
+#'   study_accession = "MADI_01",
+#'   experiment_accession = "IgG1",
+#'   feature = "IgG1",
+#'   source = "Standard",
+#'   antigen = "pt",
+#'   plate = "plate1",
+#'   nominal_sample_dilution = "1x",
+#'   wavelength = "450",
+#'   order =  c("project_id", "study_accession", "experiment_accession", "feature", "source",
+#'            "antigen", "plate", "nominal_sample_dilution", "wavelength")
+#' )
+#'
+#' # Order of arguments does not matter (must have order argument)
+#' make_curve_id_string(
+#'   antigen = "pt",
+#'   plate = "plate1",
+#'   feature = "IgG1",
+#'   source = "Standard",
+#'   project_id = "17",
+#'   study_accession = "MADI_01",
+#'   experiment_accession = "IgG1",
+#'   nominal_sample_dilution = "1x",
+#'   wavelength = "450",
+#'   order =  c("project_id", "study_accession", "experiment_accession", "feature", "source",
+#'            "antigen", "plate", "nominal_sample_dilution", "wavelength")
+#' )
+#'
+#' @seealso \code{\link{parse_curve_id}}
+#'
+#' @export
+make_curve_id_string <- function(..., sep = ":", order) {
+  args <- list(...)
+
+  if (missing(order) || length(order) == 0) {
+    stop("[make_curve_id_string] 'order' must be supplied and non-empty")
   }
 
-  # ── Guard against empty plate_standard data ───────────────────────
-  if (is.null(plate_standard) || nrow(plate_standard) == 0) {
-    warning(paste("No standard curve data found for:",
-                  "source =", source,
-                  ", antigen =", antigen,
-                  ", plate =", plate))
-    return(NULL)
+  if (!all(order %in% names(args))) {
+    stop("[make_curve_id_string] Missing required fields: ",
+         paste(setdiff(order, names(args)), collapse = ", "))
   }
 
-  # ── Filter blanks ─────────────────────────────────────────────────
-  plate_blanks <- loaded_data$blanks[
-    loaded_data$blanks$antigen   == antigen &
-      loaded_data$blanks$plate_nom == plate, ]
-
-  # ── Filter samples ────────────────────────────────────────────────
-  plate_samples <- loaded_data$samples[
-    loaded_data$samples$antigen   == antigen &
-      loaded_data$samples$plate_nom == plate, ]
-
-  # ── Filter mcmc_samples ───────────────────────────────────────────
-  plate_mcmc_samples <- if (!is.null(loaded_data$mcmc_samples) &&
-                            nrow(loaded_data$mcmc_samples) > 0) {
-    mcmc_df     <- loaded_data$mcmc_samples
-    filter_mask <- mcmc_df$antigen == antigen & mcmc_df$plate_nom == plate
-    if ("source_nom" %in% names(mcmc_df)) {
-      filter_mask <- filter_mask & mcmc_df$source_nom == source
-    }
-    mcmc_df[filter_mask, , drop = FALSE]
-  } else {
-    data.frame()
-  }
-
-  # ── Filter mcmc_pred ──────────────────────────────────────────────
-  plate_mcmc_pred <- if (!is.null(loaded_data$mcmc_pred) &&
-                         nrow(loaded_data$mcmc_pred) > 0) {
-    pred_df     <- loaded_data$mcmc_pred
-    filter_mask <- pred_df$antigen == antigen & pred_df$plate_nom == plate
-    if ("source_nom" %in% names(pred_df)) {
-      filter_mask <- filter_mask & pred_df$source_nom == source
-    }
-    pred_df[filter_mask, , drop = FALSE]
-  } else {
-    data.frame()
-  }
-
-  # ── Filter all data frames by wavelength ──────────────────────────
-  if (!is.null(wavelength) && wavelength != WL_NONE) {
-    if ("wavelength" %in% names(plate_blanks) && nrow(plate_blanks) > 0) {
-      wl_b <- plate_blanks$wavelength == normalize_wavelength(wavelength)
-      if (any(wl_b)) plate_blanks <- plate_blanks[wl_b, , drop = FALSE]
-    }
-    if ("wavelength" %in% names(plate_samples) && nrow(plate_samples) > 0) {
-      wl_s <- plate_samples$wavelength == normalize_wavelength(wavelength)
-      if (any(wl_s)) plate_samples <- plate_samples[wl_s, , drop = FALSE]
-    }
-    if ("wavelength" %in% names(plate_mcmc_samples) && nrow(plate_mcmc_samples) > 0) {
-      wl_m <- plate_mcmc_samples$wavelength == normalize_wavelength(wavelength)
-      if (any(wl_m)) plate_mcmc_samples <- plate_mcmc_samples[wl_m, , drop = FALSE]
-    }
-    if ("wavelength" %in% names(plate_mcmc_pred) && nrow(plate_mcmc_pred) > 0) {
-      wl_p <- plate_mcmc_pred$wavelength == normalize_wavelength(wavelength)
-      if (any(wl_p)) plate_mcmc_pred <- plate_mcmc_pred[wl_p, , drop = FALSE]
-    }
-  }
-
-  # ── Strip nominal dilution suffix for obtain_lower_constraint ─────
-  plate_c <- sub("-.*$", "", plate)
-
-  # ── Resolve response column ───────────────────────────────────────
-  response_col <- resolve_response_col(plate_standard)
-
-  # ── Antigen settings ──────────────────────────────────────────────
-  antigen_settings <- obtain_lower_constraint(
-    dat                  = plate_standard,
-    antigen              = antigen,
-    study_accession      = study_accession,
-    experiment_accession = experiment_accession,
-    plate                = plate_c,
-    plateid              = unique(plate_standard$plateid),
-    plate_blanks         = plate_blanks,
-    antigen_constraints  = antigen_constraints,
-    response_col         = response_col
-  )
-
-  # ── Fixed lower asymptote ─────────────────────────────────────────
-  fixed_a_result <- resolve_fixed_lower_asymptote(antigen_settings)
-  fixed_a_result <- validate_fixed_lower_asymptote(
-    fixed_a_result_raw = fixed_a_result,
-    verbose            = verbose
-  )
-
-  # ── Blank standard error ──────────────────────────────────────────
-  std_error_blank <- get_blank_se(antigen_settings = antigen_settings)
-
-  # ── Sort mcmc_pred by x for smooth line drawing ───────────────────
-  if (nrow(plate_mcmc_pred) > 0 && "x" %in% names(plate_mcmc_pred)) {
-    plate_mcmc_pred <- plate_mcmc_pred[order(plate_mcmc_pred$x), , drop = FALSE]
-  }
-
-  # ── Return ────────────────────────────────────────────────────────
-  return(list(
-    plate_standard     = plate_standard,
-    plate_blanks       = plate_blanks,
-    plate_samples      = plate_samples,
-    plate_mcmc_samples = plate_mcmc_samples,
-    plate_mcmc_pred    = plate_mcmc_pred,
-    antigen_settings   = antigen_settings,
-    fixed_a_result     = fixed_a_result,
-    std_error_blank    = std_error_blank
-  ))
+  values <- unlist(args[order])
+  paste(values, collapse = sep)
 }
+
+# make_curve_id_string <- function(..., sep = ":") {
+# args <- list(...)
+#
+# # Ensure all args are named
+# if (is.null(names(args)) || any(names(args) == "")) {
+#   stop("[make_curve_id_string] All arguments must be named.")
+# }
+#
+# required_names <- c("feature", "antigen", "plate", "wavelength")
+#
+# # Check missing required fields
+# missing <- setdiff(required_names, names(args))
+# if (length(missing) > 0) {
+#   stop("[make_curve_id_string] Missing required arguments: ",
+#        paste(missing, collapse = ", "))
+# }
+#
+# # # Optional: enforce consistent order (required first, then extras)
+# # ordered_names <- c(required_names, setdiff(names(args), required_names))
+# # args <- args[ordered_names]
+#
+# values   <- unlist(args)
+# curve_id <- paste(values, collapse = sep)
+# attr(curve_id, "fields") <- names(args)
+#
+# curve_id
+# }
+
+
+
+
+
+#' #' Parse a curve ID string into its component fields
+#' #'
+#' #' Splits a \code{curve_id} string (created by \code{make_curve_id_string()})
+#' #' on a separator and returns a one-row data frame containing the original
+#' #' \code{curve_id} plus one column per field.
+#' #'
+#' #' @param curve_id A character scalar with a \code{"fields"} attribute,
+#' #'   as produced by \code{make_curve_id_string()}.  If \code{curve_id} was
+#' #'   not created by that function, use \code{curve_id_map} instead.
+#' #' @param df A data frame. Currently unused; reserved for future use or
+#' #'   downstream joining.
+#' #' @param sep A single character used as the field separator in
+#' #'   \code{curve_id}.  Defaults to \code{":"}.
+#' #'
+#' #' @return A one-row \code{data.frame} with columns:
+#' #'   \describe{
+#' #'     \item{curve_id}{The original \code{curve_id} string.}
+#' #'     \item{...}{One column per field named in the \code{"fields"} attribute,
+#' #'       containing the corresponding parsed value.}
+#' #'   }
+#' #'
+#' #' @seealso \code{\link{make_curve_id_string}}, \code{\link{curve_id_map}}
+#' #'
+#' #' @examples
+#' #' cid <- "A:B:C"
+#' #' attr(cid, "fields") <- c("study", "dose", "rep")
+#' #' parse_curve_id_string(cid)
+#' #' #   curve_id study dose rep
+#' #' # 1    A:B:C     A    B   C
+#' #'
+#' #' @export
+#' parse_curve_id_string <- function(curve_id, df, sep = ":") {
+#'   fields <- attr(curve_id, "fields")
+#'   if (is.null(fields)) {
+#'     stop("[parse_curve_id_string] curve_id has no 'fields' attribute. ",
+#'          "Was it created with make_curve_id_string()?  ",
+#'          "If curve_id came from elsewhere (numeric, external system), ",
+#'          "use curve_id_map instead.")
+#'   }
+#'   parts <- strsplit(curve_id, paste0("\\", sep))[[1]]
+#'   if (length(parts) != length(fields)) {
+#'     stop("[parse_curve_id_string] Number of fields (", length(fields),
+#'          ") does not match number of parts in curve_id (", length(parts), ")")
+#'   }
+#'
+#'   parts_df <- setNames(as.data.frame(t(parts)), fields)
+#'
+#'   return(cbind(data.frame(curve_id = curve_id), parts_df))
+#' }
+

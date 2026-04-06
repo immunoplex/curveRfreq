@@ -36,8 +36,6 @@
 #' @param study_accession   Character. Study accession identifier.
 #' @param experiment_accession Character. Experiment accession identifier.
 #' @param plate             Character. Plate label.
-#' @param plateid           Character. Unique plate identifier (currently
-#'                          unused but retained for API compatibility).
 #' @param plate_blanks      Data frame of blank (buffer) wells for this plate.
 #' @param antigen_constraints Data frame with exactly one row (or more --- the
 #'                          first row is used) containing constraint columns:
@@ -70,15 +68,15 @@
 #'
 #' @export
 obtain_lower_constraint <- function(dat, antigen, study_accession, experiment_accession,
-                                    plate, plateid, plate_blanks, antigen_constraints,
+                                    plate, plate_blanks, antigen_constraints,
                                     response_col = NULL) {
 
   if (is.null(response_col)) response_col <- resolve_response_col(dat)
 
   # If multiple rows were passed, use only the first
   if (is.data.frame(antigen_constraints) && nrow(antigen_constraints) > 1) {
-    warning(paste("Multiple constraint rows found for antigen:", antigen,
-                  "- using first row. Consider deduplicating antigen_constraints."))
+    # warning(paste("Multiple constraint rows found for antigen:", antigen,
+    #               "- using first row. Consider deduplicating antigen_constraints."))
     antigen_constraints <- antigen_constraints[1, , drop = FALSE]
   }
 
@@ -2011,104 +2009,6 @@ summarize_model_parameters <- function(models_fit_list,
   do.call(rbind, summary_list)
 }
 
-
-#' Produce a Tidy Parameter Table with Constraints for the Best Fit
-#'
-#' Extracts coefficient estimates, standard errors, t-statistics, and
-#' p-values for the selected model, merges in constraint bounds, and
-#' optionally prepends a fixed \emph{a} row.
-#'
-#' @param best_fit         List returned by \code{\link{select_model_fit_AIC}}.
-#' @param fixed_a_result   Numeric or \code{NULL}. Fixed lower asymptote
-#'                         (on fitting scale).
-#' @param model_constraints Named list from
-#'                         \code{\link{obtain_model_constraints}}.
-#' @param antigen_settings Named list from
-#'                         \code{\link{obtain_lower_constraint}}.
-#' @param antigen_fit_options Named list from
-#'                         \code{\link{preprocess_robust_curves}}.
-#' @param verbose          Logical (default \code{TRUE}).
-#'
-#' @return \code{best_fit} with a new element \code{$best_tidy}: a tidy
-#'   data frame of parameter estimates with constraint bounds.
-#'
-#' @export
-tidy.nlsLM <- function(best_fit, fixed_a_result, model_constraints,
-                       antigen_settings, antigen_fit_options, verbose = TRUE) {
-
-  if (antigen_settings$l_asy_constraint_method == "range_of_blanks" &&
-      antigen_fit_options$is_log_response) {
-
-    fixed_a_result_validated <- validate_fixed_lower_asymptote(fixed_a_result, verbose)
-
-    fixed_a_result <- if (!is.null(fixed_a_result_validated)) {
-      log10(fixed_a_result_validated + 0.000005)
-    } else { NULL }
-
-    min_c <- antigen_settings$l_asy_min_constraint
-    max_c <- antigen_settings$l_asy_max_constraint
-
-    antigen_settings$l_asy_min_constraint <- if (
-      is.numeric(min_c) && is.finite(min_c) && min_c > 0) log10(min_c) else NA_real_
-    antigen_settings$l_asy_max_constraint <- if (
-      is.numeric(max_c) && is.finite(max_c) && max_c > 0) log10(max_c) else NA_real_
-  }
-
-  m_constraints    <- model_constraints[[best_fit$best_model_name]]
-  m_constraints_df <- as.data.frame(m_constraints)
-  m_constraints_df$term <- rownames(m_constraints_df)
-  rownames(m_constraints_df) <- NULL
-  m_constraints_df <- m_constraints_df[, c("term", "lower", "upper")]
-
-  if (!is.null(fixed_a_result)) {
-    a_fixed_constraint <- tibble::tibble(
-      term  = "a",
-      lower = antigen_settings$l_asy_min_constraint,
-      upper = antigen_settings$l_asy_max_constraint
-    )
-    m_constraints_df <- rbind(a_fixed_constraint, m_constraints_df)
-  }
-
-  s       <- summary(best_fit$best_fit)
-  out     <- as.data.frame(s$coefficients)
-  tidy_df <- tibble::tibble(
-    term      = rownames(out),
-    estimate  = out[, "Estimate"],
-    std_error = out[, "Std. Error"],
-    statistic = out[, "t value"],
-    p_value   = out[, "Pr(>|t|)"]
-  )
-
-  for (col in c("study_accession", "experiment_accession", "nominal_sample_dilution",
-                "antigen", "plateid", "plate", "source")) {
-    tidy_df[[col]] <- unique(best_fit$best_data[[col]])
-  }
-
-  if (!is.null(fixed_a_result)) {
-    a_fixed <- tibble::tibble(
-      term = "a", estimate = fixed_a_result, std_error = 0,
-      statistic = NA_real_, p_value = NA_real_,
-      study_accession      = unique(best_fit$best_data$study_accession),
-      experiment_accession = unique(best_fit$best_data$experiment_accession),
-      nominal_sample_dilution = unique(best_fit$best_data$nominal_sample_dilution),
-      antigen = unique(best_fit$best_data$antigen),
-      plateid = unique(best_fit$best_data$plateid),
-      plate   = unique(best_fit$best_data$plate),
-      source  = unique(best_fit$best_data$source)
-    )
-    tidy_df <- rbind(a_fixed, tidy_df)
-  }
-
-  tidy_df <- merge(tidy_df, m_constraints_df, by = "term", all.x = TRUE)
-  other_cols <- setdiff(colnames(tidy_df), c("term", "lower", "upper"))
-  tidy_df    <- tidy_df[, c("term", "lower", "upper", other_cols)]
-
-  tidy_df       <- attach_grouping_keys(tidy_df, best_fit$best_data, context = "tidy.nlsLM")
-  best_fit$best_tidy <- tidy_df
-
-  if (verbose) message("Finished tidy.nlsLM")
-  return(best_fit)
-}
 
 
 # -----------------------------------------------------------------------------

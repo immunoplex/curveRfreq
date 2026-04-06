@@ -239,6 +239,9 @@ pull_data <- function(study_accession, experiment_accession, project_id, conn = 
   }
 
   #mcmc_samples_2 <<- mcmc_samples
+  standards <- make_curve_id(standards)
+  blanks <- make_curve_id(blanks)
+  samples <- make_curve_id(samples)
 
   return(list(plates=plates, standards=standards,
               blanks=blanks, samples=samples,
@@ -248,6 +251,36 @@ pull_data <- function(study_accession, experiment_accession, project_id, conn = 
               response_var = response_var,
               indep_var = indep_var)
   )
+}
+
+# curve_id helper outside of package to set up data.
+make_curve_id <- function(df) {
+
+  feature_val <- ifelse(is.na(df$feature), df$experiment_accession, df$feature)
+
+  df$curve_id <- paste(
+    df$project_id,
+    df$study_accession,
+    df$experiment_accession,
+    feature_val,
+    df$source_nom,
+    df$antigen,
+    df$plate,
+    df$nominal_sample_dilution,
+    df$wavelength,
+    sep = ":"
+  )
+
+ df <-  df[, !names(df) %in% c(
+    "project_id", "study_accession", "experiment_accession",
+    "feature", "source_nom", "source", "antigen", "plate", "nominal_sample_dilution", "plate_id",
+    "plate_nom", "plateid", "wavelength"
+  )]
+
+  first_col <- "curve_id"
+  other_cols <- setdiff(names(df), c("curve_id"))
+  df <- df[, c(first_col, other_cols)]
+  return(df)
 }
 # -------------------------------
 # Safe wrapper for vignette use
