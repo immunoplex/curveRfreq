@@ -104,6 +104,7 @@ compute_curve_ci <- function(fit, x_new, x_var, fixed_a = NULL, level = 0.95) {
 #' @param fixed_a_result Numeric scalar or \code{NULL}. Fixed lower asymptote
 #'   passed to \code{compute_curve_ci()} and used to reconstruct full
 #'   coefficient vectors.
+#' @param curve_id_element_order the order of the elements of the curve_id.
 #' @param model_names Character vector of model names to process. Must match
 #'   keys in \code{models_fit_list}. Default is
 #'   \code{c("logistic5","loglogistic5","logistic4","loglogistic4","gompertz4")}.
@@ -150,6 +151,7 @@ get_plot_data <- function(models_fit_list,
                           prepped_data,
                           fit_params,
                           fixed_a_result,
+                          curve_id_element_order,
                           model_names = c("logistic5","loglogistic5","logistic4","loglogistic4","gompertz4"),
                           x_var = "concentration",
                           y_var = "mfi",
@@ -290,6 +292,20 @@ get_plot_data <- function(models_fit_list,
   # ── Drop rows where parameter is NA (from non-converged models) ──
   fit_params_aic <- fit_params_aic[!is.na(fit_params_aic$parameter), , drop = FALSE]
 
+
+  # parse out
+  dat <- parse_curve_id(dat, order = curve_id_element_order, keep = c("antigen", "feature", "plate", "nominal_sample_dilution"))
+
+  if (all(c("plate", "nominal_sample_dilution") %in% names(dat))) {
+
+    dat$plate_nom <- ifelse(
+      is.na(dat$nominal_sample_dilution) | dat$nominal_sample_dilution == "",
+      dat$plate,
+      paste(dat$plate, dat$nominal_sample_dilution, sep = "-")
+    )
+
+  }
+
   if (verbose) {
     message("Plot Data Completed")
   }
@@ -424,6 +440,16 @@ plot_model_comparisons <- function(plot_data,
     ))
   }
 
+  if (all(c("plate", "nominal_sample_dilution") %in% names(df))) {
+
+    df$plate_nom <- ifelse(
+      is.na(df$nominal_sample_dilution) | df$nominal_sample_dilution == "",
+      df$plate,
+      paste(df$plate, df$nominal_sample_dilution, sep = "-")
+    )
+
+  }
+
   # Use patchwork for a single panel display
   # Arrange: top row = data+fits, info; bottom row = resid, qq
   combined <- (p_data_fit) /
@@ -487,6 +513,8 @@ format_assay_terms <- function(x) {
 #' @param is_display_log_independent Logical; whether to display independent variable on log10 scale.
 #' @param pcov_threshold Numeric threshold for percent coefficient of variation.
 #' @param study_params study parameters including is_log_response and is_log_independent
+#' @param curve_id_element_order the string vector of the names of the elements in the curve_id c("project_id", "antigen")
+#' @param curve_col the name of the column containing the curve identifier (default "curve_id")
 #' @param response_variable Character; name of response variable column (default "mfi").
 #' @param independent_variable Character; name of independent variable column (default "concentration").
 #'
@@ -497,6 +525,8 @@ plot_standard_curve <- function(best_fit,
                                 is_display_log_independent,
                                 pcov_threshold,
                                 study_params,
+                                curve_id_element_order,
+                                curve_col = "curve_id",
                                 response_variable = "mfi",
                                 independent_variable = "concentration"
                                 ) {
@@ -504,6 +534,9 @@ plot_standard_curve <- function(best_fit,
   # best_fit_v <<- best_fit
   # mcmc_samples_in <<- mcmc_samples
   # mcmc_pred_in <<- mcmc_pred
+
+  ## expand antigen and plate columns in the dataset
+  best_fit$best_data <-  parse_curve_id(best_fit$best_data, curve_col = curve_col, order = curve_id_element_order, keep = c("plate", "antigen"))
 
   # ── Resolve response column ────────────────────────────────────────
   resolved <- ensure_response_column(
@@ -886,18 +919,22 @@ plot_standard_curve <- function(best_fit,
 
 
   # ### 10. INFLECTION POINT
-  # p <- p %>% add_trace(
-  #   x = best_fit$best_glance$inflect_x,
-  #   y = best_fit$best_glance$inflect_y,
-  #   type = "scatter",
-  #   mode = "markers",
-  #   name = paste("Inflection Point: (",
-  #                round(best_fit$best_glance$inflect_x, 3), ",",
-  #                round(best_fit$best_glance$inflect_y, 3), ")"),
-  #   legendgroup = "fitted_curve",
-  #   showlegend = TRUE,
-  #   marker = list(color = "#2724F0", size = 8)
-  # )
+  if ("best_fit_summary" %in% names(best_fit)) {
+
+    p <- p %>% add_trace(
+      x = best_fit$best_fit_summary$inflect_x,
+      y = best_fit$best_fit_summary$inflect_y,
+      type = "scatter",
+      mode = "markers",
+      name = paste("Inflection Point: (",
+                   round(best_fit$best_fit_summary$inflect_x, 3), ",",
+                   round(best_fit$best_fit_summary$inflect_y, 3), ")"),
+      legendgroup = "fitted_curve",
+      showlegend = TRUE,
+      marker = list(color = "#2724F0", size = 8)
+    )
+
+  }
 
   ### 11. LAYOUT
   p <- p %>% layout(

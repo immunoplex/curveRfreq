@@ -8,6 +8,8 @@
 #' on each individual plate.
 #'
 #' @param standards_data data.frame containing all standard curve data
+#' @param curve_id_element_order the string of the names in order of the elements in the curve_id
+#' @param curve_col name of the curve identifier colummn (default = "curve_id")
 #' @param response_col name of the response column (e.g., "mfi")
 #' @param dilution_col name of the dilution column (default = "dilution")
 #' @param plate_col name of the plate identifier column (default = "plate_nom")
@@ -29,6 +31,8 @@
 #' @export
 compute_antigen_se_table <- function(
     standards_data,
+    curve_id_element_order,
+    curve_col =   "curve_id",
     response_col  = "mfi",
     dilution_col  = "dilution",
     plate_col     = "plate_nom",
@@ -40,6 +44,10 @@ compute_antigen_se_table <- function(
     min_reps = 2,
     verbose  = FALSE) {
 
+  keep_cols <- c(grouping_cols[grouping_cols %in% curve_id_element_order], plate_col)
+
+  standards_data <- parse_curve_id(standards_data, curve_col = curve_col,
+                                   order = curve_id_element_order, keep = keep_cols)
   # ------------------------------------------------------------------
   # 1. Input validation
   # ------------------------------------------------------------------

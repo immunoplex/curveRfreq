@@ -3,7 +3,7 @@ utils::globalVariables(c(
   "yhat", "model", "estimate", "conf.low", "conf.high"
 ))
 
-#' @importFrom stats AIC BIC as.formula coef df.residual formula median nls nls.control residuals sd setNames vcov qt predict fitted qnorm
+#' @importFrom stats AIC BIC as.formula coef df.residual formula median nls nls.control residuals sd setNames vcov qt predict fitted qnorm logLik nobs
 #' @importFrom utils setTxtProgressBar txtProgressBar globalVariables head
 #' @importFrom minpack.lm nlsLM nls.lm.control
 #' @importFrom data.table :=

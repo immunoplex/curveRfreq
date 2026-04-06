@@ -10,7 +10,6 @@ obtain_lower_constraint(
   study_accession,
   experiment_accession,
   plate,
-  plateid,
   plate_blanks,
   antigen_constraints,
   response_col = NULL
@@ -27,9 +26,6 @@ and plate (standards + samples).}
 \item{experiment_accession}{Character. Experiment accession identifier.}
 
 \item{plate}{Character. Plate label.}
-
-\item{plateid}{Character. Unique plate identifier (currently
-unused but retained for API compatibility).}
 
 \item{plate_blanks}{Data frame of blank (buffer) wells for this plate.}
 
