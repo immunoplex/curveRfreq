@@ -2,7 +2,7 @@
 % Please edit documentation in R/curve_diagnostics.R
 \name{summarize_fit}
 \alias{summarize_fit}
-\title{Summarize Fitted Model with QC Metrics}
+\title{Summarize Fitted Model with QC Metrics, LOD, Detection Limits, and Curvature LOQs}
 \usage{
 summarize_fit(
   best_fit,
@@ -19,16 +19,20 @@ summarize_fit(
 \itemize{
 \item \code{best_fit$best_fit}: Fitted model object
 \item \code{best_fit$best_data}: Data used for fitting
-\item \code{best_fit$best_model_name}: Character model identifier
+\item \code{best_fit$best_model_name}: the model name of the best fit (selected by minimizing the AIC score)
+\item \code{best_fit$best_d2xy}: data.frame of second derivative values
 }}
 
-\item{response_variable}{Character string naming the response variable in \code{best_data}.}
+\item{response_variable}{Character string naming the response variable in \code{best_data} (e.g. mfi, absorbance).}
 
 \item{independent_variable}{Character string naming the predictor variable used in the model.}
 
-\item{fixed_a_result}{Optional numeric value for parameter \code{a}. Overrides the fitted value if provided.}
+\item{fixed_a_result}{numeric value for parameter \code{a}. This a derived result from the \code{\link{select_antigen_plate}} function.}
 
-\item{antigen_settings}{List of antigen-specific settings (reserved for future use).}
+\item{antigen_settings}{List of antigen-specific settings. May include:
+\itemize{
+\item \code{std_error_blank}: Standard error of the blank used for LLOD calculation
+}}
 
 \item{antigen_fit_options}{List of model fitting options, including:
 \itemize{
@@ -41,15 +45,20 @@ summarize_fit(
 \item{verbose}{Logical; if \code{TRUE}, prints progress and diagnostic messages.}
 }
 \value{
-A list identical to \code{best_fit} with an additional element:
+A list identical to \code{best_fit} with additional elements:
 \itemize{
-\item \code{fit_summary}: A one-row \code{data.frame} containing model summary and QC metrics
+\item \code{best_fit_summary}: A one-row \code{data.frame} containing model summary and QC metrics
+\item \code{lods}: A list with \code{llod} and \code{ulod}
+\item \code{mdc_rdl}: A list with \code{mindc}, \code{maxdc}, \code{minrdl}, and \code{maxrdl}
+\item \code{curv_loqs}: A list with \code{lloq}, \code{uloq}, \code{lloq_y}, and \code{uloq_y}
 }
 }
 \description{
 Generates a one-row summary of a fitted model, including parameter estimates,
-goodness-of-fit statistics, inflection point coordinates, and metadata.
-The result is stored in \code{best_fit$fit_summary}.
+goodness-of-fit statistics, inflection point coordinates, limits of detection (LOD),
+minimum/maximum detectable concentrations (MDC), reliable detection limits (RDL),
+curvature-based limits of quantification (LOQ), and metadata. The result is stored
+in \code{best_fit$best_fit_summary}.
 }
 \details{
 This function is designed to operate on the output of a model fitting step
@@ -64,14 +73,37 @@ The returned summary includes:
 R-squared, Akaike information criterion (AIC), Bayesian information criterion (BIC),
 and log-likelihood
 \item Convergence diagnostics: iteration count and convergence status
+\item Limits of detection:
+\itemize{
+\item \code{llod}: Lower limit of detection
+\item \code{ulod}: Upper limit of detection
+}
+\item Detection limits derived from the fitted curve:
+\itemize{
+\item \code{mindc}, \code{maxdc}: Minimum and maximum detectable concentrations
+\item \code{minrdl}, \code{maxrdl}: Reliable detection limits based on confidence intervals
+}
+\item Curvature-based limits of quantification (LOQ):
+\itemize{
+\item \code{lloq}, \code{uloq}: LOQ values based on extrema of the second derivative
+\item \code{lloq_y}, \code{uloq_y}: Corresponding predicted response values
+}
 \item Metadata: source, transformation flags, and model formula
 }
 
-The inflection point is computed using \code{compute_inflection_point()} and
-corresponds to the location where the second derivative of the fitted curve equals zero.
+The inflection point is computed using \code{\link{compute_inflection_point}}
+and corresponds to the location where the second derivative of the fitted curve equals zero.
 
-If no valid model or data is available, a placeholder summary with \code{NA} values
-is returned via \code{.make_na_glance()}.
+Limits of detection (LOD) are computed using \code{\link{generate_lods}}, optionally
+incorporating blank standard error. MDC and RDL values are computed using
+\code{\link{generate_mdc_rdl}} via root-finding over the observed data range.
+
+Curvature-based LOQs are computed using \code{\link{compute_loqs}}, which identifies
+local extrema in the second derivative of the fitted curve and refines their locations
+using quadratic interpolation.
+
+If no valid model, derivative data, or extrema are available, corresponding values
+are returned as \code{NA}.
 }
 \examples{
 \dontrun{
@@ -79,10 +111,10 @@ best_fit <- fit_model(data)
 
 best_fit <- summarize_fit(
   best_fit = best_fit,
-  response_variable = "response",
-  independent_variable = "log_dilution",
+  response_variable = "mfi",
+  independent_variable = "concentration",
   fixed_a_result = NULL,
-  antigen_settings = list(),
+  antigen_settings = list(std_error_blank = 0.05),
   antigen_fit_options = list(
     blank_option = "none",
     is_log_response = FALSE,
@@ -92,9 +124,15 @@ best_fit <- summarize_fit(
 )
 
 best_fit$best_fit_summary
+best_fit$lods
+best_fit$mdc_rdl
+best_fit$curv_loqs
 }
 
 }
 \seealso{
-\code{\link{compute_inflection_point}}
+\code{\link{compute_inflection_point}},
+\code{\link{generate_lods}},
+\code{\link{generate_mdc_rdl}},
+\code{\link{compute_loqs}}
 }

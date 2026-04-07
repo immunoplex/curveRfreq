@@ -647,18 +647,18 @@ plot_standard_curve <- function(best_fit,
   if (log_x_status && !isTRUE(is_display_log_independent)) {
     best_fit$best_data$concentration       <- 10^best_fit$best_data$concentration
     best_fit$best_pred$x                   <- 10^best_fit$best_pred$x
-    # best_fit$best_glance$lloq              <- 10^safe_glance("lloq")
-    # best_fit$best_glance$uloq              <- 10^safe_glance("uloq")
-    # best_fit$best_glance$inflect_x         <- 10^safe_glance("inflect_x")
-    # best_fit$best_d2xy$x                   <- 10^best_fit$best_d2xy$x
+    best_fit$best_glance$lloq              <- 10^safe_glance("lloq")
+    best_fit$best_glance$uloq              <- 10^safe_glance("uloq")
+    best_fit$best_glance$inflect_x         <- 10^safe_glance("inflect_x")
+    best_fit$best_d2xy$x                   <- 10^best_fit$best_d2xy$x
     if (nrow(samples_predicted_conc) > 0) {
       samples_predicted_conc$raw_predicted_concentration <-
         10^samples_predicted_conc$raw_predicted_concentration
     }
-    # best_fit$best_glance$mindc             <- 10^safe_glance("mindc")
-    # best_fit$best_glance$maxdc             <- 10^safe_glance("maxdc")
-    # best_fit$best_glance$minrdl            <- 10^safe_glance("minrdl")
-    # best_fit$best_glance$maxrdl            <- 10^safe_glance("maxrdl")
+    best_fit$best_glance$mindc             <- 10^safe_glance("mindc")
+    best_fit$best_glance$maxdc             <- 10^safe_glance("maxdc")
+    best_fit$best_glance$minrdl            <- 10^safe_glance("minrdl")
+    best_fit$best_glance$maxrdl            <- 10^safe_glance("maxrdl")
     if (!is.null(best_fit$best_curve_ci)) {
       best_fit$best_curve_ci$x             <- 10^best_fit$best_curve_ci$x
     }
@@ -821,15 +821,130 @@ plot_standard_curve <- function(best_fit,
   }
 
 
+  ### 6. LOD lines (horizontal)
+  p <- p %>% add_lines(
+    x = best_fit$best_pred$x,
+    y = best_fit$best_fit_summary$ulod,
+    name = paste("Upper LOD: (",
+                 round(best_fit$best_fit_summary$maxdc, 3), ",",
+                 round(best_fit$best_fit_summary$ulod, 3), ")"),
+    line = list(color = "#e25822", dash = "dash"),
+    legendgroup = "linked_ulod",
+    visible = "legendonly"
+  )
+  
+  p <- p %>% add_lines(
+    x = best_fit$best_pred$x,
+    y = best_fit$best_fit_summary$llod,
+    name = paste("Lower LOD: (",
+                 round(best_fit$best_fit_summary$mindc, 3), ",",
+                 round(best_fit$best_fit_summary$llod, 3), ")"),
+    line = list(color = "#e25822", dash = "dash"),
+    legendgroup = "linked_llod",
+    visible = "legendonly"
+  )
+  
+  ### 
+  y_min <- min(best_fit$best_data[[response_variable]], na.rm = TRUE)
+  y_max <- max(best_fit$best_data[[response_variable]], na.rm = TRUE)
+  
+  ### 6b. MDC / RDL vertical lines
+  if (!is.na(best_fit$best_fit_summary$mindc)) {
+    p <- p %>% add_lines(
+      x = c(best_fit$best_fit_summary$mindc, best_fit$best_fit_summary$mindc),
+      y = c(y_min, y_max),
+      name = paste("Lower DC:", round(best_fit$best_fit_summary$mindc, 3)),
+      line = list(color = "#e25822", dash = "dash"),
+      legendgroup = "linked_llod",
+      showlegend = FALSE, hoverinfo = "text", visible = "legendonly"
+    )
+  }
+  
+  if (!is.na(best_fit$best_fit_summary$minrdl)) {
+    p <- p %>% add_lines(
+      x = c(best_fit$best_fit_summary$minrdl, best_fit$best_fit_summary$minrdl),
+      y = c(y_min, y_max),
+      name = paste("Lower RDL:", round(best_fit$best_fit_summary$minrdl, 3)),
+      line = list(color = "#e25822"),
+      legendgroup = "linked_llod",
+      showlegend = TRUE, hoverinfo = "text", visible = "legendonly"
+    )
+  }
+  
+  if (!is.na(best_fit$best_fit_summary$maxdc)) {
+    p <- p %>% add_lines(
+      x = c(best_fit$best_fit_summary$maxdc, best_fit$best_fit_summary$maxdc),
+      y = c(y_min, y_max),
+      name = paste("Upper DC:", round(best_fit$best_fit_summary$maxdc, 3)),
+      line = list(color = "#e25822", dash = "dash"),
+      legendgroup = "linked_ulod",
+      showlegend = FALSE, hoverinfo = "text", visible = "legendonly"
+    )
+  }
+  
+  if (!is.na(best_fit$best_fit_summary$maxrdl)) {
+    p <- p %>% add_lines(
+      x = c(best_fit$best_fit_summary$maxrdl, best_fit$best_fit_summary$maxrdl),
+      y = c(y_min, y_max),
+      name = paste("Upper RDL:", round(best_fit$best_fit_summary$maxrdl, 3)),
+      line = list(color = "#e25822"),
+      legendgroup = "linked_ulod",
+      showlegend = TRUE, hoverinfo = "text", visible = "legendonly"
+    )
+  }
+  
+  ## LLOQ vertical line
+  p <- p %>% add_lines(
+    x = c(best_fit$best_fit_summary$lloq),
+    y = c(y_min, y_max),
+    name = paste("Lower LOQ: (",
+                 round(best_fit$best_fit_summary$lloq, 3), ",",
+                 round(best_fit$best_fit_summary$lloq_y, 3), ")"),
+    line = list(color = "#875692"),
+    legendgroup = "linked_lloq",
+    hoverinfo = "text", visible = "legendonly"
+  )
+  
+  ### ULOQ vertical line
+  p <- p %>% add_lines(
+    x = c(best_fit$best_fit_summary$uloq),
+    y = c(y_min, y_max),
+    name = paste("Upper LOQ: (",
+                 round(best_fit$best_fit_summary$uloq, 3), ",",
+                 round(best_fit$best_fit_summary$uloq_y, 3), ")"),
+    line = list(color = "#875692"),
+    legendgroup = "linked_uloq",
+    hoverinfo = "text", visible = "legendonly"
+  )
+  
+  ### Horizontal LOQ lines
+  p <- p %>% add_lines(
+    x = best_fit$best_pred$x,
+    y = best_fit$best_fit_summary$uloq_y,
+    name = "",
+    legendgroup = "linked_uloq", showlegend = FALSE,
+    line = list(color = "#875692"), visible = "legendonly"
+  )
+  
+  p <- p %>% add_lines(
+    x = best_fit$best_pred$x,
+    y = best_fit$best_fit_summary$lloq_y,
+    name = "",
+    legendgroup = "linked_lloq", showlegend = FALSE,
+    line = list(color = "#875692"), visible = "legendonly"
+  )
+  
   # ### 8a. SECOND DERIVATIVE (y2 axis)
-  # p <- p %>% add_lines(
-  #   x = best_fit$best_d2xy$x,
-  #   y = best_fit$best_d2xy$d2x_y,
-  #   name = "2nd Derivative of x given y",
-  #   yaxis = "y2",
-  #   line = list(color = "#604e97"),
-  #   visible = "legendonly"
-  # )
+  if ("best_d2xy" %in% names(best_fit)) {
+      p <- p %>% add_lines(
+        x = best_fit$best_d2xy$x,
+        y = best_fit$best_d2xy$d2x_y,
+        name = "2nd Derivative of x given y",
+        yaxis = "y2",
+        line = list(color = "#604e97"),
+        visible = "legendonly"
+      )
+  }
 
   ## 9. Samples - interpolated
   p <- p %>% add_trace(
@@ -844,10 +959,11 @@ plot_standard_curve <- function(best_fit,
                   "<br>", y_label, ":", samples_predicted_conc[[response_variable]],
                   "<br>Patient ID:", patientid,
                   "<br> Timepoint:", timeperiod,
-                  "<br>Well:", well,
-                  "<br>LOQ Gate Class:", samples_predicted_conc$gate_class_loq,
-                  "<br>LOD Gate Class:", samples_predicted_conc$gate_class_lod,
-                  "<br> PCOV Gate Class:", samples_predicted_conc$gate_class_pcov),
+                  "<br>Well:", well
+                  # ,"<br>LOQ Gate Class:", samples_predicted_conc$gate_class_loq,
+                  # "<br>LOD Gate Class:", samples_predicted_conc$gate_class_lod,
+                  # "<br> PCOV Gate Class:", samples_predicted_conc$gate_class_pcov
+                  ),
     hovertemplate = "%{text}<extra></extra>"
   )
   ### 8b. Sample uncertainty (y3 axis) — interpolated

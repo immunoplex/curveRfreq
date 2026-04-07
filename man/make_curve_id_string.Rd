@@ -47,7 +47,7 @@ make_curve_id_string(
   plate = "plate1",
   nominal_sample_dilution = "1x",
   wavelength = "450",
- order =  c("project_id", "study_accession", "experiment_accession", "feature", "source",
+  order =  c("project_id", "study_accession", "experiment_accession", "feature", "source",
            "antigen", "plate", "nominal_sample_dilution", "wavelength")
 )
 
