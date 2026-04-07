@@ -791,8 +791,6 @@ obtain_model_constraints <- function(data, formulas,
 #'
 #' @param model_constraints Named list of model constraint objects as
 #'                          returned by \code{\link{obtain_model_constraints}}.
-#' @param frac_generate     Numeric. Fraction of bound width used for start
-#'                          generation (unused, retained for compatibility).
 #' @param quants            Named numeric vector of quantiles (unused,
 #'                          retained for compatibility).
 #'
@@ -801,7 +799,6 @@ obtain_model_constraints <- function(data, formulas,
 #'
 #' @export
 make_start_lists <- function(model_constraints,
-                             frac_generate = 0.8,
                              quants = c(low = 0.2, mid = 0.5, high = 0.8)) {
 
   profile     <- attr(model_constraints, "constraint_profile")
