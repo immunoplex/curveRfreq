@@ -6,16 +6,12 @@
 \usage{
 make_start_lists(
   model_constraints,
-  frac_generate = 0.8,
   quants = c(low = 0.2, mid = 0.5, high = 0.8)
 )
 }
 \arguments{
 \item{model_constraints}{Named list of model constraint objects as
 returned by \code{\link{obtain_model_constraints}}.}
-
-\item{frac_generate}{Numeric. Fraction of bound width used for start
-generation (unused, retained for compatibility).}
 
 \item{quants}{Named numeric vector of quantiles (unused,
 retained for compatibility).}
