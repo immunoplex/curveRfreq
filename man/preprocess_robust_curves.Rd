@@ -33,7 +33,10 @@ response variable.}
 \item{blank_data}{Data frame of blank measurements, or
 \code{NULL}.}
 
-\item{blank_option}{Character. Blank handling method (default
+\item{blank_option}{Character. Blank handling method.One of \code{"ignored"},
+\code{"included"}, \code{"subtracted"},
+\code{"subtracted_3x"}, \code{"subtracted_10x"}.
+(default
 \code{"ignored"}).}
 
 \item{is_log_independent}{Logical. Log10-transform the concentration?
@@ -55,7 +58,7 @@ Orchestrates the full preprocessing chain:
 \enumerate{
 \item Compute concentrations from dilutions.
 \item Optionally apply prozone correction.
-\item Apply blank operation (ignore / include / subtract).
+\item Apply blank operation (ignore / include / subtract (1, 3, or 10 times the geometric mean of blanks)).
 \item Floor non-positive values and optionally log10-transform the
 response.
 }
