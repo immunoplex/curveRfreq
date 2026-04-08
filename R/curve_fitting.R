@@ -1071,7 +1071,7 @@ nlsLM_fit <- function(formula, data, start_values,
 #' \enumerate{
 #'   \item Compute concentrations from dilutions.
 #'   \item Optionally apply prozone correction.
-#'   \item Apply blank operation (ignore / include / subtract).
+#'   \item Apply blank operation (ignore / include / subtract (1, 3, or 10 times the geometric mean of blanks)).
 #'   \item Floor non-positive values and optionally log10-transform the
 #'         response.
 #' }
@@ -1085,7 +1085,10 @@ nlsLM_fit <- function(formula, data, start_values,
 #' @param is_log_response      Logical. Log10-transform the response?
 #' @param blank_data           Data frame of blank measurements, or
 #'                             \code{NULL}.
-#' @param blank_option         Character. Blank handling method (default
+#' @param blank_option         Character. Blank handling method.One of \code{"ignored"},
+#'                           \code{"included"}, \code{"subtracted"},
+#'                           \code{"subtracted_3x"}, \code{"subtracted_10x"}.
+#'                           (default
 #'                             \code{"ignored"}).
 #' @param is_log_independent   Logical. Log10-transform the concentration?
 #'                             (default \code{TRUE}).

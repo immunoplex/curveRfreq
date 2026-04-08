@@ -135,8 +135,6 @@ The lower asymptote `l_asy_constraint_method` can be set to the following:
 
 ```{r, antigen constraints}
 antigen_constraints <- data.frame(
-  study_accession              = "MADI_01",
-  experiment_accession         = "IgG1",
   antigen                      = "victoria",
   l_asy_min_constraint         = 0,
   l_asy_max_constraint         = 0,
@@ -160,9 +158,13 @@ The following are the parameters and their accepted values and definitions. The 
   - `FALSE`: No prozone correction is performed.
 
 - **`blank_option`**  
-  Character string. Controls how blank/control wells are handled. ptions include:  
+  Character string. Controls how blank wells are handled. options include:  
   - `"ignored"`: Blank wells are excluded from analysis.  
-  - `"subtracted"`: Blank values are subtracted from observed responses.  
+  - `"subtracted"`: The geometric mean of blank responses are subtracted from observed responses.
+  - `"subtacted_3x`: 3 times the geometric mean of blank responses are subtracted from observed responses
+   - `"subtacted_10x`: 10 times the geometric mean of blank responses are subtracted from observed responses
+
+MFI values from test samples below zero are not possible (fluorescence intensity is physically constrained to non-negative values) and are set to zero. 
 
 - **`is_log_response`**  
   Logical (`TRUE` or `FALSE`).  
@@ -253,7 +255,7 @@ processed_data$antigen_fit_options
 
 Candidate models from the `model_names` vector are fit to the data. Of the converging fits, the best model is selected based on the AIC score. The model with the lowest AIC score is selected and is used for all donstream QC metrics and sample concentration prediction and measurement error calculations for the selected `curve_id` (i.e., antigen on the plate).
 
-The first step is to define the formulas of the models of interest. 
+The first step is to define the formulas of the models of interest. If the lower asymptote is fixed to a constant, then the $a$ parameter will be directly substituted into the model formulas. 
 ```{r, model formulas}
 formulas <- select_model_formulas(fixed_constraint = antigen_plate$fixed_a_result, response_variable = response_var,
                                     is_log_response = study_params$is_log_response, model_names = model_names)
@@ -420,7 +422,7 @@ best_fit <- tidy.nlsLM(best_fit = best_fit, fixed_a_result = antigen_plate$fixed
 best_fit$best_tidy
 ```
 
-`summarize_fit()` augments the best_fit object by calculating key Quality Control metrics for the standard curve and model fit statistics as well as metadata. 
+`summarize_fit()` augments the best_fit object by calculating key quality control metrics for the standard curve and model fit statistics as well as metadata. 
 ```{r, best_fit_summary, collapse= TRUE}
 best_fit <- summarize_fit(best_fit = best_fit, response_variable = response_var,
                           independent_variable = indep_var,
@@ -440,8 +442,7 @@ The resulting `best_fit$best_fit_summary` contains one row per fitted curve and 
 | Inflection Point | `(inflect_x, inflect_y)` | The point on the standard curve where the concavity transitions from concave up to concave down. It is the point where the assay is most sensitive to measurement errors in the measured response of the assay.|
 | Limits of Detection (LOD) | `(llod, ulod)` | Lower and upper LODs are defined as the upper 97.5% confidence bound of the lower asymptote and the lower 2.5% confidence bound of the upper asymptote, respectively (Rajam et al.). Limits of Detection correspond to the y-coordinate in the legend, as they are defined on the response axis.|
 | Minimum/Maximum Detectable Concentrations (MDC) | `(mindc, maxdc)` | The smallest antibody concentration that produces a signal the assay can detect above background (Rajam et al.). This corresponds to the x-coordinate of the Lower Limit of Detection in the legend, as it is on the concentration axis.|
-| Reliable Detection Limits (RDL) | `(minrdl, maxrdl)` | Lower RDL: The lowest concentration at which the assay consistently produces a signal above background with 95% confidence based on the fit of the standard curve (Rajam et al.).
-Upper RDL: Analogously, the highest concentration at which the assay consistently produces a signal below the upper asymptote (saturation) with 95% confidence, based on the fit of the standard curve. |
+| Reliable Detection Limits (RDL) | `(minrdl, maxrdl)` | Lower RDL: The lowest concentration at which the assay consistently produces a signal above background with 95% confidence based on the fit of the standard curve (Rajam et al.). Upper RDL: Analogously, the highest concentration at which the assay consistently produces a signal below the upper asymptote (saturation) with 95% confidence, based on the fit of the standard curve. |
 | Limits of Quantification (LOQ) | `(lloq, uloq)` | Defines a region of assay response (MFI) and concentration where sample estimates have less measurement error. Limits of Quantification are derived from the local minimum and maximum of the second derivative of x given y of the standard curve (Daly et al.) , (Jeanne L Sebaugh and P. D. McCray) , (Sanz et al.).|
 
 ---
