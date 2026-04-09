@@ -8,7 +8,7 @@ with automatic model selection via AIC. It provides direct control over
 asymotote constraints, and estimates sample concentrations by inversion
 of the fitted equation. In addition quality control measures including
 limits of detection and limits of quantification can be calculated as
-well as sample measurement error. This package provides a pracrical
+well as sample measurement error. This package provides a practical
 default for routine single-plate analysis where computational speed and
 reliability matter most.
 
