@@ -171,12 +171,12 @@ compute_inflection_point <- function(model_name, fit, fixed_a_result, independen
 #'
 #' @export
 generate_lods <- function(best_fit, fixed_a_result, std_error_blank,  verbose = TRUE) {
-  
+
   best_ci <- best_fit$best_ci
   best_data <- best_fit$best_data
-  
+
   ulod <- best_ci[best_ci$parameter == "d",]$conf.low
-  
+
   if (!is.null(fixed_a_result)) {
     if (is.null(std_error_blank) || is.na(std_error_blank)) {
       std_error_blank <- 0
@@ -191,12 +191,12 @@ generate_lods <- function(best_fit, fixed_a_result, std_error_blank,  verbose = 
   } else {
     llod <- best_ci[best_ci$parameter == "a",]$conf.high
   }
-  
+
   if (ulod < 0 || ulod < llod) {
     ulod  <- NA_real_
   }
   return(list(llod = llod, ulod = ulod))
-  
+
 }
 
 #' Compute MDC and RDL values from fitted model and LODs
@@ -252,38 +252,38 @@ generate_lods <- function(best_fit, fixed_a_result, std_error_blank,  verbose = 
 #' @export
 generate_mdc_rdl <- function(best_fit, lods,
                              independent_variable, verbose = TRUE) {
-  
+
   # Refactor 1: accept pre-computed lods instead of recomputing
   llod <- as.numeric(lods$llod)
   ulod <- as.numeric(lods$ulod)
-  
+
   fit        <- best_fit$best_fit
   best_data  <- best_fit$best_data
-  
+
   # x-range of the standards (search bounds for uniroot)
   x_data <- best_data[[independent_variable]]
   x_lo   <- min(x_data, na.rm = TRUE)
   x_hi   <- max(x_data, na.rm = TRUE)
-  
+
   # Degrees of freedom for t-quantile (used by CI calculations)
   n_params <- length(coef(fit))
   n_obs    <- nrow(best_data)
   t_crit   <- qt(0.975, df = n_obs - n_params)
-  
+
   # Variance-covariance matrix of fitted parameters
   V <- vcov(fit)
-  
+
   # Refactor 2: hoist invariants out of pred_se inner loop
   theta <- coef(fit)
   p     <- length(theta)
   rhs   <- as.list(formula(fit))[[3]]
-  
+
   # --- helper: predicted y at a single x ----------------------------------
   pred_y <- function(x_val) {
     nd <- setNames(data.frame(x_val), independent_variable)
     as.numeric(predict(fit, newdata = nd))
   }
-  
+
   # --- helper: SE of predicted y via delta method -------------------------
   #     grad(theta) evaluated numerically; se = sqrt(grad' V grad)
   #     theta, p, rhs, V are captured from enclosing scope (hoisted)
@@ -298,7 +298,7 @@ generate_mdc_rdl <- function(best_fit, lods,
     }, numeric(1))
     sqrt(as.numeric(crossprod(grad, V %*% grad)))
   }
-  
+
   # --- helper: safe uniroot wrapper --------------------------------------
   safe_uniroot <- function(f, lower, upper) {
     tryCatch({
@@ -309,21 +309,21 @@ generate_mdc_rdl <- function(best_fit, lods,
       uniroot(f, lower = lower, upper = upper, tol = .Machine$double.eps^0.5)$root
     }, error = function(e) NA_real_)
   }
-  
+
   # --- 1. mindc: fitted curve == llod -------------------------------------
   mindc <- NA_real_
   if (!is.na(llod)) {
     mindc <- safe_uniroot(function(x_val) pred_y(x_val) - llod,
                           lower = x_lo, upper = x_hi)
   }
-  
+
   # --- 2. maxdc: fitted curve == ulod -------------------------------------
   maxdc <- NA_real_
   if (!is.na(ulod)) {
     maxdc <- safe_uniroot(function(x_val) pred_y(x_val) - ulod,
                           lower = x_lo, upper = x_hi)
   }
-  
+
   # --- 3. minrdl: 2.5% CI of fitted curve == llod ------------------------
   #        lower CI = pred_y(x) - t * se(x)
   minrdl <- NA_real_
@@ -333,7 +333,7 @@ generate_mdc_rdl <- function(best_fit, lods,
       lower = x_lo, upper = x_hi
     )
   }
-  
+
   # --- 4. maxrdl: 97.5% CI of fitted curve == ulod -----------------------
   #        upper CI = pred_y(x) + t * se(x)
   maxrdl <- NA_real_
@@ -343,13 +343,13 @@ generate_mdc_rdl <- function(best_fit, lods,
       lower = x_lo, upper = x_hi
     )
   }
-  
+
   if (verbose) {
     message(sprintf("MDC/RDL - mindc: %s, maxdc: %s, minrdl: %s, maxrdl: %s",
                     format(mindc, digits = 4), format(maxdc, digits = 4),
                     format(minrdl, digits = 4), format(maxrdl, digits = 4)))
   }
-  
+
   list(
     mindc  = as.numeric(mindc),
     maxdc  = as.numeric(maxdc),
@@ -421,42 +421,42 @@ generate_mdc_rdl <- function(best_fit, lods,
 compute_loqs <- function(best_d2xy, fit, independent_variable, verbose = TRUE) {
   y <- as.numeric(best_d2xy$d2x_y)
   x <- as.numeric(best_d2xy$x)
-  
+
   n <- length(y)
   if (n < 3) stop("Need at least 3 points to detect local extrema.")
-  
+
   # first differences
   dy <- diff(y)
-  
+
   # candidate interior indices where slope changes sign
   idx_max <- which(dy[-1] < 0 & dy[-length(dy)] > 0) + 1  # local max neighborhood
   idx_min <- which(dy[-1] > 0 & dy[-length(dy)] < 0) + 1  # local min neighborhood
-  
+
   interpolate_vertex <- function(i) {
     # use points (i-1, i, i+1)
     xi <- x[(i-1):(i+1)]
     yi <- y[(i-1):(i+1)]
-    
+
     # fit quadratic: y = a*x^2 + b*x + c
     X <- cbind(xi^2, xi, 1)
     coef <- solve(t(X) %*% X, t(X) %*% yi)  # least squares for robustness
     a <- coef[1]; b <- coef[2]; c <- coef[3]
-    
+
     if (a == 0) {
       # fallback: no curvature, just return middle point
       return(list(x = xi[2], y = yi[2]))
     }
-    
+
     # vertex of parabola: x* = -b / (2a)
     xv <- -b / (2 * a)
-    
+
     # clamp to local interval [x_{i-1}, x_{i+1}] to avoid nonsense extrapolation
     xv <- max(min(xv, max(xi)), min(xi))
-    
+
     yv <- a * xv^2 + b * xv + c
     list(x = xv, y = yv)
   }
-  
+
   # interpolate for each candidate
   if (length(idx_max) > 0) {
     max_list <- lapply(idx_max, interpolate_vertex)
@@ -468,7 +468,7 @@ compute_loqs <- function(best_d2xy, fit, independent_variable, verbose = TRUE) {
   } else {
     max_df <- data.frame(x = numeric(0), y = numeric(0), i_center = integer(0))
   }
-  
+
   if (length(idx_min) > 0) {
     min_list <- lapply(idx_min, interpolate_vertex)
     min_df <- data.frame(
@@ -479,28 +479,28 @@ compute_loqs <- function(best_d2xy, fit, independent_variable, verbose = TRUE) {
   } else {
     min_df <- data.frame(x = numeric(0), y = numeric(0), i_center = integer(0))
   }
-  
+
   # Handle empty dataframes and ensure scalar values are returned
   if (nrow(max_df) > 0) {
     lloq_x <- as.numeric(max_df[which.max(max_df$y), "x"][1])
   } else {
     lloq_x <- NA_real_
   }
-  
+
   if (nrow(min_df) > 0) {
     uloq_x <- as.numeric(min_df[which.min(min_df$y), "x"][1])
   } else {
     uloq_x <- NA_real_
   }
-  
+
   y_loq <- tryCatch({
     predict(fit, newdata = setNames(data.frame(x = c(lloq_x, uloq_x)), independent_variable))
   }, error = function(e) rep(NA_real_, 2))
-  
+
   # Ensure lloq_y and uloq_y are scalar numeric values
   lloq_y <- if (length(y_loq) >= 1 && !all(is.na(y_loq))) as.numeric(min(y_loq, na.rm = TRUE)) else NA_real_
   uloq_y <- if (length(y_loq) >= 1 && !all(is.na(y_loq))) as.numeric(max(y_loq, na.rm = TRUE)) else NA_real_
-  
+
   return(list(
     lloq = lloq_x,
     uloq = uloq_x,
@@ -525,12 +525,12 @@ compute_loqs <- function(best_d2xy, fit, independent_variable, verbose = TRUE) {
 #'   \itemize{
 #'     \item \code{best_fit$best_fit}: Fitted model object
 #'     \item \code{best_fit$best_data}: Data used for fitting
-#'     \item \code{best_fit$best_model_name}: the model name of the best fit (selected by minimizing the AIC score) 
+#'     \item \code{best_fit$best_model_name}: the model name of the best fit (selected by minimizing the AIC score)
 #'     \item \code{best_fit$best_d2xy}: data.frame of second derivative values
 #'   }
 #' @param response_variable Character string naming the response variable in \code{best_data} (e.g. mfi, absorbance).
 #' @param independent_variable Character string naming the predictor variable used in the model.
-#' @param fixed_a_result numeric value for parameter \code{a}. This a derived result from the \code{\link{select_antigen_plate}} function. 
+#' @param fixed_a_result numeric value for parameter \code{a}. This a derived result from the \code{\link{select_antigen_plate}} function.
 #' @param antigen_settings List of antigen-specific settings. May include:
 #'   \itemize{
 #'     \item \code{std_error_blank}: Standard error of the blank used for LLOD calculation
@@ -668,7 +668,7 @@ summarize_fit <- function(best_fit,
     if (verbose) message("[summarize_fit] LOD calculation failed: ", e$message)
     list(llod = NA_real_, ulod = NA_real_)
   })
-  
+
   # ---- MDC / RDL -------------------------------
   mdc_rdl <- tryCatch({
     generate_mdc_rdl(
@@ -681,7 +681,7 @@ summarize_fit <- function(best_fit,
     if (verbose) message("[summarize_fit] MDC/RDL calculation failed: ", e$message)
     list(mindc = NA_real_, maxdc = NA_real_, minrdl = NA_real_, maxrdl = NA_real_)
   })
-  
+
   # --- Curvature LOQs -------
   curv_loqs <- tryCatch({
     if (!is.null(best_fit$best_d2xy) && nrow(best_fit$best_d2xy) >= 3) {
@@ -699,8 +699,8 @@ summarize_fit <- function(best_fit,
     if (verbose) message("[summarize_fit] compute_loqs error: ", conditionMessage(e))
     list(lloq = NA_real_, uloq = NA_real_, lloq_y = NA_real_, uloq_y = NA_real_)
   })
-  
-  
+
+
   # Goodness-of-fit
   rss       <- tryCatch(sum(residuals(fit)^2), error = function(e) NA_real_)
   df_resid  <- tryCatch(df.residual(fit), error = function(e) NA_real_)
@@ -759,7 +759,7 @@ summarize_fit <- function(best_fit,
   glance_df$loglik      <- loglik_val
   glance_df$mse         <- mse_val
   glance_df$cv          <- cv_val
-  glance_df$source      <- safe_unique(best_data$source)
+  # glance_df$source      <- safe_unique(best_data$source)
   glance_df$bkg_method  <- antigen_fit_options$blank_option %||% NA_character_
   glance_df$is_log_response <- antigen_fit_options$is_log_response %||% NA
   glance_df$is_log_x    <- antigen_fit_options$is_log_concentration %||% NA
