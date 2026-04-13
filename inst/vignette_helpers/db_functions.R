@@ -35,10 +35,10 @@ pull_data <- function(study_accession, experiment_accession, project_id, conn = 
   plates$plate_nom <- paste(plates$plate, plates$nominal_sample_dilution, sep = "-")
 
 
-  antigen_constraints <- fetch_antigen_parameters(study_accession = study_accession,
-                                                  experiment_accession = experiment_accession,
-                                                  project_id = project_id,
-                                                  conn = conn)
+  # antigen_constraints <- fetch_antigen_parameters(study_accession = study_accession,
+  #                                                 experiment_accession = experiment_accession,
+  #                                                 project_id = project_id,
+  #                                                 conn = conn)
 
   standard_curve_data <- fetch_db_standards(study_accession = study_accession,
                                             experiment_accession = experiment_accession,
@@ -170,73 +170,73 @@ pull_data <- function(study_accession, experiment_accession, project_id, conn = 
         paste(std_prefix, collapse = ", "), "\n")
   }
 
-  mcmc_samples <- fetch_best_sample_robust_concentrations(study_accession = study_accession,
-                                                          experiment_accession = experiment_accession,
-                                                          project_id = project_id,
-                                                          conn = conn)
-
-  #mcmc_samples_read <<- mcmc_samples
-
-  mcmc_pred <- fetch_best_pred_robust_concentrations(study_accession = study_accession,
-                                                     experiment_accession = experiment_accession,
-                                                     project_id = project_id,
-                                                     conn = conn)
-
-  # ── Normalize MCMC data for ELISA wavelength compatibility ──────────
-  # Apply the same wavelength normalization and source_nom construction
-  # that standards/blanks/samples receive above, so that
-  # select_antigen_plate can filter MCMC data consistently.
-  if (nrow(mcmc_samples) > 0) {
-    if (!"wavelength" %in% names(mcmc_samples)) {
-      mcmc_samples$wavelength <- WL_NONE
-    }
-    mcmc_samples$wavelength <- normalize_wavelength(mcmc_samples$wavelength)
-    mcmc_samples$source_nom <- build_source_nom(mcmc_samples)
-
-    # Ensure plate_nom exists and is consistent
-    if (all(c("plate", "nominal_sample_dilution") %in% names(mcmc_samples))) {
-      mcmc_samples$plate_nom <- paste(
-        mcmc_samples$plate, mcmc_samples$nominal_sample_dilution, sep = "-"
-      )
-    }
-
-    # Fix source_nom prefix to match standards (same logic as above)
-    if (length(std_prefix) == 1) {
-      mcmc_samp_prefix <- unique(sub("\\|.*$", "", mcmc_samples$source_nom))
-      if (!all(mcmc_samp_prefix == std_prefix)) {
-        mcmc_samples <- fix_source_nom(mcmc_samples, std_prefix)
-        cat("  ✓ mcmc_samples source_nom prefixes updated to match standards\n")
-      }
-    }
-
-    # Rename response column for ELISA compatibility
-    if (length(response_var) == 1 && response_var != "mfi" &&
-        "mfi" %in% names(mcmc_samples)) {
-      names(mcmc_samples)[names(mcmc_samples) == "mfi"] <- response_var
-    }
-  }
-
-  if (nrow(mcmc_pred) > 0) {
-    if (!"wavelength" %in% names(mcmc_pred)) {
-      mcmc_pred$wavelength <- WL_NONE
-    }
-    mcmc_pred$wavelength <- normalize_wavelength(mcmc_pred$wavelength)
-    mcmc_pred$source_nom <- build_source_nom(mcmc_pred)
-
-    if (all(c("plate", "nominal_sample_dilution") %in% names(mcmc_pred))) {
-      mcmc_pred$plate_nom <- paste(
-        mcmc_pred$plate, mcmc_pred$nominal_sample_dilution, sep = "-"
-      )
-    }
-
-    if (length(std_prefix) == 1) {
-      mcmc_pred_prefix <- unique(sub("\\|.*$", "", mcmc_pred$source_nom))
-      if (!all(mcmc_pred_prefix == std_prefix)) {
-        mcmc_pred <- fix_source_nom(mcmc_pred, std_prefix)
-        cat("  ✓ mcmc_pred source_nom prefixes updated to match standards\n")
-      }
-    }
-  }
+  # mcmc_samples <- fetch_best_sample_robust_concentrations(study_accession = study_accession,
+  #                                                         experiment_accession = experiment_accession,
+  #                                                         project_id = project_id,
+  #                                                         conn = conn)
+  #
+  # #mcmc_samples_read <<- mcmc_samples
+  #
+  # mcmc_pred <- fetch_best_pred_robust_concentrations(study_accession = study_accession,
+  #                                                    experiment_accession = experiment_accession,
+  #                                                    project_id = project_id,
+  #                                                    conn = conn)
+  #
+  # # ── Normalize MCMC data for ELISA wavelength compatibility ──────────
+  # # Apply the same wavelength normalization and source_nom construction
+  # # that standards/blanks/samples receive above, so that
+  # # select_antigen_plate can filter MCMC data consistently.
+  # if (nrow(mcmc_samples) > 0) {
+  #   if (!"wavelength" %in% names(mcmc_samples)) {
+  #     mcmc_samples$wavelength <- WL_NONE
+  #   }
+  #   mcmc_samples$wavelength <- normalize_wavelength(mcmc_samples$wavelength)
+  #   mcmc_samples$source_nom <- build_source_nom(mcmc_samples)
+  #
+  #   # Ensure plate_nom exists and is consistent
+  #   if (all(c("plate", "nominal_sample_dilution") %in% names(mcmc_samples))) {
+  #     mcmc_samples$plate_nom <- paste(
+  #       mcmc_samples$plate, mcmc_samples$nominal_sample_dilution, sep = "-"
+  #     )
+  #   }
+  #
+  #   # Fix source_nom prefix to match standards (same logic as above)
+  #   if (length(std_prefix) == 1) {
+  #     mcmc_samp_prefix <- unique(sub("\\|.*$", "", mcmc_samples$source_nom))
+  #     if (!all(mcmc_samp_prefix == std_prefix)) {
+  #       mcmc_samples <- fix_source_nom(mcmc_samples, std_prefix)
+  #       cat("  ✓ mcmc_samples source_nom prefixes updated to match standards\n")
+  #     }
+  #   }
+  #
+  #   # Rename response column for ELISA compatibility
+  #   if (length(response_var) == 1 && response_var != "mfi" &&
+  #       "mfi" %in% names(mcmc_samples)) {
+  #     names(mcmc_samples)[names(mcmc_samples) == "mfi"] <- response_var
+  #   }
+  # }
+  #
+  # if (nrow(mcmc_pred) > 0) {
+  #   if (!"wavelength" %in% names(mcmc_pred)) {
+  #     mcmc_pred$wavelength <- WL_NONE
+  #   }
+  #   mcmc_pred$wavelength <- normalize_wavelength(mcmc_pred$wavelength)
+  #   mcmc_pred$source_nom <- build_source_nom(mcmc_pred)
+  #
+  #   if (all(c("plate", "nominal_sample_dilution") %in% names(mcmc_pred))) {
+  #     mcmc_pred$plate_nom <- paste(
+  #       mcmc_pred$plate, mcmc_pred$nominal_sample_dilution, sep = "-"
+  #     )
+  #   }
+  #
+  #   if (length(std_prefix) == 1) {
+  #     mcmc_pred_prefix <- unique(sub("\\|.*$", "", mcmc_pred$source_nom))
+  #     if (!all(mcmc_pred_prefix == std_prefix)) {
+  #       mcmc_pred <- fix_source_nom(mcmc_pred, std_prefix)
+  #       cat("  ✓ mcmc_pred source_nom prefixes updated to match standards\n")
+  #     }
+  #   }
+  # }
 
   #mcmc_samples_2 <<- mcmc_samples
   standards <- make_curve_id(standards)
@@ -245,9 +245,9 @@ pull_data <- function(study_accession, experiment_accession, project_id, conn = 
 
   return(list(plates=plates, standards=standards,
               blanks=blanks, samples=samples,
-              mcmc_samples = mcmc_samples,
-              mcmc_pred = mcmc_pred,
-              antigen_constraints=antigen_constraints,
+              # mcmc_samples = mcmc_samples,
+              # mcmc_pred = mcmc_pred,
+              # antigen_constraints=antigen_constraints,
               response_var = response_var,
               indep_var = indep_var)
   )

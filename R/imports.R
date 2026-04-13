@@ -12,4 +12,5 @@ utils::globalVariables(c(
 #' @importFrom reshape2 melt
 #' @import dplyr
 #' @import plotly
+#' @importFrom R6 R6Class
 "_PACKAGE"
