@@ -1,0 +1,464 @@
+---
+title: "Frequentist Modeling of Immunoassay Standard Curves with the StandardCurve Class"
+author: ["Seamus O. Stein", "Michael Scot Zens", "Anne G. Hoen"]
+date: "`r format(Sys.Date(), '%B %d, %Y')`"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Frequentist Modeling of Immunoassay Standard Curves with the StandardCurve Class}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment  = "#>"
+)
+```
+
+## Overview
+This vignette demonstrates a complete workflow for fitting standard curves
+for immunoassay data, including both ELISA and multiplex bead assay data,
+and deriving detection metrics using the `curveRfreq` package. The
+workflow is encapsulated in the `StandardCurve` R6 class, which wraps
+the full `curveRfreq` pipeline into a single stateful object with a
+clean, verb-driven API: the class  handles everything from antigen
+selection through model fitting, QC metrics, error propagation, and plotting.
+
+We walk through the complete workflow:
+
+1. **Load and prepare data** — load `$standards`, `$blanks`, `$samples` data externally and construct
+   the `StandardCurve` object with study settings and antigen constraints. 
+2. **Set Curve Settings** (`$set_curve_settings()`) — Resolves antigen-specific curve setting for the data loaded into the StandardCurve object, including lower asympote handling (fix, constrained etc) and blank variability estimates.
+
+3. **Fit** (`$fit()`) — fit candidate nonlinear models with the constants set in the object and select the best model groundd in information theory.
+4. **Compare** (`$compare_models()`) — Provides a visual comparison of the converging models fit including an overlay, residuals vs fitted values, the parameter estimates and the AIC. 
+5. **Summarize** (`$summarize()`) — inspect fitted parameters and key
+   QC metrics for the standard curve:
+   - Inflection Point
+   - Limits of Detection (LOD)
+   - Minimum/Maximum Detectable Concentrations (MDC)
+   - Reliable Detection Limits (RDL)
+   - Curvature-based Limits of Quantification (LOQ)
+6. **Plot** (`$plot()`) — visualize the final standard curve
+7. **Propagate error** (`$propagate_error()`) — compute sample
+   concentration predictions, measurement error, and the Precision Profile
+8. **Extract** (`$get_results()`) — pull tables for downstream use
+
+## Setup
+
+We begin by loading the development version of the package and establishing
+a database connection. In practice, users may supply their own data through their database connection
+or by setting up data structures accepted and outlined in this vignette.
+
+
+```{r setup, message = FALSE}
+devtools::load_all()
+```
+
+```{r load-data}
+script_path <- system.file("vignette_helpers", "db_functions.R", package = "curveRfreq")
+source(script_path)
+library(glue)
+conn <- get_db_connection()
+
+curve_id_elements = c("project_id", "study_accession", "experiment_accession", "feature", "source",
+                                     "antigen", "plate", "nominal_sample_dilution", "wavelength")
+
+loaded_data <- pull_data(study_accession = "MADI_01",
+                         experiment_accession = "IgG1", 
+                         project_id = 17, 
+                         curve_id_elements = curve_id_elements,
+                         conn = conn)
+
+head(loaded_data$curve_id_lookup)
+```
+
+`loaded_data` is a plain list. The class expects it to contain 
+`$standards`, `$blanks`, `$samples`, `$response_var`, and `$indep_var`.
+
+We choose a curve_id from the lookup table and filter the loaded data by it for the constructor to take. 
+
+```{r}
+curve_id <- 1118
+curve_data <- filter_by_curve_id(loaded_data, curve_id = curve_id)
+```
+
+- `model_names`: Candidate nonlinear models considered during the fitting algorithm.
+   Model names are specifed as a vector of strings limited to:
+    - logistic5
+    - loglogistic5
+    - logistic4
+    - loglogistic4
+    - gompertz4
+
+**To manually exclude a model form from consideration do not include it in the list.**
+
+```{r}
+model_names <- c("logistic5", "loglogistic5",
+                                 "logistic4", "loglogistic4",
+                                 "gompertz4")
+
+is_display_log_response <- TRUE
+is_display_log_independent <- TRUE
+verbose <- TRUE
+```
+
+## Define Antigen Constraints and Study Parameters
+
+These are specified once and passed to `$new()`. They apply to every
+`$set_curve_settings()` / `$fit()` call on this object.
+
+
+### Antigen Constraints
+For the particular antigen in a study and experiment, constraints on the lower asymptote of the standard curve and constraint method as well as the standard curve concentration is set.
+The lower asymptote `l_asy_constraint_method` can be set to the following:
+
+- default: the default constraints built into the algorithm
+- user_defined: uses the `l_asy_min_constraint` and `l_asy_max_constraint` to constrain the lower asymptote. This is helpful if one wishes to fix the lower asymptote to a constant such as a MFI value of 0.
+- range_of_blanks: uses the range of the blanks for the associated antigen and plate identifier as the lower asymptote.
+- geometric_mean_of_blanks: constrains the lower asymptote for the associated antigen and plate identifier to the geometric mean of the blanks
+
+
+
+```{r antigen-constraints}
+antigen_constraints <- data.frame(
+  antigen                      = "victoria",
+  l_asy_min_constraint         = 0,
+  l_asy_max_constraint         = 0,
+  l_asy_constraint_method      = "default",
+  standard_curve_concentration = 10000,
+  pcov_threshold               = 15,
+  stringsAsFactors             = FALSE
+)
+
+print(antigen_constraints)
+```
+
+### Study Parameters
+
+Parameters for the entire study are set in a named list before fitting standard curve and influence its fit.
+The following are the parameters and their accepted values and definitions. The example below uses the suggested defaults. 
+
+- **`applyProzone`**  
+  Logical (`TRUE` or `FALSE`).  
+  Determines whether prozone (hook effect) detection and correction is applied.  
+  - `TRUE`: Detects and adjusts for potential signal suppression at low dilutions.  
+  - `FALSE`: No prozone correction is performed.
+
+- **`blank_option`**  
+  Character string. Controls how blank wells are handled. options include:  
+  - `"ignored"`: Blank wells are excluded from analysis.  
+  - `"subtracted"`: The geometric mean of blank responses are subtracted from observed responses.
+  - `"subtacted_3x`: 3 times the geometric mean of blank responses are subtracted from observed responses
+   - `"subtacted_10x`: 10 times the geometric mean of blank responses are subtracted from observed responses
+
+MFI values from test samples below zero are not possible (fluorescence intensity is physically constrained to non-negative values) and are set to zero. 
+
+- **`is_log_response`**  
+  Logical (`TRUE` or `FALSE`).  
+  Indicates whether the response variable (e.g., MFI or absorbance) should be log-transformed.
+  - `TRUE`: Fit models on the log-transformed response.  
+  - `FALSE`: Use the raw response values.
+
+- **`is_log_independent`**  
+  Logical (`TRUE` or `FALSE`).  
+  Specifies whether the independent variable (concentration) is log-transformed.  
+  - `TRUE`: Use log-scale for the independent variable.  
+  - `FALSE`: Use the original scale.
+
+```{r study-params}
+study_params <- list(
+  applyProzone       = TRUE,
+  blank_option       = "ignored",
+  is_log_response    = TRUE,
+  is_log_independent = TRUE
+)
+```
+
+
+
+## Construct the StandardCurve Object
+
+Pass the loaded data, study parameters, and constraints to `$new()`. The class
+reads `response_var` and `indep_var` directly from `curve_data`.
+
+```{r new}
+sc <- StandardCurve$new(
+  loaded_data         = curve_data,
+  study_params        = study_params,
+  antigen_constraints = antigen_constraints,
+  model_names = model_names,
+  is_display_log_response    = is_display_log_response,
+  is_display_log_independent = is_display_log_independent,
+  verbose = verbose
+)
+
+# Printing the object shows pipeline status at any time
+sc
+```
+
+## Set curve settings
+
+`$set_curve_settings()` receives the data in the `StandardCurve()` object containing a single antigen / plate combination
+and resolves antigen-specific constraints. It resets any stale fit results
+automatically so re-selecting is always safe.
+
+```{r select}
+sc$set_curve_settings()
+```
+
+The filtered standards and antigen settings are now available for inspection if desired.
+
+```{r select-inspect}
+head(sc$antigen_plate$plate_standard)
+sc$antigen_plate$antigen_settings
+```
+
+
+
+## Model Fitting and Selection. 
+
+`$fit()` runs the entire fitting pipeline in one call across eight internal
+stages: preprocessing, formula construction, constraint computation, starting
+value generation, multi-start nonlinear least squares, model comparison,
+AIC-based selection, and QC metric calculation.
+
+```{r fit}
+sc$fit()
+```
+
+The object now holds all intermediate results as accessible fields -- nothing
+is hidden.
+
+```{r fit-internals}
+# Raw candidate fits
+sc$fit_summary          # AIC, BIC, RSS for each model
+sc$fit_params           # parameter estimates and CIs per model
+
+# Best model outputs
+# sc$best_fit$best_model_name
+# sc$best_fit$best_tidy        # tidy parameter table
+# sc$best_fit$best_fit_summary # QC metrics + fit stats (one row)
+```
+
+
+
+##  Summarize
+
+`$summarize()` computes and prints fit statistics, curve characteristics (inflection point, LOD, MDC, RDL, LOQ), and the tidy parameter table to the console - including the best model name, candidate model comparison (AIC, BIC, RSS), and QC metrics. A summary of the fitted model parameters alongside their lower and upper constraints is stored in `$best_fit$best_tidy` as a data frame, making it available for reporting and downstream analysis.
+
+```{r summarize}
+sc$summarize()
+
+sc$best_fit$best_model_name
+sc$best_fit$best_tidy        # tidy parameter table
+sc$best_fit$best_fit_summary # QC metrics + fit stats (one row)
+```
+
+Each row corresponds to a model parameter whose definitions are as follows.
+
+### **Model Parameters**
+
+| Parameter | Description |
+|----------|------------|
+| `a` | Lower asymptote |
+| `b` | Slope parameter |
+| `c` | Inflection point (midpoint) |
+| `d` | Upper asymptote |
+| `g` | Asymmetry parameter (5-parameter models only) |
+
+The  columns include:
+
+- term: Name of the model parameter
+- lower, upper: Bounds for the parameter based on constraints
+- estimate: Estimated value of the parameter
+- std_error: Standard error of the estimate
+- statistic: Test statistic (estimate divided by standard error)
+- p_value: p-value of the parameter
+- curve_id: Unique identifier for the fitted curve
+
+The resulting `best_fit$best_fit_summary` contains one row per fitted curve and includes:
+
+**Curve Characteristics**
+
+| Metric | Notation | Description |
+|------|----------|------------|
+| Inflection Point | `(inflect_x, inflect_y)` | The point on the standard curve where the concavity transitions from concave up to concave down. It is the point where the assay is most sensitive to measurement errors in the measured response of the assay.|
+| Limits of Detection (LOD) | `(llod, ulod)` | Lower and upper LODs are defined as the upper 97.5% confidence bound of the lower asymptote and the lower 2.5% confidence bound of the upper asymptote, respectively (Rajam et al.). Limits of Detection correspond to the y-coordinate in the legend, as they are defined on the response axis.|
+| Minimum/Maximum Detectable Concentrations (MDC) | `(mindc, maxdc)` | The smallest antibody concentration that produces a signal the assay can detect above background (Rajam et al.). This corresponds to the x-coordinate of the Lower Limit of Detection in the legend, as it is on the concentration axis.|
+| Reliable Detection Limits (RDL) | `(minrdl, maxrdl)` | Lower RDL: The lowest concentration at which the assay consistently produces a signal above background with 95% confidence based on the fit of the standard curve (Rajam et al.). Upper RDL: Analogously, the highest concentration at which the assay consistently produces a signal below the upper asymptote (saturation) with 95% confidence, based on the fit of the standard curve. |
+| Limits of Quantification (LOQ) | `(lloq, uloq)` | Defines a region of assay response (MFI) and concentration where sample estimates have less measurement error. Limits of Quantification are derived from the local minimum and maximum of the second derivative of x given y of the standard curve (Daly et al.) , (Jeanne L Sebaugh and P. D. McCray) , (Sanz et al.).|
+
+---
+
+**Model Fit Statistics**
+
+| Metric | Notation | Description |
+|------|----------|------------|
+| Residual Degrees of Freedom | `dfresidual` | Degrees of freedom remaining after model fitting |
+| Number of Observations | `nobs` | Total number of data points used in the fit |
+| R-squared | `rsquare_fit` | Goodness-of-fit measure |
+| AIC | `aic` | Akaike Information Criterion for model selection |
+| BIC | `bic` | Bayesian Information Criterion for model selection |
+| Log-likelihood | `loglik` | Likelihood of the fitted model |
+| Mean Squared Error | `mse` | Average squared difference between observed and predicted values |
+| Coefficient of Variation | `cv` | Relative variability of the residuals |
+
+---
+
+**Model Parameters** 
+Model parameter values (e.g., a, b, c, d, g) are included.
+
+**Metadata**
+
+| Field | Notation | Description |
+|------|------------|
+| Model Type | `crit` | Selected model based on fitting criteria |
+| Convergence Status | `status` | Indicates whether the model successfully converged |
+| Standard curve formula | `formula` | Model formula used for fitting |
+| Log Response Flag | `is_log_response` | Whether response variable is log-transformed |
+| Log independent variable Flag | `is_log_x` | Whether idependent variable (concentration) is log-transformed |
+| Prozone Adjustment | `apply_prozone` | Indicates if prozone correction was applied |
+| Background Method | `bkg_method` | Method used for blank/background handling |
+
+
+## Step 7 -- Compare Candidate Models
+
+`$compare_models()` produces a multi-panel plot showing fitted curves,
+residuals vs. fitted values, parameter estimates with confidence intervals,
+and AIC scores for all converged candidate models. Use this to validate that
+the AIC-selected model is sensible.
+
+```{r compare-models, fig.width = 10, fig.height = 12, out.width = "100%"}
+sc$compare_models()
+
+```
+
+
+## Propagate Measurement Error
+
+`$propagate_error()` constructs an SE lookup table from the standards data,
+retrieves the values relevant to the selected antigen, and propagates
+measurement error from the standard curve to produce the precision profile
+(stored in `$best_fit$sample_se`).
+
+```{r propagate-error}
+sc$propagate_error()
+
+head(sc$best_fit$sample_se)
+```
+
+##  Plot the Final Standard Curve
+
+`$plot()` renders the selected best-fit curve with QC annotations including
+the inflection point, LOD, MDC, RDL, and LOQ bands.
+
+```{r plot, fig.width = 14, fig.height = 8, out.width = "100%"}
+sc$plot()
+
+```
+
+Log-scale axes can be toggled without refitting:
+
+```{r plot-linear, fig.width = 14, fig.height = 8, out.width = "100%"}
+sc$plot(is_display_log_independent = FALSE, is_display_log_response = FALSE)
+```
+
+
+## Extract Results
+
+`$get_results()` returns a named list of the key output tables for downstream
+analysis or export.
+
+```{r get-results}
+results <- sc$get_results()
+
+# Tables available
+names(results)
+
+# One-row QC + fit statistics summary
+results$best_fit_summary
+
+# Tidy parameter estimates
+results$best_tidy
+
+# Precision profile (populated after $propagate_error())
+head(results$sample_se)
+```
+
+```{r export, eval = FALSE}
+# write.csv(results$best_fit_summary, "curve_summary.csv",    row.names = FALSE)
+# write.csv(results$best_tidy,        "curve_parameters.csv", row.names = FALSE)
+# write.csv(results$sample_se,        "precision_profile.csv",row.names = FALSE)
+```
+
+
+## Fitting Multiple Antigens or Plates
+
+Because data loading is external, iterating over many antigen / plate
+combinations is straightforward. Call `$select()` with new arguments -- it
+resets all fit results automatically before each new run.
+
+```{r multi-antigen, eval = FALSE}
+# antigens <- c("victoria", "perth", "brisbane")
+# plates   <- c("plate_1", "plate_2", "plate_3")
+# 
+# all_summaries <- vector("list", length(antigens) * length(plates))
+# i <- 1
+# 
+# for (ant in antigens) {
+#   for (plt in plates) {
+#     sc$select(
+#       project_id              = 17,
+#       study_accession         = "MADI_01",
+#       experiment_accession    = "IgG1",
+#       feature                 = "IgG1",
+#       source                  = "Standard",
+#       antigen                 = ant,
+#       plate                   = plt,
+#       nominal_sample_dilution = "1000"
+#     )$fit()
+# 
+#     all_summaries[[i]] <- sc$get_results()$best_fit_summary
+#     i <- i + 1
+#   }
+# }
+# 
+# combined_summary <- do.call(rbind, all_summaries)
+```
+
+To switch to a different study entirely, pull new data externally and hand it
+to `$set_data()`. This replaces the data and clears all downstream state:
+
+```{r set-data, eval = FALSE}
+# loaded_data_2 <- pull_data("MADI_02", "IgG1", 17, conn)
+# 
+# sc$set_data(loaded_data_2)
+# 
+# sc$select(...)$fit()$summarize()
+```
+
+
+## Quick Reference
+
+```{r quick-ref, eval = FALSE}
+# # Full single-antigen workflow
+# loaded_data <- pull_data(study_accession, experiment_accession, project_id, conn)
+# 
+# sc <- StandardCurve$new(loaded_data, study_params, antigen_constraints)
+# 
+# sc$select(project_id, study_accession, experiment_accession,
+#           feature, source, antigen, plate, nominal_sample_dilution)
+# 
+# sc$fit()
+# sc$summarize()
+# sc$compare_models()
+# sc$plot()
+# sc$propagate_error()
+# 
+# results <- sc$get_results()
+# 
+# # Check status at any time
+# sc   # or print(sc)
+```
