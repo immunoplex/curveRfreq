@@ -99,7 +99,7 @@ StandardCurve <- R6Class(
     #' @field current_se SE values for the currently selected antigen.
     current_se = NULL,
 
-    #' @field .selection_args Internal cache of arguments from the last `$select()`.
+    #' @field .selection_args Internal cache of arguments from the last `$set_curve_settings()`.
     .selection_args = NULL,
 
     # =========================================================================
@@ -159,10 +159,10 @@ StandardCurve <- R6Class(
     antigen_constraints      = NULL,
     model_names              = NULL,
     curve_col                = "curve_id",
-    curve_id_element_order   = c("project_id", "study_accession",
-                                 "experiment_accession", "feature",
-                                 "source", "antigen", "plate",
-                                 "nominal_sample_dilution", "wavelength"),
+    # curve_id_element_order   = c("project_id", "study_accession",
+    #                              "experiment_accession", "feature",
+    #                              "source", "antigen", "plate",
+    #                              "nominal_sample_dilution", "wavelength"),
     is_display_log_response    = TRUE,
     is_display_log_independent = TRUE,
     verbose                    = TRUE
@@ -173,7 +173,7 @@ StandardCurve <- R6Class(
       self$study_params               <- study_params
       self$model_names                <- model_names
       self$curve_col                  <- curve_col
-      self$curve_id_element_order     <- curve_id_element_order
+      # self$curve_id_element_order     <- curve_id_element_order
       self$is_display_log_response    <- is_display_log_response
       self$is_display_log_independent <- is_display_log_independent
       self$verbose                    <- verbose
@@ -235,30 +235,30 @@ StandardCurve <- R6Class(
     },
 
     # =========================================================================
-    # select()
+    # set_curve_settings()
     # =========================================================================
-
     #' @description
-    #' Filter the loaded data to a single antigen / plate combination and
-    #' apply antigen-specific constraints.
+    #' Resolve antigen-specific constraints and curve settings.
     #'
-    #' Wraps `select_antigen_plate()`. Results are stored in `$antigen_plate`.
+    #' Wraps `resolve_curve_settings()` using `self$loaded_data`, which must
+    #' already be filtered to the relevant curve prior to calling this method.
+    #' Filtering is performed externally via `fetch_curve_id()` and
+    #' `filter_by_curve_id()` before constructing the object with `$new()` or
+    #' updating it with `$set_data()`.
     #'
-    #' @param project_id Character or integer.
-    #' @param study_accession Character.
-    #' @param experiment_accession Character.
-    #' @param feature Character. E.g. `"IgG1"`.
-    #' @param source Character. E.g. `"Standard"`.
-    #' @param antigen Character. Antigen label.
-    #' @param plate Character. Plate label, e.g. `"plate_3"`.
-    #' @param nominal_sample_dilution Character or numeric.
-    #' @param wavelength Character. Defaults to `"__none__"` (bead arrays).
+    #' Results are stored in `$antigen_plate`. Any stale fit results from a
+    #' previous `$set_curve_settings()` call are cleared automatically.
+    #'
+    #' @param wavelength Character. Defaults to `WL_NONE` (`"__none__"`) for
+    #'   bead arrays. Set explicitly for ELISA absorbance wavelengths,
+    #'   e.g. `"450"`.
     #'
     #' @return The `StandardCurve` object (invisibly).
     #'
     #' @examples
     #' \dontrun{
-    #' sc$select(
+    #' curve_id <- fetch_curve_id(
+    #'   lookup                  = loaded_data$curve_id_lookup,
     #'   project_id              = 17,
     #'   study_accession         = "MADI_01",
     #'   experiment_accession    = "IgG1",
@@ -266,56 +266,93 @@ StandardCurve <- R6Class(
     #'   source                  = "Standard",
     #'   antigen                 = "victoria",
     #'   plate                   = "plate_3",
-    #'   nominal_sample_dilution = "1000"
+    #'   nominal_sample_dilution = "1000",
+    #'   wavelength              = "__none__",
+    #'   element_order           = curve_id_element_order
     #' )
+    #'
+    #' filtered <- filter_by_curve_id(loaded_data, curve_id = curve_id)
+    #'
+    #' sc$set_curve_settings()
+    #' # or for ELISA:
+    #' sc$set_curve_settings(wavelength = "450")
     #' }
-    select = function(
-    project_id,
-    study_accession,
-    experiment_accession,
-    feature,
-    source,
-    antigen,
-    plate,
-    nominal_sample_dilution,
+    set_curve_settings = function(
+    # antigen,
+    # study_accession,
+    # experiment_accession,
+    # plate,
     wavelength = WL_NONE
     ) {
-      private$.step_banner("SELECT ANTIGEN PLATE")
-
-      # Cache for propagate_error() and print()
+      private$.step_banner("SET CURVE SETTINGS")
+      
+      # Cache selection args for propagate_error() and print()
       self$.selection_args <- list(
-        project_id              = project_id,
-        study_accession         = study_accession,
-        experiment_accession    = experiment_accession,
-        feature                 = feature,
-        source                  = source,
-        antigen                 = antigen,
-        plate                   = plate,
-        nominal_sample_dilution = nominal_sample_dilution,
-        wavelength              = wavelength
+        # study_accession      = study_accession,
+        # experiment_accession = experiment_accession,
+        # antigen              = antigen,
+        # plate                = plate,
+        wavelength           = wavelength
       )
-
-      self$antigen_plate <- select_antigen_plate(
-        loaded_data             = self$loaded_data,
-        project_id              = project_id,
-        study_accession         = study_accession,
-        experiment_accession    = experiment_accession,
-        feature                 = feature,
-        source                  = source,
-        antigen                 = antigen,
-        plate                   = plate,
-        nominal_sample_dilution = nominal_sample_dilution,
-        wavelength              = wavelength,
-        antigen_constraints     = self$antigen_constraints,
-        curve_id_element_order  = self$curve_id_element_order,
-        verbose                 = self$verbose
+      
+      self$antigen_plate <- resolve_curve_settings(
+        loaded_data          = self$loaded_data,
+        antigen_constraints  = self$antigen_constraints,
+        wavelength           = wavelength,
+        verbose              = self$verbose
       )
-
-      # Clear stale fit results so they are never silently returned
+      
       private$.reset_fit()
-
+      
       invisible(self)
     },
+    # select = function(
+    # project_id,
+    # study_accession,
+    # experiment_accession,
+    # feature,
+    # source,
+    # antigen,
+    # plate,
+    # nominal_sample_dilution,
+    # wavelength = WL_NONE
+    # ) {
+    #   private$.step_banner("SELECT ANTIGEN PLATE")
+    # 
+    #   # Cache for propagate_error() and print()
+    #   self$.selection_args <- list(
+    #     project_id              = project_id,
+    #     study_accession         = study_accession,
+    #     experiment_accession    = experiment_accession,
+    #     feature                 = feature,
+    #     source                  = source,
+    #     antigen                 = antigen,
+    #     plate                   = plate,
+    #     nominal_sample_dilution = nominal_sample_dilution,
+    #     wavelength              = wavelength
+    #   )
+    # 
+    #   self$antigen_plate <- select_antigen_plate(
+    #     loaded_data             = self$loaded_data,
+    #     project_id              = project_id,
+    #     study_accession         = study_accession,
+    #     experiment_accession    = experiment_accession,
+    #     feature                 = feature,
+    #     source                  = source,
+    #     antigen                 = antigen,
+    #     plate                   = plate,
+    #     nominal_sample_dilution = nominal_sample_dilution,
+    #     wavelength              = wavelength,
+    #     antigen_constraints     = self$antigen_constraints,
+    #     curve_id_element_order  = self$curve_id_element_order,
+    #     verbose                 = self$verbose
+    #   )
+    # 
+    #   # Clear stale fit results so they are never silently returned
+    #   private$.reset_fit()
+    # 
+    #   invisible(self)
+    # },
 
     # =========================================================================
     # fit()
@@ -437,7 +474,7 @@ StandardCurve <- R6Class(
         prepped_data           = pd,
         fit_params             = self$fit_params,
         fixed_a_result         = ap$fixed_a_result,
-        curve_id_element_order = self$curve_id_element_order,
+        curve_id_lookup        = ap$curve_id_lookup,
         model_names            = self$model_names,
         x_var                  = iv,
         y_var                  = rv
@@ -508,11 +545,14 @@ StandardCurve <- R6Class(
       private$.require_fitted()
       private$.step_banner("PROPAGATE ERROR")
 
-      args <- self$.selection_args
-
+     #args <- self$.selection_args
+      args <- as.list(self$antigen_plate$curve_id_lookup[1, ])
+      
+      
       self$se_antigen_table <- compute_antigen_se_table(
-        standards_data         = self$loaded_data$standards,
-        curve_id_element_order = self$curve_id_element_order,
+        standards_data         = self$loaded_data$whole_standards,
+        curve_id_lookup        = self$loaded_data$curve_id_whole_lookup,
+        #curve_id_element_order = self$curve_id_element_order,
         curve_col              = self$curve_col,
         response_col           = self$response_var,
         dilution_col           = "dilution",
@@ -598,6 +638,7 @@ StandardCurve <- R6Class(
         independent_variable = iv,
         fixed_a_result       = ap$fixed_a_result,
         antigen_settings     = ap$antigen_settings,
+        curve_id_lookup      = ap$curve_id_lookup,
         antigen_fit_options  = self$processed_data$antigen_fit_options
       )
       # if (!is.null(bf$best_tidy)) {
@@ -680,8 +721,8 @@ StandardCurve <- R6Class(
         is_display_log_response    = is_display_log_response,
         pcov_threshold             = pct,
         study_params               = self$study_params,
-        curve_id_element_order     = self$curve_id_element_order,
-        curve_col                  = self$curve_col,
+        # curve_id_element_order     = self$curve_id_element_order,
+        # curve_col                  = self$curve_col,
         response_variable          = self$response_var,
         independent_variable       = self$indep_var
       )
@@ -798,7 +839,7 @@ StandardCurve <- R6Class(
 
     .require_selected = function() {
       if (is.null(self$antigen_plate))
-        stop("[StandardCurve] Call $select() before $fit().")
+        stop("[StandardCurve] Call $set_curve_settings() before $fit().")
     },
 
     .require_fitted = function() {
@@ -806,7 +847,7 @@ StandardCurve <- R6Class(
         stop("[StandardCurve] Call $fit() before this method.")
     },
 
-    # Clears everything downstream of select()
+    # Clears everything downstream of set_curve_settings()
     .reset_fit = function() {
       self$processed_data    <- NULL
       self$formulas          <- NULL
@@ -830,7 +871,7 @@ StandardCurve <- R6Class(
 
     .pipeline_status = function() {
       steps <- list(
-        "select()"          = !is.null(self$antigen_plate),
+        "set_curve_settings()"          = !is.null(self$antigen_plate),
         "fit()"             = !is.null(self$best_fit),
         "propagate_error()" = !is.null(self$current_se)
       )
@@ -860,7 +901,7 @@ StandardCurve <- R6Class(
 #' Wraps the full \code{curveRfreq} standard-curve fitting pipeline into a
 #' single stateful object. Data loading is external — supply a pre-loaded
 #' data list via \code{$new()} or \code{$set_data()}, then call
-#' \code{$select()}, \code{$fit()}, \code{$summarize()}, \code{$plot()}, and
+#' \code{$set_curve_settings()}, \code{$fit()}, \code{$summarize()}, \code{$plot()}, and
 #' \code{$propagate_error()} in sequence. All intermediate results are stored
 #' as public fields and can be inspected at any stage.
 #' @usage NULL

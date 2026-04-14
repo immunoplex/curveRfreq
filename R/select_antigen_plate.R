@@ -1,3 +1,150 @@
+#' Resolve curve settings for an antigen on a plate
+#'
+#' Computes modeling inputs and constraints for a selected antigen on a plate,
+#' including lower asymptote handling and blank variability estimates.
+#'
+#' This function assumes that plate-level datasets have already been filtered
+#' and derives additional settings needed
+#' for curve fitting.
+#'
+#' @param loaded_data A list containing plate-level datasets with the following
+#' elements:
+#' \itemize{
+#'   \item `standards` Standard curve data.
+#'   \item `blanks` Blank/control data.
+#'   \item `samples` Sample data.
+#'   \item `curve_id_lookup` a single row containing the plate-level curve identifier
+#'   including antigen, study accession and experiment_accession and the id number.
+#' }
+#' @param antigen_constraints Data frame or list containing antigen-specific
+#' constraint rules used in `obtain_lower_constraint()`.
+#' @param wavelength Optional wavelength filter. If provided, all datasets are
+#' filtered to the matching normalized wavelength. Defaults to `WL_NONE`.
+#' @param verbose Logical. If `TRUE`, prints diagnostic messages including row counts.
+#'
+#' @return A list containing:
+#' \itemize{
+#'   \item `plate_standard` Filtered standard curve data.
+#'   \item `plate_blanks` Filtered blank data.
+#'   \item `plate_samples` Filtered sample data.
+#'   \item `antigen_settings` Output of `obtain_lower_constraint()`.
+#'   \item `fixed_a_result` Validated lower asymptote result.
+#'   \item `std_error_blank` Estimated standard error of blank measurements.
+#' }
+#'
+#' @details
+#' \strong{Wavelength filtering:}
+#' If `wavelength` is provided (not `WL_NONE`), all input datasets are filtered
+#' to rows matching the normalized wavelength using `normalize_wavelength()`.
+#'
+#' \strong{Assumptions:}
+#' \itemize{
+#'   \item Input data has already been subset to a single curve/plate context.
+#'   \item The `standards` dataset must contain at least one row after filtering,
+#'         otherwise an error is thrown.
+#' }
+#'
+#' @examples
+#' \dontrun{
+#' settings <- resolve_curve_settings(
+#'   loaded_data = plate_data,
+#'   antigen_constraints = constraints
+#' )
+#' }
+#'
+#' @export
+#'
+#' @export
+resolve_curve_settings <- function(
+    loaded_data,
+    antigen_constraints,
+    wavelength = WL_NONE,
+    verbose = TRUE
+) {
+
+  # ── Extract datasets ───────────────────────────────────────────────
+  plate_standard <- loaded_data$standards
+  plate_blanks   <- loaded_data$blanks
+  plate_samples  <- loaded_data$samples
+  curve_id_lookup <- loaded_data$curve_id_lookup
+
+  # ── Wavelength filtering ───────────────────────────────────────────
+  if (!is.null(wavelength) && wavelength != WL_NONE) {
+
+    .filter_wl <- function(df) {
+      if (!is.null(df) && nrow(df) > 0 && "wavelength" %in% names(df)) {
+        df$wavelength <- normalize_wavelength(df$wavelength)
+        mask <- df$wavelength == normalize_wavelength(wavelength)
+        if (any(mask)) return(df[mask, , drop = FALSE])
+      }
+      df
+    }
+
+    plate_standard <- .filter_wl(plate_standard)
+    plate_blanks   <- .filter_wl(plate_blanks)
+    plate_samples  <- .filter_wl(plate_samples)
+  }
+
+  # ── Guard: ensure standard data exists AFTER filtering ─────────────
+  if (is.null(plate_standard) || nrow(plate_standard) == 0) {
+    stop("[resolve_curve_settings] No standard data after filtering")
+  }
+
+  # ── Strip dilution suffix from plate ───────────────────────────────
+  # plate_c <- sub("-.*$", "", plate)
+
+  # ── Resolve response column ────────────────────────────────────────
+  response_col <- resolve_response_col(plate_standard)
+
+  # ── Antigen settings ───────────────────────────────────────────────
+  antigen_settings <- obtain_lower_constraint(
+    dat                  = plate_standard,
+    antigen              = curve_id_lookup$antigen,
+    study_accession      = curve_id_lookup$study_accession,
+    experiment_accession = curve_id_lookup$experiment_accession,
+    plate                = curve_id_lookup$plate, #plate_c,
+    plate_blanks         = plate_blanks,
+    antigen_constraints  = antigen_constraints,
+    response_col         = response_col
+  )
+
+  # ── Fixed lower asymptote ──────────────────────────────────────────
+  fixed_a_result <- resolve_fixed_lower_asymptote(antigen_settings)
+  fixed_a_result <- validate_fixed_lower_asymptote(
+    fixed_a_result_raw = fixed_a_result,
+    verbose            = verbose
+  )
+
+  # ── Blank standard error ───────────────────────────────────────────
+  std_error_blank <- get_blank_se(antigen_settings = antigen_settings)
+
+  # ── Logging ────────────────────────────────────────────────────────
+  if (verbose) {
+    counts <- c(
+      standard = nrow(plate_standard),
+      blanks   = nrow(plate_blanks),
+      samples  = nrow(plate_samples)
+    )
+
+    message(
+      "[resolve_curve_settings] counts: ",
+      paste(names(counts), counts, sep = "=", collapse = ", ")
+    )
+  }
+
+  # ── Return ─────────────────────────────────────────────────────────
+  return(list(
+    plate_standard   = plate_standard,
+    plate_blanks     = plate_blanks,
+    plate_samples    = plate_samples,
+    antigen_settings = antigen_settings,
+    fixed_a_result   = fixed_a_result,
+    std_error_blank  = std_error_blank,
+    curve_id_lookup  = curve_id_lookup
+  ))
+}
+
+
 #' Select and Prepare Antigen Plate Data
 #'
 #' Filters and prepares standard curves, blanks, samples, and optional MCMC outputs

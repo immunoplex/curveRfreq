@@ -44,18 +44,39 @@ antigen = "victoria"
 
 
 ## ----load data----------------------------------------------------------------
-loaded_data <- pull_data(study_accession = study_accession, experiment_accession = experiment_accession, project_id = project_id, conn = conn)
+loaded_data <- pull_data(study_accession = study_accession, experiment_accession = experiment_accession, project_id = project_id, curve_id_elements = curve_id_element_order, conn = conn)
+
+## -----------------------------------------------------------------------------
+curve_id <- fetch_curve_id(
+  lookup = loaded_data$curve_id_lookup,
+  project_id = project_id,
+  study_accession = study_accession,
+  experiment_accession = experiment_accession,
+  feature = feature,
+  source = source,
+  antigen = antigen,
+  plate = plate,
+  nominal_sample_dilution = nominal_sample_dilution,
+  wavelength = wavelength,
+  element_order = curve_id_element_order
+)
+curve_id
+
+## -----------------------------------------------------------------------------
+head(loaded_data$curve_id_lookup)
+
+## -----------------------------------------------------------------------------
+filtered <- filter_by_curve_id(loaded_data, curve_id = curve_id)
 
 ## ----response and independent variables---------------------------------------
-response_var <- loaded_data$response_var
-indep_var <- loaded_data$indep_var
+response_var <- filtered$response_var
+indep_var <- filtered$indep_var
 cat("response variable:", response_var, "\n")
 cat("independent variable:", indep_var)
 
 ## ----antigen constraints------------------------------------------------------
+# important to go into the package. 
 antigen_constraints <- data.frame(
-  study_accession              = "MADI_01",
-  experiment_accession         = "IgG1",
   antigen                      = "victoria",
   l_asy_min_constraint         = 0,
   l_asy_max_constraint         = 0,
@@ -68,6 +89,7 @@ antigen_constraints <- data.frame(
 print(antigen_constraints)
 
 ## ----study parameters---------------------------------------------------------
+# importamt that gets fed into the package
 study_params <- list(
   applyProzone       = TRUE,
   blank_option       = "ignored",
@@ -77,24 +99,31 @@ study_params <- list(
 
 print(study_params)
 
+## ----resolve curve settings---------------------------------------------------
+antigen_plate <- resolve_curve_settings(
+  loaded_data = filtered,
+  antigen_constraints = antigen_constraints,
+  verbose = TRUE
+)
+
 ## ----select antigen on the plate----------------------------------------------
 # ── Select antigen data on a plate plate ──────────────────────────────────────────
 # Builds curve_id for the selected values
-# triggers autodetect and all scalar arguments are unpacked automatically.
-antigen_plate <- select_antigen_plate(
-  loaded_data         = loaded_data,
-  project_id              = project_id,
-  study_accession         = study_accession,
-  experiment_accession    = experiment_accession,
-  feature                 = feature,
-  source                  = source,
-  antigen                 = antigen,
-  plate                   = plate,
-  nominal_sample_dilution = nominal_sample_dilution,
-  wavelength              = wavelength,
-  antigen_constraints = loaded_data$antigen_constraints,
-  curve_id_element_order = curve_id_element_order
-)
+# # triggers autodetect and all scalar arguments are unpacked automatically.
+# antigen_plate <- select_antigen_plate(
+#   loaded_data         = loaded_data,
+#   project_id              = project_id,
+#   study_accession         = study_accession,
+#   experiment_accession    = experiment_accession,
+#   feature                 = feature,
+#   source                  = source,
+#   antigen                 = antigen,
+#   plate                   = plate,
+#   nominal_sample_dilution = nominal_sample_dilution,
+#   wavelength              = wavelength,
+#   antigen_constraints = loaded_data$antigen_constraints,
+#   curve_id_element_order = curve_id_element_order
+# )
 
 
 ## ----preproccess data---------------------------------------------------------
@@ -154,7 +183,8 @@ plot_data <- get_plot_data(models_fit_list = fit_robust_lm,
                              prepped_data = processed_data$data,
                              fit_params = fit_params,
                              fixed_a_result = antigen_plate$fixed_a_result,
-                             curve_id_element_order = curve_id_element_order,
+                             curve_id_lookup = antigen_plate$curve_id_lookup,
+                            # curve_id_element_order = curve_id_element_order,
                              model_names = model_names,
                              x_var = indep_var,
                              y_var = response_var)
@@ -192,6 +222,7 @@ best_fit <- summarize_fit(best_fit = best_fit, response_variable = response_var,
                           independent_variable = indep_var,
                           fixed_a_result = antigen_plate$fixed_a_result, 
                           antigen_settings = antigen_plate$antigen_settings,
+                          curve_id_lookup  = antigen_plate$curve_id_lookup,
                           antigen_fit_options = processed_data$antigen_fit_options)
 
 best_fit$best_fit_summary
@@ -199,7 +230,8 @@ best_fit$best_fit_summary
 ## -----------------------------------------------------------------------------
 se_antigen_table <- compute_antigen_se_table(
       standards_data = loaded_data$standards,
-      curve_id_element_order = curve_id_element_order,
+      curve_id_lookup = loaded_data$curve_id_lookup,
+      #curve_id_element_order = curve_id_element_order,
       curve_col = curve_col,
       response_col   = response_var,
       dilution_col   = "dilution",
@@ -242,8 +274,8 @@ plot_standard_curve(best_fit = best_fit, is_display_log_independent = is_display
                     is_display_log_response = is_display_log_response,
                     pcov_threshold = antigen_constraints$pcov_threshold,
                     study_params = study_params,
-                    curve_id_element_order = curve_id_element_order,
-                    curve_col = curve_col,
+                    # curve_id_element_order = curve_id_element_order,
+                    # curve_col = curve_col,
                     response_variable = response_var,
                     independent_variable = indep_var)
 

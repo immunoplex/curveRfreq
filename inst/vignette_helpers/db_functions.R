@@ -25,7 +25,7 @@ get_db_connection <- function() {
 # -------------------------------
 # Minimal data pull
 # -------------------------------
-pull_data <- function(study_accession, experiment_accession, project_id, conn = conn) {
+pull_data <- function(study_accession, experiment_accession, project_id, curve_id_elements, conn = conn) {
   plates <- fetch_db_header(study_accession = study_accession,
                             experiment_accession = experiment_accession,
                             project_id = project_id,
@@ -237,14 +237,26 @@ pull_data <- function(study_accession, experiment_accession, project_id, conn = 
   #     }
   #   }
   # }
-
   #mcmc_samples_2 <<- mcmc_samples
+
+  curve_id_lookup <- get_curve_ids(conn, study_accession = study_accession, project_id = project_id, match_cols = curve_id_elements)
+
   standards <- make_curve_id(standards)
   blanks <- make_curve_id(blanks)
   samples <- make_curve_id(samples)
 
+  standards <- swap_curve_id(standards, curve_id_lookup = curve_id_lookup)
+  blanks <- swap_curve_id(blanks, curve_id_lookup = curve_id_lookup)
+  samples <- swap_curve_id(samples, curve_id_lookup = curve_id_lookup)
+  
+  
+  if ("curve_id_string" %in% names(curve_id_lookup)) {
+    curve_id_lookup$curve_id_string <- NULL
+  }
+  
   return(list(plates=plates, standards=standards,
               blanks=blanks, samples=samples,
+              curve_id_lookup = curve_id_lookup,
               # mcmc_samples = mcmc_samples,
               # mcmc_pred = mcmc_pred,
               # antigen_constraints=antigen_constraints,
@@ -253,6 +265,253 @@ pull_data <- function(study_accession, experiment_accession, project_id, conn = 
   )
 }
 
+
+
+swap_curve_id <- function(df, curve_id_lookup) {
+
+  # Create mapping index
+  idx <- match(df$curve_id, curve_id_lookup$curve_id_string)
+
+  # Replace with numeric curve_id
+  df$curve_id <- curve_id_lookup$curve_id[idx]
+
+  if ("curve_id_string" %in% names(df)) {
+    df$curve_id_string <- NULL
+  }
+  
+  return(df)
+}
+
+
+fetch_curve_id <- function(lookup, ..., element_order) {
+
+  # Capture inputs as a named list
+  args <- list(...)
+
+  # Ensure all required elements are present
+  missing_args <- setdiff(element_order, names(args))
+  if (length(missing_args) > 0) {
+    stop(paste("Missing arguments:", paste(missing_args, collapse = ", ")))
+  }
+
+  # Reorder arguments to match element_order
+  args <- args[element_order]
+
+  # Build logical filter dynamically
+  idx <- rep(TRUE, nrow(lookup))
+
+  for (nm in element_order) {
+    idx <- idx & lookup[[nm]] == args[[nm]]
+  }
+
+  rows <- lookup[idx, ]
+
+  if (nrow(rows) != 1) {
+    stop(paste("Expected 1 match, found", nrow(rows)))
+  }
+
+  return(rows$curve_id)
+}
+
+# finds existing and new curve ids in the database
+get_curve_ids <- function(conn, study_accession, project_id,
+                          match_cols = c("project_id", "study_accession", "experiment_accession",
+                                         "feature", "source", "antigen", "plate",
+                                         "nominal_sample_dilution", "wavelength")) {
+  join_conditions_sql <- paste(
+    sapply(match_cols, function(col) sprintf("cl.%s = b.%s", col, col)),
+    collapse = "\n        AND "
+  )
+
+  outer_select_sql <- paste(
+    sapply(match_cols, function(col) sprintf("b.%s", col)),
+    collapse = ",\n        "
+  )
+
+  curve_id_string_sql <- paste(
+    sapply(match_cols, function(col) sprintf("b.%s::TEXT", col)),
+    collapse = " || ':' || "
+  )
+
+  query <- sprintf("
+    WITH base AS (
+        SELECT DISTINCT
+            h.project_id,
+            s.study_accession,
+            s.experiment_accession,
+            s.antigen,
+            s.feature,
+            s.source,
+            COALESCE(s.wavelength, '__none__') AS wavelength,
+            h.plate,
+            h.nominal_sample_dilution
+        FROM madi_results.xmap_standard s
+        INNER JOIN madi_results.xmap_header h
+            ON  h.study_accession         = s.study_accession
+            AND h.experiment_accession    = s.experiment_accession
+            AND h.plate                   = s.plate
+            AND h.nominal_sample_dilution = s.nominal_sample_dilution
+        WHERE s.study_accession = '%s'
+          AND h.project_id = %s
+    )
+    SELECT
+        COALESCE(
+            cl.curve_id,
+            (SELECT MAX(curve_id) FROM madi_results.curve_lookup) + ROW_NUMBER() OVER ()
+        ) AS curve_id,
+        %s AS curve_id_string,
+        %s
+    FROM base b
+    LEFT JOIN madi_results.curve_lookup cl
+        ON  %s
+  ", study_accession, project_id, curve_id_string_sql, outer_select_sql, join_conditions_sql)
+
+  DBI::dbGetQuery(conn, query)
+}
+
+
+filter_by_curve_id <- function(loaded_data,
+                               curve_id,
+                               target_names = c("standards", "blanks", "samples", "curve_id_lookup"),
+                               verbose = FALSE) {
+  
+  filtered <- loaded_data
+  
+  filtered$curve_id_whole_lookup <- filtered$curve_id_lookup
+  filtered$whole_standards <- filtered$standards
+  filtered[target_names] <- lapply(filtered[target_names], function(df) {
+    
+    # Skip non-data frames
+    if (!is.data.frame(df)) {
+      if (verbose) message("[filter_by_curve_id] Skipping non-data.frame")
+      return(df)
+    }
+    
+    # Skip empty data
+    if (nrow(df) == 0) {
+      if (verbose) message("[filter_by_curve_id] Empty data.frame")
+      return(df)
+    }
+    
+    # Skip if no curve_id column
+    if (!"curve_id" %in% names(df)) {
+      if (verbose) message("[filter_by_curve_id] No curve_id column")
+      return(df)
+    }
+    
+    # Filter
+    df[as.character(df$curve_id) == as.character(curve_id), , drop = FALSE]
+  })
+  
+  return(filtered)
+}
+
+
+
+filter_by_curve_elements <- function(df, ..., element_order) {
+
+  if (is.null(df) || nrow(df) == 0) {
+    return(df)
+  }
+
+  args <- list(...)
+
+  # Check required elements exist
+  missing_args <- setdiff(element_order, names(args))
+  if (length(missing_args) > 0) {
+    stop(paste("Missing arguments:", paste(missing_args, collapse = ", ")))
+  }
+
+  # Reorder args
+  args <- args[element_order]
+
+  # Build filter
+  idx <- rep(TRUE, nrow(df))
+
+  for (nm in element_order) {
+    if (!nm %in% names(df)) {
+      stop(paste("Column not found in data:", nm))
+    }
+    idx <- idx & df[[nm]] == args[[nm]]
+  }
+
+  df[idx, , drop = FALSE]
+}
+# get_curve_ids <- function(conn, study_accession, project_id,
+#                           match_cols = c("project_id", "study_accession", "experiment_accession",
+#                                          "feature", "source", "antigen", "plate",
+#                                          "nominal_sample_dilution", "wavelength")) {
+#
+#   # Build JOIN conditions from match_cols
+#   join_conditions_sql <- paste(
+#     sapply(match_cols, function(col) sprintf("cl.%s = b.%s", col, col)),
+#     collapse = "\n        AND "
+#   )
+#
+#   # Only select match_cols in outer query
+#   outer_select_sql <- paste(
+#     sapply(match_cols, function(col) sprintf("b.%s", col)),
+#     collapse = ",\n        "
+#   )
+#
+#   query <- sprintf("
+#     WITH base AS (
+#         SELECT DISTINCT
+#             h.project_id,
+#             s.study_accession,
+#             s.experiment_accession,
+#             s.antigen,
+#             s.feature,
+#             s.source,
+#             COALESCE(s.wavelength, '__none__') AS wavelength,
+#             h.plate,
+#             h.nominal_sample_dilution
+#         FROM madi_results.xmap_standard s
+#         INNER JOIN madi_results.xmap_header h
+#             ON  h.study_accession         = s.study_accession
+#             AND h.experiment_accession    = s.experiment_accession
+#             AND h.plate                   = s.plate
+#             AND h.nominal_sample_dilution = s.nominal_sample_dilution
+#         WHERE s.study_accession = '%s'
+#           AND h.project_id = %s
+#     )
+#     SELECT
+#         COALESCE(
+#             cl.curve_id,
+#             (SELECT MAX(curve_id) FROM madi_results.curve_lookup) + ROW_NUMBER() OVER ()
+#         ) AS curve_id,
+#         %s
+#     FROM base b
+#     LEFT JOIN madi_results.curve_lookup cl
+#         ON  %s
+#   ", study_accession, project_id, outer_select_sql, join_conditions_sql)
+#
+#   DBI::dbGetQuery(conn, query)
+# }
+
+apply_curve_id <- function(df, curve_id_lookup, match_cols) {
+
+  # wavelength may be NA in df — coalesce to '__none__' to match lookup
+  if ("wavelength" %in% match_cols) {
+    df$wavelength <- ifelse(is.na(df$wavelength), '__none__', df$wavelength)
+  }
+
+  # Build string curve_id from match_cols pasted together with colon
+  df$curve_id_string <- apply(df[, match_cols, drop = FALSE], 1, paste, collapse = ":")
+
+  # Join lookup on match_cols to get integer curve_id
+  df <- merge(df, curve_id_lookup[, c(match_cols, "curve_id")],
+              by = match_cols, all.x = TRUE)
+
+  # Drop match_cols and other columns
+  drop_cols <- c(match_cols, "feature", "source_nom", "source", "plate_id", "plate_nom", "plateid")
+  df <- df[, !names(df) %in% drop_cols]
+
+  # Put curve_id and curve_id_string first
+  df <- df[, c("curve_id", "curve_id_string", setdiff(names(df), c("curve_id", "curve_id_string")))]
+
+  return(df)
+}
 # curve_id helper outside of package to set up data.
 make_curve_id <- function(df) {
 
