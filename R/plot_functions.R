@@ -104,7 +104,7 @@ compute_curve_ci <- function(fit, x_new, x_var, fixed_a = NULL, level = 0.95) {
 #' @param fixed_a_result Numeric scalar or \code{NULL}. Fixed lower asymptote
 #'   passed to \code{compute_curve_ci()} and used to reconstruct full
 #'   coefficient vectors.
-#' @param curve_id_element_order the order of the elements of the curve_id.
+#' @param curve_id_lookup the order of the elements of the curve_id.
 #' @param model_names Character vector of model names to process. Must match
 #'   keys in \code{models_fit_list}. Default is
 #'   \code{c("logistic5","loglogistic5","logistic4","loglogistic4","gompertz4")}.
@@ -151,7 +151,7 @@ get_plot_data <- function(models_fit_list,
                           prepped_data,
                           fit_params,
                           fixed_a_result,
-                          curve_id_element_order,
+                          curve_id_lookup,
                           model_names = c("logistic5","loglogistic5","logistic4","loglogistic4","gompertz4"),
                           x_var = "concentration",
                           y_var = "mfi",
@@ -294,7 +294,9 @@ get_plot_data <- function(models_fit_list,
 
 
   # parse out
-  dat <- parse_curve_id(dat, order = curve_id_element_order, keep = c("antigen", "feature", "plate", "nominal_sample_dilution"))
+  dat <- merge(dat, curve_id_lookup, by = "curve_id", all.x = TRUE)
+
+  # dat <- parse_curve_id(dat, order = curve_id_element_order, keep = c("antigen", "feature", "plate", "nominal_sample_dilution"))
 
   if (all(c("plate", "nominal_sample_dilution") %in% names(dat))) {
 
@@ -513,8 +515,6 @@ format_assay_terms <- function(x) {
 #' @param is_display_log_independent Logical; whether to display independent variable on log10 scale.
 #' @param pcov_threshold Numeric threshold for percent coefficient of variation.
 #' @param study_params study parameters including is_log_response and is_log_independent
-#' @param curve_id_element_order the string vector of the names of the elements in the curve_id c("project_id", "antigen")
-#' @param curve_col the name of the column containing the curve identifier (default "curve_id")
 #' @param response_variable Character; name of response variable column (default "mfi").
 #' @param independent_variable Character; name of independent variable column (default "concentration").
 #'
@@ -525,8 +525,8 @@ plot_standard_curve <- function(best_fit,
                                 is_display_log_independent,
                                 pcov_threshold,
                                 study_params,
-                                curve_id_element_order,
-                                curve_col = "curve_id",
+                                # curve_id_element_order,
+                                # curve_col = "curve_id",
                                 response_variable = "mfi",
                                 independent_variable = "concentration"
                                 ) {
@@ -536,7 +536,7 @@ plot_standard_curve <- function(best_fit,
   # mcmc_pred_in <<- mcmc_pred
 
   ## expand antigen and plate columns in the dataset
-  best_fit$best_data <-  parse_curve_id(best_fit$best_data, curve_col = curve_col, order = curve_id_element_order, keep = c("plate", "antigen"))
+  #best_fit$best_data <-  parse_curve_id(best_fit$best_data, curve_col = curve_col, order = curve_id_element_order, keep = c("plate", "antigen"))
 
   # ── Resolve response column ────────────────────────────────────────
   resolved <- ensure_response_column(
@@ -832,7 +832,7 @@ plot_standard_curve <- function(best_fit,
     legendgroup = "linked_ulod",
     visible = "legendonly"
   )
-  
+
   p <- p %>% add_lines(
     x = best_fit$best_pred$x,
     y = best_fit$best_fit_summary$llod,
@@ -843,11 +843,11 @@ plot_standard_curve <- function(best_fit,
     legendgroup = "linked_llod",
     visible = "legendonly"
   )
-  
-  ### 
+
+  ###
   y_min <- min(best_fit$best_data[[response_variable]], na.rm = TRUE)
   y_max <- max(best_fit$best_data[[response_variable]], na.rm = TRUE)
-  
+
   ### 6b. MDC / RDL vertical lines
   if (!is.na(best_fit$best_fit_summary$mindc)) {
     p <- p %>% add_lines(
@@ -859,7 +859,7 @@ plot_standard_curve <- function(best_fit,
       showlegend = FALSE, hoverinfo = "text", visible = "legendonly"
     )
   }
-  
+
   if (!is.na(best_fit$best_fit_summary$minrdl)) {
     p <- p %>% add_lines(
       x = c(best_fit$best_fit_summary$minrdl, best_fit$best_fit_summary$minrdl),
@@ -870,7 +870,7 @@ plot_standard_curve <- function(best_fit,
       showlegend = TRUE, hoverinfo = "text", visible = "legendonly"
     )
   }
-  
+
   if (!is.na(best_fit$best_fit_summary$maxdc)) {
     p <- p %>% add_lines(
       x = c(best_fit$best_fit_summary$maxdc, best_fit$best_fit_summary$maxdc),
@@ -881,7 +881,7 @@ plot_standard_curve <- function(best_fit,
       showlegend = FALSE, hoverinfo = "text", visible = "legendonly"
     )
   }
-  
+
   if (!is.na(best_fit$best_fit_summary$maxrdl)) {
     p <- p %>% add_lines(
       x = c(best_fit$best_fit_summary$maxrdl, best_fit$best_fit_summary$maxrdl),
@@ -892,7 +892,7 @@ plot_standard_curve <- function(best_fit,
       showlegend = TRUE, hoverinfo = "text", visible = "legendonly"
     )
   }
-  
+
   ## LLOQ vertical line
   p <- p %>% add_lines(
     x = c(best_fit$best_fit_summary$lloq),
@@ -904,7 +904,7 @@ plot_standard_curve <- function(best_fit,
     legendgroup = "linked_lloq",
     hoverinfo = "text", visible = "legendonly"
   )
-  
+
   ### ULOQ vertical line
   p <- p %>% add_lines(
     x = c(best_fit$best_fit_summary$uloq),
@@ -916,7 +916,7 @@ plot_standard_curve <- function(best_fit,
     legendgroup = "linked_uloq",
     hoverinfo = "text", visible = "legendonly"
   )
-  
+
   ### Horizontal LOQ lines
   p <- p %>% add_lines(
     x = best_fit$best_pred$x,
@@ -925,7 +925,7 @@ plot_standard_curve <- function(best_fit,
     legendgroup = "linked_uloq", showlegend = FALSE,
     line = list(color = "#875692"), visible = "legendonly"
   )
-  
+
   p <- p %>% add_lines(
     x = best_fit$best_pred$x,
     y = best_fit$best_fit_summary$lloq_y,
@@ -933,7 +933,7 @@ plot_standard_curve <- function(best_fit,
     legendgroup = "linked_lloq", showlegend = FALSE,
     line = list(color = "#875692"), visible = "legendonly"
   )
-  
+
   # ### 8a. SECOND DERIVATIVE (y2 axis)
   if ("best_d2xy" %in% names(best_fit)) {
       p <- p %>% add_lines(
@@ -1056,8 +1056,8 @@ plot_standard_curve <- function(best_fit,
   p <- p %>% layout(
     title = paste(
       "Fitted", title_model_name, "Model (",
-      unique(best_fit$best_data$plate), ",",
-      unique(best_fit$best_data$antigen), ")"
+      unique(best_fit$best_fit_summary$plate), ",",
+      unique(best_fit$best_fit_summary$antigen), ")"
     ),
     xaxis = list(
       title    = x_label,

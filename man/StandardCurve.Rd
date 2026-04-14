@@ -7,7 +7,7 @@
 Wraps the full \code{curveRfreq} standard-curve fitting pipeline into a
 single stateful object. Data loading is external — supply a pre-loaded
 data list via \code{$new()} or \code{$set_data()}, then call
-\code{$select()}, \code{$fit()}, \code{$summarize()}, \code{$plot()}, and
+\code{$set_curve_settings()}, \code{$fit()}, \code{$summarize()}, \code{$plot()}, and
 \code{$propagate_error()} in sequence. All intermediate results are stored
 as public fields and can be inspected at any stage.
 }
@@ -48,11 +48,12 @@ sc$select(...)$fit()
 }
 
 ## ------------------------------------------------
-## Method `StandardCurve$select`
+## Method `StandardCurve$set_curve_settings`
 ## ------------------------------------------------
 
 \dontrun{
-sc$select(
+curve_id <- fetch_curve_id(
+  lookup                  = loaded_data$curve_id_lookup,
   project_id              = 17,
   study_accession         = "MADI_01",
   experiment_accession    = "IgG1",
@@ -60,8 +61,16 @@ sc$select(
   source                  = "Standard",
   antigen                 = "victoria",
   plate                   = "plate_3",
-  nominal_sample_dilution = "1000"
+  nominal_sample_dilution = "1000",
+  wavelength              = "__none__",
+  element_order           = curve_id_element_order
 )
+
+filtered <- filter_by_curve_id(loaded_data, curve_id = curve_id)
+
+sc$set_curve_settings()
+# or for ELISA:
+sc$set_curve_settings(wavelength = "450")
 }
 
 ## ------------------------------------------------
@@ -169,7 +178,7 @@ by \code{tidy.nlsLM()} and \code{summarize_fit()}.}
 
 \item{\code{current_se}}{SE values for the currently selected antigen.}
 
-\item{\code{.selection_args}}{Internal cache of arguments from the last \verb{$select()}.}
+\item{\code{.selection_args}}{Internal cache of arguments from the last \verb{$set_curve_settings()}.}
 }
 \if{html}{\out{</div>}}
 }
@@ -178,7 +187,7 @@ by \code{tidy.nlsLM()} and \code{summarize_fit()}.}
 \itemize{
 \item \href{#method-StandardCurve-new}{\code{StandardCurve$new()}}
 \item \href{#method-StandardCurve-set_data}{\code{StandardCurve$set_data()}}
-\item \href{#method-StandardCurve-select}{\code{StandardCurve$select()}}
+\item \href{#method-StandardCurve-set_curve_settings}{\code{StandardCurve$set_curve_settings()}}
 \item \href{#method-StandardCurve-fit}{\code{StandardCurve$fit()}}
 \item \href{#method-StandardCurve-propagate_error}{\code{StandardCurve$propagate_error()}}
 \item \href{#method-StandardCurve-summarize}{\code{StandardCurve$summarize()}}
@@ -202,8 +211,6 @@ Create a new \code{StandardCurve} object.
   antigen_constraints = NULL,
   model_names = NULL,
   curve_col = "curve_id",
-  curve_id_element_order = c("project_id", "study_accession", "experiment_accession",
-    "feature", "source", "antigen", "plate", "nominal_sample_dilution", "wavelength"),
   is_display_log_response = TRUE,
   is_display_log_independent = TRUE,
   verbose = TRUE
@@ -229,14 +236,14 @@ to all five supported models.}
 
 \item{\code{curve_col}}{Name of the curve-ID column. Default \code{"curve_id"}.}
 
-\item{\code{curve_id_element_order}}{Character vector defining field order inside
-\code{curve_id}. Defaults to the standard nine-element schema.}
-
 \item{\code{is_display_log_response}}{Logical. Default \code{TRUE}.}
 
 \item{\code{is_display_log_independent}}{Logical. Default \code{TRUE}.}
 
 \item{\code{verbose}}{Logical. Default \code{TRUE}.}
+
+\item{\code{curve_id_element_order}}{Character vector defining field order inside
+\code{curve_id}. Defaults to the standard nine-element schema.}
 }
 \if{html}{\out{</div>}}
 }
@@ -310,47 +317,29 @@ sc$select(...)$fit()
 
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-StandardCurve-select"></a>}}
-\if{latex}{\out{\hypertarget{method-StandardCurve-select}{}}}
-\subsection{Method \code{select()}}{
-Filter the loaded data to a single antigen / plate combination and
-apply antigen-specific constraints.
+\if{html}{\out{<a id="method-StandardCurve-set_curve_settings"></a>}}
+\if{latex}{\out{\hypertarget{method-StandardCurve-set_curve_settings}{}}}
+\subsection{Method \code{set_curve_settings()}}{
+Resolve antigen-specific constraints and curve settings.
 
-Wraps \code{select_antigen_plate()}. Results are stored in \verb{$antigen_plate}.
+Wraps \code{resolve_curve_settings()} using \code{self$loaded_data}, which must
+already be filtered to the relevant curve prior to calling this method.
+Filtering is performed externally via \code{fetch_curve_id()} and
+\code{filter_by_curve_id()} before constructing the object with \verb{$new()} or
+updating it with \verb{$set_data()}.
+
+Results are stored in \verb{$antigen_plate}. Any stale fit results from a
+previous \verb{$set_curve_settings()} call are cleared automatically.
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{StandardCurve$select(
-  project_id,
-  study_accession,
-  experiment_accession,
-  feature,
-  source,
-  antigen,
-  plate,
-  nominal_sample_dilution,
-  wavelength = WL_NONE
-)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{StandardCurve$set_curve_settings(wavelength = WL_NONE)}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
-\item{\code{project_id}}{Character or integer.}
-
-\item{\code{study_accession}}{Character.}
-
-\item{\code{experiment_accession}}{Character.}
-
-\item{\code{feature}}{Character. E.g. \code{"IgG1"}.}
-
-\item{\code{source}}{Character. E.g. \code{"Standard"}.}
-
-\item{\code{antigen}}{Character. Antigen label.}
-
-\item{\code{plate}}{Character. Plate label, e.g. \code{"plate_3"}.}
-
-\item{\code{nominal_sample_dilution}}{Character or numeric.}
-
-\item{\code{wavelength}}{Character. Defaults to \code{"__none__"} (bead arrays).}
+\item{\code{wavelength}}{Character. Defaults to \code{WL_NONE} (\code{"__none__"}) for
+bead arrays. Set explicitly for ELISA absorbance wavelengths,
+e.g. \code{"450"}.}
 }
 \if{html}{\out{</div>}}
 }
@@ -360,7 +349,8 @@ The \code{StandardCurve} object (invisibly).
 \subsection{Examples}{
 \if{html}{\out{<div class="r example copy">}}
 \preformatted{\dontrun{
-sc$select(
+curve_id <- fetch_curve_id(
+  lookup                  = loaded_data$curve_id_lookup,
   project_id              = 17,
   study_accession         = "MADI_01",
   experiment_accession    = "IgG1",
@@ -368,8 +358,16 @@ sc$select(
   source                  = "Standard",
   antigen                 = "victoria",
   plate                   = "plate_3",
-  nominal_sample_dilution = "1000"
+  nominal_sample_dilution = "1000",
+  wavelength              = "__none__",
+  element_order           = curve_id_element_order
 )
+
+filtered <- filter_by_curve_id(loaded_data, curve_id = curve_id)
+
+sc$set_curve_settings()
+# or for ELISA:
+sc$set_curve_settings(wavelength = "450")
 }
 }
 \if{html}{\out{</div>}}

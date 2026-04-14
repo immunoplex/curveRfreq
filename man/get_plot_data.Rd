@@ -9,7 +9,7 @@ get_plot_data(
   prepped_data,
   fit_params,
   fixed_a_result,
-  curve_id_element_order,
+  curve_id_lookup,
   model_names = c("logistic5", "loglogistic5", "logistic4", "loglogistic4", "gompertz4"),
   x_var = "concentration",
   y_var = "mfi",
@@ -31,7 +31,7 @@ named by \code{x_var} and \code{y_var}.}
 passed to \code{compute_curve_ci()} and used to reconstruct full
 coefficient vectors.}
 
-\item{curve_id_element_order}{the order of the elements of the curve_id.}
+\item{curve_id_lookup}{the order of the elements of the curve_id.}
 
 \item{model_names}{Character vector of model names to process. Must match
 keys in \code{models_fit_list}. Default is

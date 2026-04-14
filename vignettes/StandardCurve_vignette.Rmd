@@ -29,7 +29,8 @@ We walk through the complete workflow:
 
 1. **Load and prepare data** — load `$standards`, `$blanks`, `$samples` data externally and construct
    the `StandardCurve` object with study settings and antigen constraints. 
-2. **Select** (`$select()`) — pick an antigen and plate
+2. **Set Curve Settings** (`$set_curve_settings()`) — Resolves antigen-specific curve setting for the data loaded into the StandardCurve object, including lower asympote handling (fix, constrained etc) and blank variability estimates.
+
 3. **Fit** (`$fit()`) — fit candidate nonlinear models with the constants set in the object and select the best model groundd in information theory.
 4. **Compare** (`$compare_models()`) — Provides a visual comparison of the converging models fit including an overlay, residuals vs fitted values, the parameter estimates and the AIC. 
 5. **Summarize** (`$summarize()`) — inspect fitted parameters and key
@@ -61,18 +62,27 @@ source(script_path)
 library(glue)
 conn <- get_db_connection()
 
-loaded_data <- pull_data(
-  study_accession      = "MADI_01",
-  experiment_accession = "IgG1",
-  project_id           = 17,
-  conn                 = conn
-)
+curve_id_elements = c("project_id", "study_accession", "experiment_accession", "feature", "source",
+                                     "antigen", "plate", "nominal_sample_dilution", "wavelength")
+
+loaded_data <- pull_data(study_accession = "MADI_01",
+                         experiment_accession = "IgG1", 
+                         project_id = 17, 
+                         curve_id_elements = curve_id_elements,
+                         conn = conn)
+
+head(loaded_data$curve_id_lookup)
 ```
 
 `loaded_data` is a plain list. The class expects it to contain 
 `$standards`, `$blanks`, `$samples`, `$response_var`, and `$indep_var`.
 
-We define the modeling and filtering parameters used throughout the workflow.
+We choose a curve_id from the lookup table and filter the loaded data by it for the constructor to take. 
+
+```{r}
+curve_id <- 1118
+curve_data <- filter_by_curve_id(loaded_data, curve_id = curve_id)
+```
 
 - `model_names`: Candidate nonlinear models considered during the fitting algorithm.
    Model names are specifed as a vector of strings limited to:
@@ -97,7 +107,7 @@ verbose <- TRUE
 ## Define Antigen Constraints and Study Parameters
 
 These are specified once and passed to `$new()`. They apply to every
-`$select()` / `$fit()` call on this object.
+`$set_curve_settings()` / `$fit()` call on this object.
 
 
 ### Antigen Constraints
@@ -171,19 +181,14 @@ study_params <- list(
 ## Construct the StandardCurve Object
 
 Pass the loaded data, study parameters, and constraints to `$new()`. The class
-reads `response_var` and `indep_var` directly from `loaded_data`.
+reads `response_var` and `indep_var` directly from `curve_data`.
 
 ```{r new}
 sc <- StandardCurve$new(
-  loaded_data         = loaded_data,
+  loaded_data         = curve_data,
   study_params        = study_params,
   antigen_constraints = antigen_constraints,
   model_names = model_names,
-  curve_id_element_order = c(
-    "project_id", "study_accession", "experiment_accession",
-    "feature", "source", "antigen", "plate",
-    "nominal_sample_dilution", "wavelength"
-  ),
   is_display_log_response    = is_display_log_response,
   is_display_log_independent = is_display_log_independent,
   verbose = verbose
@@ -193,24 +198,14 @@ sc <- StandardCurve$new(
 sc
 ```
 
-## Select an Antigen and Plate
+## Set curve settings
 
-`$select()` filters the loaded data to a single antigen / plate combination
+`$set_curve_settings()` receives the data in the `StandardCurve()` object containing a single antigen / plate combination
 and resolves antigen-specific constraints. It resets any stale fit results
 automatically so re-selecting is always safe.
 
 ```{r select}
-sc$select(
-  project_id              = 17,
-  study_accession         = "MADI_01",
-  experiment_accession    = "IgG1",
-  feature                 = "IgG1",
-  source                  = "Standard",
-  antigen                 = "victoria",
-  plate                   = "plate_3",
-  nominal_sample_dilution = "1000",
-  wavelength              = "__none__"    
-)
+sc$set_curve_settings()
 ```
 
 The filtered standards and antigen settings are now available for inspection if desired.
@@ -341,7 +336,7 @@ sc$compare_models()
 ```
 
 
-## Step 9 -- Propagate Measurement Error
+## Propagate Measurement Error
 
 `$propagate_error()` constructs an SE lookup table from the standards data,
 retrieves the values relevant to the selected antigen, and propagates
@@ -354,7 +349,7 @@ sc$propagate_error()
 head(sc$best_fit$sample_se)
 ```
 
-## Step 8 -- Plot the Final Standard Curve
+##  Plot the Final Standard Curve
 
 `$plot()` renders the selected best-fit curve with QC annotations including
 the inflection point, LOD, MDC, RDL, and LOQ bands.
@@ -371,7 +366,7 @@ sc$plot(is_display_log_independent = FALSE, is_display_log_response = FALSE)
 ```
 
 
-## Step 10 -- Extract Results
+## Extract Results
 
 `$get_results()` returns a named list of the key output tables for downstream
 analysis or export.

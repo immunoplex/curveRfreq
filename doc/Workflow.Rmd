@@ -105,7 +105,33 @@ antigen = "victoria"
 ```
 
 ```{r, load data}
-loaded_data <- pull_data(study_accession = study_accession, experiment_accession = experiment_accession, project_id = project_id, conn = conn)
+loaded_data <- pull_data(study_accession = study_accession, experiment_accession = experiment_accession, project_id = project_id, curve_id_elements = curve_id_element_order, conn = conn)
+```
+
+
+```{r}
+curve_id <- fetch_curve_id(
+  lookup = loaded_data$curve_id_lookup,
+  project_id = project_id,
+  study_accession = study_accession,
+  experiment_accession = experiment_accession,
+  feature = feature,
+  source = source,
+  antigen = antigen,
+  plate = plate,
+  nominal_sample_dilution = nominal_sample_dilution,
+  wavelength = wavelength,
+  element_order = curve_id_element_order
+)
+curve_id
+```
+
+```{r}
+head(loaded_data$curve_id_lookup)
+```
+
+```{r}
+filtered <- filter_by_curve_id(loaded_data, curve_id = curve_id)
 ```
 
 ## Response and Predictor Variables
@@ -117,8 +143,8 @@ For bead arrays the response variable is 'mfi' and for ELISA assays the response
 The independent variable is concentration for both assays.
 
 ```{r, response and independent variables}
-response_var <- loaded_data$response_var
-indep_var <- loaded_data$indep_var
+response_var <- filtered$response_var
+indep_var <- filtered$indep_var
 cat("response variable:", response_var, "\n")
 cat("independent variable:", indep_var)
 ```
@@ -134,9 +160,8 @@ The lower asymptote `l_asy_constraint_method` can be set to the following:
 
 
 ```{r, antigen constraints}
+# important to go into the package. 
 antigen_constraints <- data.frame(
-  study_accession              = "MADI_01",
-  experiment_accession         = "IgG1",
   antigen                      = "victoria",
   l_asy_min_constraint         = 0,
   l_asy_max_constraint         = 0,
@@ -160,9 +185,13 @@ The following are the parameters and their accepted values and definitions. The 
   - `FALSE`: No prozone correction is performed.
 
 - **`blank_option`**  
-  Character string. Controls how blank/control wells are handled. ptions include:  
+  Character string. Controls how blank wells are handled. options include:  
   - `"ignored"`: Blank wells are excluded from analysis.  
-  - `"subtracted"`: Blank values are subtracted from observed responses.  
+  - `"subtracted"`: The geometric mean of blank responses are subtracted from observed responses.
+  - `"subtacted_3x`: 3 times the geometric mean of blank responses are subtracted from observed responses
+   - `"subtacted_10x`: 10 times the geometric mean of blank responses are subtracted from observed responses
+
+MFI values from test samples below zero are not possible (fluorescence intensity is physically constrained to non-negative values) and are set to zero. 
 
 - **`is_log_response`**  
   Logical (`TRUE` or `FALSE`).  
@@ -177,6 +206,7 @@ The following are the parameters and their accepted values and definitions. The 
   - `FALSE`: Use the original scale.
 
 ```{r, study parameters}
+# importamt that gets fed into the package
 study_params <- list(
   applyProzone       = TRUE,
   blank_option       = "ignored",
@@ -190,26 +220,34 @@ print(study_params)
 ## Selecting and Preproccessing data
 This section outlines how to subset the relevant antigen data for a specific plate and apply preprocessing steps prior to model fitting. These steps ensure that the data are clean, consistent, and aligned with the study-level parameter settings.
 
-The `select_antigen_plate()` function extracts the subset of data corresponding to a specific antigen on a given plate. It also constructs a unique `curve_id` based on the provided identifiers (set at the beginning of this tutorial) and applies any antigen-specific constraints. Each component of the curve id is separated by a colon `:`. 
+The `resolve_curve_settings()` function expects the subset of data corresponding to a specific antigen on a given plate. filtered by an unique `curve_id`. It applies applies any antigen-specific constraints and calculates standard error of any blanks. 
+
+```{r, resolve curve settings}
+antigen_plate <- resolve_curve_settings(
+  loaded_data = filtered,
+  antigen_constraints = antigen_constraints,
+  verbose = TRUE
+)
+```
 
 ```{r,  select antigen on the plate}
 # ── Select antigen data on a plate plate ──────────────────────────────────────────
 # Builds curve_id for the selected values
-# triggers autodetect and all scalar arguments are unpacked automatically.
-antigen_plate <- select_antigen_plate(
-  loaded_data         = loaded_data,
-  project_id              = project_id,
-  study_accession         = study_accession,
-  experiment_accession    = experiment_accession,
-  feature                 = feature,
-  source                  = source,
-  antigen                 = antigen,
-  plate                   = plate,
-  nominal_sample_dilution = nominal_sample_dilution,
-  wavelength              = wavelength,
-  antigen_constraints = loaded_data$antigen_constraints,
-  curve_id_element_order = curve_id_element_order
-)
+# # triggers autodetect and all scalar arguments are unpacked automatically.
+# antigen_plate <- select_antigen_plate(
+#   loaded_data         = loaded_data,
+#   project_id              = project_id,
+#   study_accession         = study_accession,
+#   experiment_accession    = experiment_accession,
+#   feature                 = feature,
+#   source                  = source,
+#   antigen                 = antigen,
+#   plate                   = plate,
+#   nominal_sample_dilution = nominal_sample_dilution,
+#   wavelength              = wavelength,
+#   antigen_constraints = loaded_data$antigen_constraints,
+#   curve_id_element_order = curve_id_element_order
+# )
 
 ```
 
@@ -253,7 +291,7 @@ processed_data$antigen_fit_options
 
 Candidate models from the `model_names` vector are fit to the data. Of the converging fits, the best model is selected based on the AIC score. The model with the lowest AIC score is selected and is used for all donstream QC metrics and sample concentration prediction and measurement error calculations for the selected `curve_id` (i.e., antigen on the plate).
 
-The first step is to define the formulas of the models of interest. 
+The first step is to define the formulas of the models of interest. If the lower asymptote is fixed to a constant, then the $a$ parameter will be directly substituted into the model formulas. 
 ```{r, model formulas}
 formulas <- select_model_formulas(fixed_constraint = antigen_plate$fixed_a_result, response_variable = response_var,
                                     is_log_response = study_params$is_log_response, model_names = model_names)
@@ -333,7 +371,8 @@ plot_data <- get_plot_data(models_fit_list = fit_robust_lm,
                              prepped_data = processed_data$data,
                              fit_params = fit_params,
                              fixed_a_result = antigen_plate$fixed_a_result,
-                             curve_id_element_order = curve_id_element_order,
+                             curve_id_lookup = antigen_plate$curve_id_lookup,
+                            # curve_id_element_order = curve_id_element_order,
                              model_names = model_names,
                              x_var = indep_var,
                              y_var = response_var)
@@ -420,12 +459,13 @@ best_fit <- tidy.nlsLM(best_fit = best_fit, fixed_a_result = antigen_plate$fixed
 best_fit$best_tidy
 ```
 
-`summarize_fit()` augments the best_fit object by calculating key Quality Control metrics for the standard curve and model fit statistics as well as metadata. 
+`summarize_fit()` augments the best_fit object by calculating key quality control metrics for the standard curve and model fit statistics as well as metadata. 
 ```{r, best_fit_summary, collapse= TRUE}
 best_fit <- summarize_fit(best_fit = best_fit, response_variable = response_var,
                           independent_variable = indep_var,
                           fixed_a_result = antigen_plate$fixed_a_result, 
                           antigen_settings = antigen_plate$antigen_settings,
+                          curve_id_lookup  = antigen_plate$curve_id_lookup,
                           antigen_fit_options = processed_data$antigen_fit_options)
 
 best_fit$best_fit_summary
@@ -440,8 +480,7 @@ The resulting `best_fit$best_fit_summary` contains one row per fitted curve and 
 | Inflection Point | `(inflect_x, inflect_y)` | The point on the standard curve where the concavity transitions from concave up to concave down. It is the point where the assay is most sensitive to measurement errors in the measured response of the assay.|
 | Limits of Detection (LOD) | `(llod, ulod)` | Lower and upper LODs are defined as the upper 97.5% confidence bound of the lower asymptote and the lower 2.5% confidence bound of the upper asymptote, respectively (Rajam et al.). Limits of Detection correspond to the y-coordinate in the legend, as they are defined on the response axis.|
 | Minimum/Maximum Detectable Concentrations (MDC) | `(mindc, maxdc)` | The smallest antibody concentration that produces a signal the assay can detect above background (Rajam et al.). This corresponds to the x-coordinate of the Lower Limit of Detection in the legend, as it is on the concentration axis.|
-| Reliable Detection Limits (RDL) | `(minrdl, maxrdl)` | Lower RDL: The lowest concentration at which the assay consistently produces a signal above background with 95% confidence based on the fit of the standard curve (Rajam et al.).
-Upper RDL: Analogously, the highest concentration at which the assay consistently produces a signal below the upper asymptote (saturation) with 95% confidence, based on the fit of the standard curve. |
+| Reliable Detection Limits (RDL) | `(minrdl, maxrdl)` | Lower RDL: The lowest concentration at which the assay consistently produces a signal above background with 95% confidence based on the fit of the standard curve (Rajam et al.). Upper RDL: Analogously, the highest concentration at which the assay consistently produces a signal below the upper asymptote (saturation) with 95% confidence, based on the fit of the standard curve. |
 | Limits of Quantification (LOQ) | `(lloq, uloq)` | Defines a region of assay response (MFI) and concentration where sample estimates have less measurement error. Limits of Quantification are derived from the local minimum and maximum of the second derivative of x given y of the standard curve (Daly et al.) , (Jeanne L Sebaugh and P. D. McCray) , (Sanz et al.).|
 
 ---
@@ -486,7 +525,8 @@ First, a standard error (SE) lookup table is generated using the standard curve 
 ```{r}
 se_antigen_table <- compute_antigen_se_table(
       standards_data = loaded_data$standards,
-      curve_id_element_order = curve_id_element_order,
+      curve_id_lookup = loaded_data$curve_id_lookup,
+      #curve_id_element_order = curve_id_element_order,
       curve_col = curve_col,
       response_col   = response_var,
       dilution_col   = "dilution",
@@ -537,8 +577,8 @@ plot_standard_curve(best_fit = best_fit, is_display_log_independent = is_display
                     is_display_log_response = is_display_log_response,
                     pcov_threshold = antigen_constraints$pcov_threshold,
                     study_params = study_params,
-                    curve_id_element_order = curve_id_element_order,
-                    curve_col = curve_col,
+                    # curve_id_element_order = curve_id_element_order,
+                    # curve_col = curve_col,
                     response_variable = response_var,
                     independent_variable = indep_var)
 ```
