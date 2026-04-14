@@ -535,6 +535,7 @@ compute_loqs <- function(best_d2xy, fit, independent_variable, verbose = TRUE) {
 #'   \itemize{
 #'     \item \code{std_error_blank}: Standard error of the blank used for LLOD calculation
 #'   }
+#' @param curve_id_lookup lookup table for the selected curve_id associating with its components. 
 #' @param antigen_fit_options List of model fitting options, including:
 #'   \itemize{
 #'     \item \code{blank_option}
@@ -628,6 +629,7 @@ summarize_fit <- function(best_fit,
                           independent_variable,
                           fixed_a_result,
                           antigen_settings,
+                          curve_id_lookup, 
                           antigen_fit_options,
                           verbose = TRUE) {
 
@@ -767,6 +769,16 @@ summarize_fit <- function(best_fit,
   glance_df$formula     <- tryCatch(sub("I\\((.*)\\)", "\\1", paste(deparse(formula(fit)), collapse = " ")), error = function(e) NA_character_)
   glance_df$last_concentration_calc_method <- "interpolated"
 
+  
+  glance_df <- merge(
+    glance_df,
+    curve_id_lookup,
+    by = "curve_id",
+    all.x = TRUE
+  )
+  
+ 
+  
 
   best_fit$best_fit_summary <- glance_df
 

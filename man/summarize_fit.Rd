@@ -10,6 +10,7 @@ summarize_fit(
   independent_variable,
   fixed_a_result,
   antigen_settings,
+  curve_id_lookup,
   antigen_fit_options,
   verbose = TRUE
 )
@@ -33,6 +34,8 @@ summarize_fit(
 \itemize{
 \item \code{std_error_blank}: Standard error of the blank used for LLOD calculation
 }}
+
+\item{curve_id_lookup}{lookup table for the selected curve_id associating with its components.}
 
 \item{antigen_fit_options}{List of model fitting options, including:
 \itemize{
