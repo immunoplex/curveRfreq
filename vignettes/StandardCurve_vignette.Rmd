@@ -387,12 +387,6 @@ results$best_tidy
 head(results$sample_se)
 ```
 
-```{r export, eval = FALSE}
-# write.csv(results$best_fit_summary, "curve_summary.csv",    row.names = FALSE)
-# write.csv(results$best_tidy,        "curve_parameters.csv", row.names = FALSE)
-# write.csv(results$sample_se,        "precision_profile.csv",row.names = FALSE)
-```
-
 
 ## Fitting Multiple Antigens or Plates
 

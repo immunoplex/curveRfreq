@@ -538,9 +538,9 @@ StandardCurve <- R6Class(
     #' head(sc$best_fit$sample_se)
     #' }
     propagate_error = function(
-    grouping_cols = c("project_id", "study_accession",
-                      "experiment_accession", "source",
-                      "antigen", "feature")
+    # grouping_cols = c("project_id", "study_accession",
+    #                   "experiment_accession", "source",
+    #                   "antigen", "feature")
     ) {
       private$.require_fitted()
       private$.step_banner("PROPAGATE ERROR")
@@ -548,6 +548,12 @@ StandardCurve <- R6Class(
      #args <- self$.selection_args
       args <- as.list(self$antigen_plate$curve_id_lookup[1, ])
       
+      plate_col <- "plate"
+      
+      grouping_cols <- setdiff(
+        names(self$loaded_data$curve_id_whole_lookup),
+        c(self$curve_col, plate_col)
+      )
       
       self$se_antigen_table <- compute_antigen_se_table(
         standards_data         = self$loaded_data$whole_standards,
