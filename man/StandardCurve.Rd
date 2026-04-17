@@ -432,10 +432,7 @@ Calls \code{compute_antigen_se_table()}, \code{lookup_antigen_se()}, and
 \code{predict_and_propagate_error()}. Results stored in \verb{$se_antigen_table},
 \verb{$current_se}, and \verb{$best_fit$sample_se}.
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{StandardCurve$propagate_error(
-  grouping_cols = c("project_id", "study_accession", "experiment_accession", "source",
-    "antigen", "feature")
-)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{StandardCurve$propagate_error()}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{

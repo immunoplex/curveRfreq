@@ -442,15 +442,16 @@ plot_model_comparisons <- function(plot_data,
     ))
   }
 
-  if (all(c("plate", "nominal_sample_dilution") %in% names(df))) {
+  if (all(c("plate", "nominal_sample_dilution") %in% names(dat))) {
 
-    df$plate_nom <- ifelse(
-      is.na(df$nominal_sample_dilution) | df$nominal_sample_dilution == "",
-      df$plate,
-      paste(df$plate, df$nominal_sample_dilution, sep = "-")
+    dat$plate_nom <- ifelse(
+      is.na(dat$nominal_sample_dilution) | dat$nominal_sample_dilution == "",
+      dat$plate,
+      paste(dat$plate, dat$nominal_sample_dilution, sep = "-")
     )
-
-  }
+  } else if ("plate" %in% names(dat)) {
+      dat$plate_nom <- dat$plate
+  } 
 
   # Use patchwork for a single panel display
   # Arrange: top row = data+fits, info; bottom row = resid, qq
