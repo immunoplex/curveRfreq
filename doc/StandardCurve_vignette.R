@@ -130,11 +130,6 @@ results$best_tidy
 # Precision profile (populated after $propagate_error())
 head(results$sample_se)
 
-## ----export, eval = FALSE-----------------------------------------------------
-# # write.csv(results$best_fit_summary, "curve_summary.csv",    row.names = FALSE)
-# # write.csv(results$best_tidy,        "curve_parameters.csv", row.names = FALSE)
-# # write.csv(results$sample_se,        "precision_profile.csv",row.names = FALSE)
-
 ## ----multi-antigen, eval = FALSE----------------------------------------------
 # # antigens <- c("victoria", "perth", "brisbane")
 # # plates   <- c("plate_1", "plate_2", "plate_3")
