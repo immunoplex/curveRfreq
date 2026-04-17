@@ -25,7 +25,8 @@ RoxygenNote: 7.3.3
 Suggests: 
     glue,
     knitr,
-    rmarkdown
+    rmarkdown,
+    devtools
 VignetteBuilder: knitr
 Depends: 
     R (>= 3.5)
