@@ -78,7 +78,7 @@ We choose a `curve_id` from the lookup table and filter the loaded data by it be
 passing it to the constructor.
 
 ```{r filter-data}
-curve_id   <- 6   
+curve_id   <- 6
 antigen <- bead_assay_example$curve_id_lookup[bead_assay_example$curve_id_lookup$curve_id == curve_id,]$antigen
 curve_data <- filter_by_curve_id(bead_assay_example, curve_id = curve_id)
 ```
@@ -387,59 +387,66 @@ results$best_tidy
 head(results$sample_se)
 ```
 
-## Fitting Multiple Antigens or Plates
+## A more advanced example: Fitting Multiple Antigens or Plates
 
-Because `bead_assay_example` contains two antigens (`alpha` and `beta`) each across
-three plates, iterating over all combinations is straightforward. Call
+Since `bead_assay_example` contains two antigens (`alpha` and `beta`) each across
+three plates, we can iterate over all combinations. Call
 `filter_by_curve_id()` with a new `curve_id` from the lookup table and pass the
 result to `$set_data()` — it replaces the data and clears all downstream state
 automatically.
 
+
 ```{r multi-antigen, eval = FALSE}
-# all_summaries <- vector("list", nrow(bead_assay_example$curve_id_lookup))
-# 
-# for (i in seq_len(nrow(bead_assay_example$curve_id_lookup))) {
-# 
-#   cid        <- bead_assay_example$curve_id_lookup$curve_id[i]
-#   curve_data <- filter_by_curve_id(bead_assay_example, curve_id = cid)
-# 
-#   sc$set_data(curve_data)
-#   sc$set_curve_settings()$fit()$summarize()
-# 
-#   all_summaries[[i]] <- sc$get_results()$best_fit_summary
-# }
-# 
-# combined_summary <- do.call(rbind, all_summaries)
-```
+# Define per-antigen constraints as a named list
+antigen_constraints_list <- list(
+  alpha = data.frame(
+    antigen                      = "alpha",
+    l_asy_min_constraint         = 0,
+    l_asy_max_constraint         = 0,
+    l_asy_constraint_method      = "default",
+    standard_curve_concentration = 10000,
+    pcov_threshold               = 15,
+    stringsAsFactors             = FALSE
+  ),
+  beta = data.frame(
+    antigen                      = "beta",
+    l_asy_min_constraint         = 0,
+    l_asy_max_constraint         = 0,
+    l_asy_constraint_method      = "default",
+    standard_curve_concentration = 10000,
+    pcov_threshold               = 15,
+    stringsAsFactors             = FALSE
+  )
+)
 
-To switch the antigen constraints when iterating across antigens, rebuild
-`antigen_constraints` before calling `$new()` or update the object directly:
+all_summaries <- vector("list", nrow(bead_assay_example$curve_id_lookup))
 
-```{r antigen-switch, eval = FALSE}
-# beta_constraints <- data.frame(
-#   antigen                      = "beta",
-#   l_asy_min_constraint         = 0,
-#   l_asy_max_constraint         = 0,
-#   l_asy_constraint_method      = "default",
-#   standard_curve_concentration = 10000,
-#   pcov_threshold               = 15,
-#   stringsAsFactors             = FALSE
-# )
-# 
-# curve_data_beta <- filter_by_curve_id(bead_assay_example, curve_id = 4)
-# 
-# sc_beta <- StandardCurve$new(
-#   loaded_data         = curve_data_beta,
-#   study_params        = study_params,
-#   antigen_constraints = beta_constraints,
-#   model_names         = model_names,
-#   is_display_log_response    = is_display_log_response,
-#   is_display_log_independent = is_display_log_independent,
-#   verbose = verbose
-# )
-# 
-# sc_beta$set_curve_settings()$fit()$summarize()
+for (i in seq_len(nrow(bead_assay_example$curve_id_lookup))) {
+
+  cid        <- bead_assay_example$curve_id_lookup$curve_id[i]
+  antigen    <- bead_assay_example$curve_id_lookup$antigen[i]   # pull antigen name
+  curve_data <- filter_by_curve_id(bead_assay_example, curve_id = cid)
+
+  # Update the StandardCurve object with new data AND new constraints
+  sc$set_data(curve_data)
+  sc$antigen_constraints <- antigen_constraints_list[[antigen]]  # swap constraints
+
+  sc$set_curve_settings()$fit()$summarize()
+  all_summaries[[i]] <- sc$get_results()$best_fit_summary
+}
+
+combined_summary <- do.call(rbind, all_summaries)
+combined_summary
 ```
+Key Notes:
+
+- Pull the antigen name from the lookup table on each iteration so you know which constraint set to apply. This assumes `curve_id_lookup` has an antigen column. 
+
+- Swap `sc$antigen_constraints` before `$set_curve_settings()` because `set_curve_settings()` reads from antigen_constraints to configure the model bounds. If you swap after, the new constraints will not take effect until the next call.
+
+- `$set_data()` clears downstream state (fitted models, summaries, etc.) but it does not reset antigen_constraints, so the swap step is still necessary and will persist safely until overwritten on the next iteration.
+
+- Alternatively, if the constraint differences are substantial or you want a cleaner separation, instantiate a fresh `StandardCurve` object per antigen inside the loop using `StandardCurve$new()` with the appropriate constraint data frame. This avoids any risk of stale state but is slightly more verbose.
 
 ## Quick Reference
 

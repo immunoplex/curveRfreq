@@ -17,7 +17,7 @@ data(bead_assay_example)
 head(bead_assay_example$curve_id_lookup)
 
 ## ----filter-data--------------------------------------------------------------
-curve_id   <- 6   
+curve_id   <- 6
 antigen <- bead_assay_example$curve_id_lookup[bead_assay_example$curve_id_lookup$curve_id == curve_id,]$antigen
 curve_data <- filter_by_curve_id(bead_assay_example, curve_id = curve_id)
 
@@ -122,45 +122,46 @@ results$best_tidy
 head(results$sample_se)
 
 ## ----multi-antigen, eval = FALSE----------------------------------------------
-# # all_summaries <- vector("list", nrow(bead_assay_example$curve_id_lookup))
-# #
-# # for (i in seq_len(nrow(bead_assay_example$curve_id_lookup))) {
-# #
-# #   cid        <- bead_assay_example$curve_id_lookup$curve_id[i]
-# #   curve_data <- filter_by_curve_id(bead_assay_example, curve_id = cid)
-# #
-# #   sc$set_data(curve_data)
-# #   sc$set_curve_settings()$fit()$summarize()
-# #
-# #   all_summaries[[i]] <- sc$get_results()$best_fit_summary
-# # }
-# #
-# # combined_summary <- do.call(rbind, all_summaries)
-
-## ----antigen-switch, eval = FALSE---------------------------------------------
-# # beta_constraints <- data.frame(
-# #   antigen                      = "beta",
-# #   l_asy_min_constraint         = 0,
-# #   l_asy_max_constraint         = 0,
-# #   l_asy_constraint_method      = "default",
-# #   standard_curve_concentration = 10000,
-# #   pcov_threshold               = 15,
-# #   stringsAsFactors             = FALSE
-# # )
-# #
-# # curve_data_beta <- filter_by_curve_id(bead_assay_example, curve_id = 4)
-# #
-# # sc_beta <- StandardCurve$new(
-# #   loaded_data         = curve_data_beta,
-# #   study_params        = study_params,
-# #   antigen_constraints = beta_constraints,
-# #   model_names         = model_names,
-# #   is_display_log_response    = is_display_log_response,
-# #   is_display_log_independent = is_display_log_independent,
-# #   verbose = verbose
-# # )
-# #
-# # sc_beta$set_curve_settings()$fit()$summarize()
+# # Define per-antigen constraints as a named list
+# antigen_constraints_list <- list(
+#   alpha = data.frame(
+#     antigen                      = "alpha",
+#     l_asy_min_constraint         = 0,
+#     l_asy_max_constraint         = 0,
+#     l_asy_constraint_method      = "default",
+#     standard_curve_concentration = 10000,
+#     pcov_threshold               = 15,
+#     stringsAsFactors             = FALSE
+#   ),
+#   beta = data.frame(
+#     antigen                      = "beta",
+#     l_asy_min_constraint         = 0,
+#     l_asy_max_constraint         = 0,
+#     l_asy_constraint_method      = "default",
+#     standard_curve_concentration = 10000,
+#     pcov_threshold               = 15,
+#     stringsAsFactors             = FALSE
+#   )
+# )
+# 
+# all_summaries <- vector("list", nrow(bead_assay_example$curve_id_lookup))
+# 
+# for (i in seq_len(nrow(bead_assay_example$curve_id_lookup))) {
+# 
+#   cid        <- bead_assay_example$curve_id_lookup$curve_id[i]
+#   antigen    <- bead_assay_example$curve_id_lookup$antigen[i]   # pull antigen name
+#   curve_data <- filter_by_curve_id(bead_assay_example, curve_id = cid)
+# 
+#   # Update the StandardCurve object with new data AND new constraints
+#   sc$set_data(curve_data)
+#   sc$antigen_constraints <- antigen_constraints_list[[antigen]]  # swap constraints
+# 
+#   sc$set_curve_settings()$fit()$summarize()
+#   all_summaries[[i]] <- sc$get_results()$best_fit_summary
+# }
+# 
+# combined_summary <- do.call(rbind, all_summaries)
+# combined_summary
 
 ## ----quick-ref, eval = FALSE--------------------------------------------------
 # # # Full single-plate workflow using the built-in example data
