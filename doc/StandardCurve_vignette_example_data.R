@@ -126,7 +126,7 @@ head(results$sample_se)
 # #
 # # for (i in seq_len(nrow(bead_assay_example$curve_id_lookup))) {
 # #
-# #   cid        <- bead_assay_example$curve_id_lookup$curve_int[i]
+# #   cid        <- bead_assay_example$curve_id_lookup$curve_id[i]
 # #   curve_data <- filter_by_curve_id(bead_assay_example, curve_id = cid)
 # #
 # #   sc$set_data(curve_data)
