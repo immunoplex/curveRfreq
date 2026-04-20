@@ -324,10 +324,10 @@ Model parameter values (e.g., `a`, `b`, `c`, `d`, `g`) are included.
 | Standard curve formula | `formula` | Model formula used for fitting |
 | Log Response Flag | `is_log_response` | Whether response variable is log-transformed |
 | Log independent variable Flag | `is_log_x` | Whether independent variable (concentration) is log-transformed |
-| Prozone Adjustment | `apply_prozone` | Indicates if prozone correction was applied |
+| Prozone Correction | `apply_prozone` | Indicates if prozone correction was applied |
 | Background Method | `bkg_method` | Method used for blank/background handling |
 
-## Step 7 -- Compare Candidate Models
+## Compare Candidate Models
 
 `$compare_models()` produces a multi-panel plot showing fitted curves,
 residuals vs. fitted values, parameter estimates with confidence intervals,
