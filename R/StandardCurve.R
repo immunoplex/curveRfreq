@@ -647,9 +647,9 @@ StandardCurve <- R6Class(
         curve_id_lookup      = ap$curve_id_lookup,
         antigen_fit_options  = self$processed_data$antigen_fit_options
       )
-      # if (!is.null(bf$best_tidy)) {
+      # if (!is.null(bf$best_parameters)) {
       #   message("\n─── Parameter Estimates ──────────────────────────────────────")
-      #   print(bf$best_tidy)
+      #   print(bf$best_parameters)
       # }
       #
       # if (!is.null(bf$best_fit_summary)) {
@@ -681,11 +681,11 @@ StandardCurve <- R6Class(
       # }
       #
       # cat("\n  -- Model Parameters -----------------------------------------\n")
-      # if (!is.null(bf$best_tidy)) {
+      # if (!is.null(bf$best_parameters)) {
       #   print(
-      #     bf$best_tidy[, intersect(
+      #     bf$best_parameters[, intersect(
       #       c("term", "estimate", "std_error", "p_value", "lower", "upper"),
-      #       names(bf$best_tidy)
+      #       names(bf$best_parameters)
       #     ), drop = FALSE],
       #     digits    = digits,
       #     row.names = FALSE
@@ -776,7 +776,7 @@ StandardCurve <- R6Class(
     #' @description
     #' Return key result tables as a named list for downstream use or export.
     #'
-    #' @return Named list: `fit_summary`, `best_tidy`, `best_fit_summary`,
+    #' @return Named list: `fit_summary`, `best_parameters`, `best_fit_summary`,
     #'   `sample_se` (populated only after `$propagate_error()`).
     #'
     #' @examples
@@ -789,7 +789,7 @@ StandardCurve <- R6Class(
 
       list(
         fit_summary      = self$fit_summary,
-        best_tidy        = self$best_fit$best_tidy,
+        best_parameters        = self$best_fit$best_parameters,
         best_fit_summary = self$best_fit$best_fit_summary,
         sample_se        = self$best_fit$sample_se %||% NULL
       )

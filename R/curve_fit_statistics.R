@@ -43,7 +43,7 @@
 #'   message via \code{message()}.
 #'
 #' @return The input \code{best_fit} list with an additional element
-#'   \code{best_tidy}: a \code{tibble} with one row per parameter containing
+#'   \code{best_parameters}: a \code{tibble} with one row per parameter containing
 #'   columns:
 #'   \describe{
 #'     \item{term}{Parameter name.}
@@ -92,7 +92,7 @@
 #'   antigen_settings  = my_antigen_settings,
 #'   antigen_fit_options = list(is_log_response = TRUE)
 #' )
-#' best_fit$best_tidy
+#' best_fit$best_parameters
 #' }
 #'
 #' @export
@@ -198,7 +198,7 @@ tidy.nlsLM <- function(best_fit, fixed_a_result, model_constraints, antigen_sett
 
   tidy_df <- attach_grouping_keys(tidy_df, best_fit$best_data, context = "tidy.nlsLM")
 
-  best_fit$best_tidy <- tidy_df
+  best_fit$best_parameters <- tidy_df
   if (verbose) {
     message("Finished tidy.nlsLM")
   }

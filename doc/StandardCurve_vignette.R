@@ -96,7 +96,7 @@ sc$fit_params           # parameter estimates and CIs per model
 sc$summarize()
 
 sc$best_fit$best_model_name
-sc$best_fit$best_tidy        # tidy parameter table
+sc$best_fit$best_parameters        # tidy parameter table
 sc$best_fit$best_fit_summary # QC metrics + fit stats (one row)
 
 ## ----compare-models, fig.width = 10, fig.height = 12, out.width = "100%"------
@@ -124,8 +124,8 @@ names(results)
 # One-row QC + fit statistics summary
 results$best_fit_summary
 
-# Tidy parameter estimates
-results$best_tidy
+# parameter estimates
+results$best_parameters
 
 # Precision profile (populated after $propagate_error())
 head(results$sample_se)

@@ -57,7 +57,7 @@ message via \code{message()}.}
 }
 \value{
 The input \code{best_fit} list with an additional element
-\code{best_tidy}: a \code{tibble} with one row per parameter containing
+\code{best_parameters}: a \code{tibble} with one row per parameter containing
 columns:
 \describe{
 \item{term}{Parameter name.}
@@ -110,7 +110,7 @@ best_fit <- tidy.nlsLM(
   antigen_settings  = my_antigen_settings,
   antigen_fit_options = list(is_log_response = TRUE)
 )
-best_fit$best_tidy
+best_fit$best_parameters
 }
 
 }

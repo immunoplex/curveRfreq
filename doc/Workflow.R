@@ -215,7 +215,7 @@ best_fit <- tidy.nlsLM(best_fit = best_fit, fixed_a_result = antigen_plate$fixed
                antigen_fit_options = prepped_data$antigen_fit_options, 
                verbose = verbose)
 
-best_fit$best_tidy
+best_fit$best_parameters
 
 ## ----best_fit_summary, collapse= TRUE-----------------------------------------
 best_fit <- summarize_fit(best_fit = best_fit, response_variable = response_var,

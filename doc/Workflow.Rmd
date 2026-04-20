@@ -456,7 +456,7 @@ best_fit <- tidy.nlsLM(best_fit = best_fit, fixed_a_result = antigen_plate$fixed
                antigen_fit_options = prepped_data$antigen_fit_options, 
                verbose = verbose)
 
-best_fit$best_tidy
+best_fit$best_parameters
 ```
 
 `summarize_fit()` augments the best_fit object by calculating key quality control metrics for the standard curve and model fit statistics as well as metadata. 

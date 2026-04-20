@@ -246,13 +246,13 @@ sc$fit_params           # parameter estimates and CIs per model
 
 ##  Summarize
 
-`$summarize()` computes and prints fit statistics, curve characteristics (inflection point, LOD, MDC, RDL, LOQ), and the tidy parameter table to the console - including the best model name, candidate model comparison (AIC, BIC, RSS), and QC metrics. A summary of the fitted model parameters alongside their lower and upper constraints is stored in `$best_fit$best_tidy` as a data frame, making it available for reporting and downstream analysis.
+`$summarize()` computes and prints fit statistics, curve characteristics (inflection point, LOD, MDC, RDL, LOQ), and the tidy parameter table to the console - including the best model name, candidate model comparison (AIC, BIC, RSS), and QC metrics. A summary of the fitted model parameters alongside their lower and upper constraints is stored in `$best_fit$best_parameters` as a data frame, making it available for reporting and downstream analysis.
 
 ```{r summarize}
 sc$summarize()
 
 sc$best_fit$best_model_name
-sc$best_fit$best_tidy        # tidy parameter table
+sc$best_fit$best_parameters        # tidy parameter table
 sc$best_fit$best_fit_summary # QC metrics + fit stats (one row)
 ```
 
@@ -380,8 +380,8 @@ names(results)
 # One-row QC + fit statistics summary
 results$best_fit_summary
 
-# Tidy parameter estimates
-results$best_tidy
+# parameter estimates
+results$best_parameters
 
 # Precision profile (populated after $propagate_error())
 head(results$sample_se)

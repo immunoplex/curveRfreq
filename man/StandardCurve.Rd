@@ -568,7 +568,7 @@ Return key result tables as a named list for downstream use or export.
 }
 
 \subsection{Returns}{
-Named list: \code{fit_summary}, \code{best_tidy}, \code{best_fit_summary},
+Named list: \code{fit_summary}, \code{best_parameters}, \code{best_fit_summary},
 \code{sample_se} (populated only after \verb{$propagate_error()}).
 }
 \subsection{Examples}{
