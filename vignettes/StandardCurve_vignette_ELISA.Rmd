@@ -58,7 +58,7 @@ devtools::load_all()
 ```
 
 ## Load Example Data
-
+ 
 The package ships with `elisa_assay_example`, a synthetic multi-plate ELISA
 immunoassay dataset containing standard curves, blanks, and patient samples across
 one antigen (`alpha`) run on six plates.
