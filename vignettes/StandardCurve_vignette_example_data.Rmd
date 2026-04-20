@@ -18,7 +18,7 @@ knitr::opts_chunk$set(
 
 ## Overview
 This vignette demonstrates a complete workflow for fitting standard curves
-for immunoassay data, including both ELISA and multiplex bead assay data,
+for immunoassay data, including bead array assay data,
 and deriving detection metrics using the `curveRfreq` package. The
 workflow is encapsulated in the `StandardCurve` R6 class, which wraps
 the full `curveRfreq` pipeline into a single stateful object with a
