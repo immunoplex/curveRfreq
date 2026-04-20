@@ -7,14 +7,49 @@ knitr::opts_chunk$set(
 ## ----setup, message = FALSE---------------------------------------------------
 devtools::load_all()
 
-script_path <- system.file("vignette_helpers", "db_functions.R", package = "curveRfreq")
-source(script_path)
-
 ## ----load-data----------------------------------------------------------------
 data(bead_assay_example)
 
 # Inspect the curve/plate lookup table
 head(bead_assay_example$curve_id_lookup)
+
+## ----filter-function----------------------------------------------------------
+filter_by_curve_id <- function(loaded_data,
+                               curve_id,
+                               target_names = c("standards", "blanks",
+                                                "samples", "curve_id_lookup"),
+                               verbose = FALSE) {
+  
+  filtered <- loaded_data
+  
+  filtered$curve_id_whole_lookup <- filtered$curve_id_lookup
+  filtered$whole_standards <- filtered$standards
+  filtered[target_names] <- lapply(filtered[target_names], function(df) {
+    
+    # Skip non-data frames
+    if (!is.data.frame(df)) {
+      if (verbose) message("[filter_by_curve_id] Skipping non-data.frame")
+      return(df)
+    }
+    
+    # Skip empty data
+    if (nrow(df) == 0) {
+      if (verbose) message("[filter_by_curve_id] Empty data.frame")
+      return(df)
+    }
+    
+    # Skip if no curve_id column
+    if (!"curve_id" %in% names(df)) {
+      if (verbose) message("[filter_by_curve_id] No curve_id column")
+      return(df)
+    }
+    
+    # Filter
+    df[as.character(df$curve_id) == as.character(curve_id), , drop = FALSE]
+  })
+  
+  return(filtered)
+}
 
 ## ----filter-data--------------------------------------------------------------
 curve_id   <- 6

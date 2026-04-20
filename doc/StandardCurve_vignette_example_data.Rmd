@@ -51,11 +51,10 @@ We walk through the complete workflow:
 
 ## Setup
 
+We begin by loading the development version of the package. 
+
 ```{r setup, message = FALSE}
 devtools::load_all()
-
-script_path <- system.file("vignette_helpers", "db_functions.R", package = "curveRfreq")
-source(script_path)
 ```
 
 ## Load Example Data
@@ -74,14 +73,55 @@ head(bead_assay_example$curve_id_lookup)
 `bead_assay_example` is a plain list. The `StandardCurve` class expects it to contain
 `$standards`, `$blanks`, `$samples`, `$response_var`, and `$indep_var`.
 
-We choose a `curve_id` from the lookup table and filter the loaded data by it before
-passing it to the constructor.
+We choose a `curve_id` from the lookup table and use a custom filtering function (`filter_by_curve_id)` to subset the dataset of interest (`bead_assay_example` in this vignette). This function takes the full dataset and the chosen `curve_id`, filters all relevant components, and returns a reduced dataset containing only records associated with that specific curve. The filtered dataset is then passed to the constructor.
+
+```{r filter-function}
+filter_by_curve_id <- function(loaded_data,
+                               curve_id,
+                               target_names = c("standards", "blanks",
+                                                "samples", "curve_id_lookup"),
+                               verbose = FALSE) {
+  
+  filtered <- loaded_data
+  
+  filtered$curve_id_whole_lookup <- filtered$curve_id_lookup
+  filtered$whole_standards <- filtered$standards
+  filtered[target_names] <- lapply(filtered[target_names], function(df) {
+    
+    # Skip non-data frames
+    if (!is.data.frame(df)) {
+      if (verbose) message("[filter_by_curve_id] Skipping non-data.frame")
+      return(df)
+    }
+    
+    # Skip empty data
+    if (nrow(df) == 0) {
+      if (verbose) message("[filter_by_curve_id] Empty data.frame")
+      return(df)
+    }
+    
+    # Skip if no curve_id column
+    if (!"curve_id" %in% names(df)) {
+      if (verbose) message("[filter_by_curve_id] No curve_id column")
+      return(df)
+    }
+    
+    # Filter
+    df[as.character(df$curve_id) == as.character(curve_id), , drop = FALSE]
+  })
+  
+  return(filtered)
+}
+```
+
 
 ```{r filter-data}
 curve_id   <- 6
 antigen <- bead_assay_example$curve_id_lookup[bead_assay_example$curve_id_lookup$curve_id == curve_id,]$antigen
 curve_data <- filter_by_curve_id(bead_assay_example, curve_id = curve_id)
 ```
+
+## Configuration
 
 - `model_names`: Candidate nonlinear models considered during the fitting algorithm.
   Model names are specified as a vector of strings limited to:
@@ -93,6 +133,8 @@ curve_data <- filter_by_curve_id(bead_assay_example, curve_id = curve_id)
 
 **To manually exclude a model form from consideration do not include it in the list.**
 
+- `is_display_log_response` and `is_display_log_independent` flags control whether plotting results are displayed on log scales or not. 
+ 
 ```{r model-settings}
 model_names <- c("logistic5", "loglogistic5",
                  "logistic4", "loglogistic4",
