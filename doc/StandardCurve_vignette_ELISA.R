@@ -115,16 +115,11 @@ sc$fit()
 sc$fit_summary          # AIC, BIC, RSS for each model
 sc$fit_params           # parameter estimates and CIs per model
 
-# Best model outputs
-# sc$best_fit$best_model_name
-# sc$best_fit$best_tidy        # tidy parameter table
-# sc$best_fit$best_fit_summary # QC metrics + fit stats (one row)
-
 ## ----summarize----------------------------------------------------------------
 sc$summarize()
 
 sc$best_fit$best_model_name
-sc$best_fit$best_parameters        # parameter table
+sc$best_fit$best_parameters  # parameter table
 sc$best_fit$best_fit_summary # QC metrics + fit stats (one row)
 
 ## ----compare-models, fig.width = 10, fig.height = 12, out.width = "100%"------
