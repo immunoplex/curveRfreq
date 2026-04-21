@@ -29,7 +29,7 @@ beta_params <- list(
 ##   Concentrations & plate layout (96‑well, column‑major)
 ## -----------------------------------------------------------------
 CONC   <- c(0.001, 0.003, 0.01, 0.03, 0.1, 0.3, 1.0, 3.0, 10.0, 30.0)   # AU/mL
-PLATES <- paste0("SDYELISAexample:plate_", 1:6)   # six plates
+PLATES <- paste0("SDYELISAexample:EXPexample:plate_", 1:6)   # six plates
 
 PLATE_GRID <- paste0(
   rep(LETTERS[1:8], times = 12),
@@ -273,7 +273,7 @@ curve_data$curve_id_lookup <- curve_id_lookup
 parts <- strsplit(curve_data$curve_id_lookup$curve_str,
                   split = ":", fixed = TRUE)
 
-curve_data$curve_id_lookup[, c("antigen", "study_accession", "plate")] <-
+curve_data$curve_id_lookup[, c("antigen", "study_accession", "experiment_accession", "plate")] <-
   do.call(rbind, parts)
 
 curve_data$curve_id_lookup$curve_str <- NULL
@@ -293,4 +293,4 @@ elisa_assay_example <- c(
        indep_var    = indep_var)
 )
 
-# usethis::use_data(elisa_assay_example, overwrite = TRUE)
+#usethis::use_data(elisa_assay_example, overwrite = TRUE)

@@ -73,6 +73,8 @@ integer curve IDs to their plate metadata:
 (\code{"alpha"} for all plates in this dataset).}
 \item{study_accession}{Character. Study accession corresponding to
 the curve (e.g. \code{"SDYexample"}).}
+\item{experiment_accession}{Character. Experiment accession corresponding to
+the curve (e.g. \code{"EXPexample"}).}
 \item{plate}{Character. Plate identifier
 (e.g. \code{"plate_1"}).}
 }
