@@ -5,7 +5,7 @@ set.seed(42)
 ALPHA <- list(family = "gompertz", a = 18,  d = 20000, b = 1.20, c = 0.10)
 BETA  <- list(family = "5pl",      a = 25,  d = 28000, b = 1.80, c = 1.00, g = 0.80)
 CONC   <- c(0.001, 0.003, 0.01, 0.03, 0.1, 0.3, 1, 3, 10, 30)  # AU/mL
-PLATES <- paste0("SDYexample:plate_", 1:3)
+PLATES <- paste0("SDYexample:EXPexample:plate_", 1:3)
 
 # ── Plate layout (96-well, column-major fill) ─────────────────────────────────
 PLATE_GRID <- paste0(
@@ -207,7 +207,7 @@ cat("BLK ∩ SMP:", intersect(w_blk, w_smp), "→ should be empty\n")
 
 
 curve_data
-curve_id_elements <- c("antigen", "study_accession", "plate")
+curve_id_elements <- c("antigen", "study_accession", "experiment_accession","plate")
 parts <- strsplit(curve_data$curve_id_lookup$curve_str, ":", fixed = TRUE)
 curve_data$curve_id_lookup[, curve_id_elements] <- do.call(rbind, parts)
 
@@ -222,4 +222,4 @@ indep_var <- unique(curve_data_for_package$standards$assay_independent_variable)
 
 bead_assay_example <- c(curve_data_for_package, list(response_var = response_var, indep_var = indep_var))
 
-# usethis::use_data(bead_assay_data, overwrite = TRUE)
+#usethis::use_data(bead_assay_example, overwrite = TRUE)
