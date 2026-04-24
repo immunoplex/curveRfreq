@@ -777,6 +777,7 @@ StandardCurve <- R6Class(
     #' Return key result tables as a named list for downstream use or export.
     #'
     #' @return Named list: `fit_summary`, `best_parameters`, `best_fit_summary`,
+    #'  `best_pred`,`best_standard`  `best_curve_id`
     #'   `sample_se` (populated only after `$propagate_error()`).
     #'
     #' @examples
@@ -791,7 +792,16 @@ StandardCurve <- R6Class(
         fit_summary      = self$fit_summary,
         best_parameters        = self$best_fit$best_parameters,
         best_fit_summary = self$best_fit$best_fit_summary,
-        sample_se        = self$best_fit$sample_se %||% NULL
+        sample_se        = self$best_fit$sample_se %||% NULL,
+        best_pred        = self$best_fit$best_pred  %||% NULL,
+        best_standard = self$best_fit$best_data,
+        best_curve_id = {
+          df <- self$antigen_plate$curve_id_lookup
+          df$response_var <- self$response_var
+          df$indep_var    <- self$indep_var
+          df
+        }
+        
       )
     },
 
