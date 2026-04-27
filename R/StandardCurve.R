@@ -793,7 +793,14 @@ StandardCurve <- R6Class(
         best_parameters        = self$best_fit$best_parameters,
         best_fit_summary = self$best_fit$best_fit_summary,
         sample_se        = self$best_fit$sample_se %||% NULL,
-        best_pred        = self$best_fit$best_pred  %||% NULL,
+        best_pred        = {
+          bp <- self$best_fit$best_pred %||% NULL
+          if (!is.null(bp) && !is.null(self$loaded_data$curve_id_lookup)) {
+            bp[[self$curve_col]] <- unique(self$loaded_data$curve_id_lookup[[self$curve_col]])[1L]
+            bp <- bp[, c(self$curve_col, setdiff(names(bp), self$curve_col))]
+          }
+          bp
+        },
         best_standard = self$best_fit$best_data,
         best_curve_id = {
           df <- self$antigen_plate$curve_id_lookup
