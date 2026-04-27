@@ -516,6 +516,7 @@ format_assay_terms <- function(x) {
 #' @param is_display_log_independent Logical; whether to display independent variable on log10 scale.
 #' @param pcov_threshold Numeric threshold for percent coefficient of variation.
 #' @param study_params study parameters including is_log_response and is_log_independent
+#' @param curve_id_lookup lookup for the specific curve_id. Used to get the plate and antigen names
 #' @param response_variable Character; name of response variable column (default "mfi").
 #' @param independent_variable Character; name of independent variable column (default "concentration").
 #'
@@ -528,6 +529,7 @@ plot_standard_curve <- function(best_fit,
                                 study_params,
                                 # curve_id_element_order,
                                 # curve_col = "curve_id",
+                                curve_id_lookup, 
                                 response_variable = "mfi",
                                 independent_variable = "concentration"
                                 ) {
@@ -625,7 +627,7 @@ plot_standard_curve <- function(best_fit,
   log_response_status <- isTRUE(as.logical(study_params$is_log_response))
   if (log_response_status && !isTRUE(is_display_log_response)) {
     best_fit$best_data[[response_variable]] <- 10^best_fit$best_data[[response_variable]]
-    best_fit$best_pred$yhat               <- 10^best_fit$best_pred$yhat
+    best_fit$best_pred$yhat_response               <- 10^best_fit$best_pred$yhat_response
     best_fit$best_glance$llod             <- 10^safe_glance("llod")
     best_fit$best_glance$ulod             <- 10^safe_glance("ulod")
     best_fit$best_glance$lloq_y           <- 10^safe_glance("lloq_y")
@@ -647,7 +649,7 @@ plot_standard_curve <- function(best_fit,
   log_x_status <- isTRUE(as.logical(study_params$is_log_independent))
   if (log_x_status && !isTRUE(is_display_log_independent)) {
     best_fit$best_data$concentration       <- 10^best_fit$best_data$concentration
-    best_fit$best_pred$x                   <- 10^best_fit$best_pred$x
+    best_fit$best_pred$predicted_concentration                   <- 10^best_fit$best_pred$predicted_concentration
     best_fit$best_glance$lloq              <- 10^safe_glance("lloq")
     best_fit$best_glance$uloq              <- 10^safe_glance("uloq")
     best_fit$best_glance$inflect_x         <- 10^safe_glance("inflect_x")
@@ -795,8 +797,8 @@ plot_standard_curve <- function(best_fit,
 
   ### 5. FITTED CURVE
   p <- p %>% add_lines(
-    x = best_fit$best_pred$x,
-    y = best_fit$best_pred$yhat,
+    x = best_fit$best_pred$predicted_concentration,
+    y = best_fit$best_pred$yhat_response,
     name = "Fitted Curve",
     legendgroup = "fitted_curve",
     showlegend = TRUE,
@@ -824,7 +826,7 @@ plot_standard_curve <- function(best_fit,
 
   ### 6. LOD lines (horizontal)
   p <- p %>% add_lines(
-    x = best_fit$best_pred$x,
+    x = best_fit$best_pred$predicted_concentration,
     y = best_fit$best_fit_summary$ulod,
     name = paste("Upper LOD: (",
                  round(best_fit$best_fit_summary$maxdc, 3), ",",
@@ -835,7 +837,7 @@ plot_standard_curve <- function(best_fit,
   )
 
   p <- p %>% add_lines(
-    x = best_fit$best_pred$x,
+    x = best_fit$best_pred$predicted_concentration,
     y = best_fit$best_fit_summary$llod,
     name = paste("Lower LOD: (",
                  round(best_fit$best_fit_summary$mindc, 3), ",",
@@ -920,7 +922,7 @@ plot_standard_curve <- function(best_fit,
 
   ### Horizontal LOQ lines
   p <- p %>% add_lines(
-    x = best_fit$best_pred$x,
+    x = best_fit$best_pred$predicted_concentration,
     y = best_fit$best_fit_summary$uloq_y,
     name = "",
     legendgroup = "linked_uloq", showlegend = FALSE,
@@ -928,7 +930,7 @@ plot_standard_curve <- function(best_fit,
   )
 
   p <- p %>% add_lines(
-    x = best_fit$best_pred$x,
+    x = best_fit$best_pred$predicted_concentration,
     y = best_fit$best_fit_summary$lloq_y,
     name = "",
     legendgroup = "linked_lloq", showlegend = FALSE,
@@ -970,7 +972,7 @@ plot_standard_curve <- function(best_fit,
   ### 8b. Sample uncertainty (y3 axis) — interpolated
   unc_col <- list(color = "#e68fac")
   p <- p %>% add_lines(
-    x = best_fit$best_pred$x,
+    x = best_fit$best_pred$predicted_concentration,
     y = best_fit$best_pred$pcov,
     name = "Measurement Uncertainty",
     yaxis = "y3",
@@ -993,7 +995,7 @@ plot_standard_curve <- function(best_fit,
     hovertemplate = "%{text}<extra></extra>",
     visible = "legendonly"
   ) %>% add_lines(
-    x = best_fit$best_pred$x,
+    x = best_fit$best_pred$predicted_concentration,
     y = best_fit$best_pred$pcov_threshold,
     name = paste0("pCoV Threshold: ", best_fit$best_pred$pcov_threshold, "%"),
     yaxis = "y3",
@@ -1057,8 +1059,8 @@ plot_standard_curve <- function(best_fit,
   p <- p %>% layout(
     title = paste(
       "Fitted", title_model_name, "Model (",
-      unique(best_fit$best_fit_summary$plate), ",",
-      unique(best_fit$best_fit_summary$antigen), ")"
+      unique(curve_id_lookup$plate), ",",
+      unique(curve_id_lookup$antigen), ")"
     ),
     xaxis = list(
       title    = x_label,

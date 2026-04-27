@@ -10,6 +10,7 @@ plot_standard_curve(
   is_display_log_independent,
   pcov_threshold,
   study_params,
+  curve_id_lookup,
   response_variable = "mfi",
   independent_variable = "concentration"
 )
@@ -25,6 +26,8 @@ best_pred, best_glance, and optional best_curve_ci.}
 \item{pcov_threshold}{Numeric threshold for percent coefficient of variation.}
 
 \item{study_params}{study parameters including is_log_response and is_log_independent}
+
+\item{curve_id_lookup}{lookup for the specific curve_id. Used to get the plate and antigen names}
 
 \item{response_variable}{Character; name of response variable column (default "mfi").}
 

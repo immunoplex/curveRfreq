@@ -507,8 +507,17 @@ predict_and_propagate_error <- function(best_fit,
   pred_se$antigen                  <- unique(best_fit$best_data$antigen)
   pred_se$source                   <- unique(best_fit$best_data$source)
 
-  pred_se <- attach_grouping_keys(pred_se, best_fit$best_data, context = "predict_and_propagate_error/pred_se")
+  
+ # pred_se <- attach_grouping_keys(pred_se, best_fit$best_data, context = "predict_and_propagate_error/pred_se")
 
+  names(pred_se)[names(pred_se) == "yhat"] <- "yhat_response"
+  names(pred_se)[names(pred_se) == "model"] <- "model_name"
+  names(pred_se)[names(pred_se) == "se_x"] <- "se_concentration"
+  pred_se$cv_x <- NULL
+  pred_se$ovrall_se <- NULL
+  pred_se$x <- NULL
+  pred_se$overall_se <- NULL
+  
   # pred_se_v <<- pred_se
   best_fit$best_pred <- pred_se
 

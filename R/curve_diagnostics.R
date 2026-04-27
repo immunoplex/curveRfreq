@@ -767,17 +767,18 @@ summarize_fit <- function(best_fit,
   glance_df$is_log_x    <- antigen_fit_options$is_log_concentration %||% NA
   glance_df$apply_prozone <- antigen_fit_options$apply_prozone %||% NA
   glance_df$formula     <- tryCatch(sub("I\\((.*)\\)", "\\1", paste(deparse(formula(fit)), collapse = " ")), error = function(e) NA_character_)
-  glance_df$last_concentration_calc_method <- "interpolated"
+  
+  #glance_df$last_concentration_calc_method <- "interpolated"
 
   
-  glance_df <- merge(
-    glance_df,
-    curve_id_lookup,
-    by = "curve_id",
-    all.x = TRUE
-  )
-  
- 
+  # glance_df <- merge(
+  #   glance_df,
+  #   curve_id_lookup,
+  #   by = "curve_id",
+  #   all.x = TRUE
+  # )
+  # 
+  # 
   
 
   best_fit$best_fit_summary <- glance_df

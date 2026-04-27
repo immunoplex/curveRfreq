@@ -60,6 +60,7 @@ The input \code{best_fit} list with an additional element
 \code{best_parameters}: a \code{tibble} with one row per parameter containing
 columns:
 \describe{
+\item{curve_id}{The curve identifier for the best fitted curve. It is associated with an identifier value in the lookup table.}
 \item{term}{Parameter name.}
 \item{lower}{Lower constraint bound from \code{model_constraints}.}
 \item{upper}{Upper constraint bound from \code{model_constraints}.}
@@ -68,17 +69,6 @@ columns:
 parameters).}
 \item{statistic}{t-statistic (\code{NA} for fixed parameters).}
 \item{p_value}{Two-sided p-value (\code{NA} for fixed parameters).}
-\item{study_accession}{Study identifier.}
-\item{experiment_accession}{Experiment identifier.}
-\item{nominal_sample_dilution}{Nominal sample dilution.}
-\item{antigen}{Antigen name.}
-\item{plateid}{Plate identifier.}
-\item{plate}{Plate name.}
-\item{source}{Data source.}
-\item{wavelength}{Wavelength grouping key (via
-\code{\link{attach_grouping_keys}}).}
-\item{feature}{Feature grouping key (via
-\code{\link{attach_grouping_keys}}).}
 }
 }
 \description{
