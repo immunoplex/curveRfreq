@@ -148,9 +148,6 @@ results$best_fit_summary
 # Parameter estimates
 results$best_parameters
 
-# extract curve id info for the best fit model with response and independent variables attached
-results$best_curve_id
-
 # prediction grid from the best fitting model.
 head(results$best_pred)
 

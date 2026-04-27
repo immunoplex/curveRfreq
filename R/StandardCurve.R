@@ -720,6 +720,7 @@ StandardCurve <- R6Class(
 
       pct <- tryCatch(self$antigen_constraints$pcov_threshold[1],
                       error = function(e) 15)
+       
 
       p <- plot_standard_curve(
         best_fit                   = self$best_fit,
@@ -727,6 +728,7 @@ StandardCurve <- R6Class(
         is_display_log_response    = is_display_log_response,
         pcov_threshold             = pct,
         study_params               = self$study_params,
+        curve_id_lookup           = self$loaded_data$curve_id_lookup,
         # curve_id_element_order     = self$curve_id_element_order,
         # curve_col                  = self$curve_col,
         response_variable          = self$response_var,
@@ -777,8 +779,7 @@ StandardCurve <- R6Class(
     #' Return key result tables as a named list for downstream use or export.
     #'
     #' @return Named list: `fit_summary`, `best_parameters`, `best_fit_summary`,
-    #'  `best_pred`,`best_standard`  `best_curve_id`
-    #'   `sample_se` (populated only after `$propagate_error()`).
+    #'  `best_pred`,`best_standard`,`sample_se` (populated only after `$propagate_error()`).
     #'
     #' @examples
     #' \dontrun{
@@ -801,13 +802,13 @@ StandardCurve <- R6Class(
           }
           bp
         },
-        best_standard = self$best_fit$best_data,
-        best_curve_id = {
-          df <- self$antigen_plate$curve_id_lookup
-          df$response_var <- self$response_var
-          df$indep_var    <- self$indep_var
-          df
-        }
+        best_standard = self$best_fit$best_data
+        # best_curve_id = {
+        #   df <- self$antigen_plate$curve_id_lookup
+        #   df$response_var <- self$response_var
+        #   df$indep_var    <- self$indep_var
+        #   df
+        # }
         
       )
     },

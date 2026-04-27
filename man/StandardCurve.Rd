@@ -569,8 +569,7 @@ Return key result tables as a named list for downstream use or export.
 
 \subsection{Returns}{
 Named list: \code{fit_summary}, \code{best_parameters}, \code{best_fit_summary},
-\code{best_pred},\code{best_standard}  \code{best_curve_id}
-\code{sample_se} (populated only after \verb{$propagate_error()}).
+\code{best_pred},\code{best_standard},\code{sample_se} (populated only after \verb{$propagate_error()}).
 }
 \subsection{Examples}{
 \if{html}{\out{<div class="r example copy">}}

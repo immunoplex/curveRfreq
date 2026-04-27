@@ -274,6 +274,7 @@ plot_standard_curve(best_fit = best_fit, is_display_log_independent = is_display
                     is_display_log_response = is_display_log_response,
                     pcov_threshold = antigen_constraints$pcov_threshold,
                     study_params = study_params,
+                   curve_id_lookup = antigen_plate$curve_id_lookup,
                     # curve_id_element_order = curve_id_element_order,
                     # curve_col = curve_col,
                     response_variable = response_var,

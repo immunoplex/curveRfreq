@@ -46,6 +46,7 @@
 #'   \code{best_parameters}: a \code{tibble} with one row per parameter containing
 #'   columns:
 #'   \describe{
+#'   \item{curve_id}{The curve identifier for the best fitted curve. It is associated with an identifier value in the lookup table.}
 #'     \item{term}{Parameter name.}
 #'     \item{lower}{Lower constraint bound from \code{model_constraints}.}
 #'     \item{upper}{Upper constraint bound from \code{model_constraints}.}
@@ -54,17 +55,6 @@
 #'       parameters).}
 #'     \item{statistic}{t-statistic (\code{NA} for fixed parameters).}
 #'     \item{p_value}{Two-sided p-value (\code{NA} for fixed parameters).}
-#'     \item{study_accession}{Study identifier.}
-#'     \item{experiment_accession}{Experiment identifier.}
-#'     \item{nominal_sample_dilution}{Nominal sample dilution.}
-#'     \item{antigen}{Antigen name.}
-#'     \item{plateid}{Plate identifier.}
-#'     \item{plate}{Plate name.}
-#'     \item{source}{Data source.}
-#'     \item{wavelength}{Wavelength grouping key (via
-#'       \code{\link{attach_grouping_keys}}).}
-#'     \item{feature}{Feature grouping key (via
-#'       \code{\link{attach_grouping_keys}}).}
 #'   }
 #'
 #' @details
@@ -144,12 +134,12 @@ tidy.nlsLM <- function(best_fit, fixed_a_result, model_constraints, antigen_sett
   s <- summary(best_fit$best_fit)
   out <- as.data.frame(s$coefficients)
   tidy_df <- tibble::tibble(
+    curve_id =  unique(best_fit$best_data$curve_id),
     term = rownames(out),
     estimate = out[, "Estimate"],
     std.error = out[, "Std. Error"],
     statistic = out[, "t value"],
-    p.value = out[, "Pr(>|t|)"],
-    curve_id =  unique(best_fit$best_data$curve_id)
+    p.value = out[, "Pr(>|t|)"]
   )
 
   # tidy_df$curve_id <- unique(best_fit$best_data$curve_id)
@@ -168,12 +158,12 @@ tidy.nlsLM <- function(best_fit, fixed_a_result, model_constraints, antigen_sett
 
   if (!is.null(fixed_a_result)) {
     a_fixed <- tibble::tibble(
+      curve_id = unique(best_fit$best_data$curve_id),
       term = "a",
       estimate = fixed_a_result,
       std.error = 0,
       statistic = NA_real_,
-      p.value = NA_real_,
-      curve_id = unique(best_fit$best_data$curve_id)
+      p.value = NA_real_
       # study_accession = unique(best_fit$best_data$study_accession),
       # experiment_accession = unique(best_fit$best_data$experiment_accession),
       # nominal_sample_dilution = unique(best_fit$best_data$nominal_sample_dilution),
@@ -191,12 +181,12 @@ tidy.nlsLM <- function(best_fit, fixed_a_result, model_constraints, antigen_sett
 
 
   tidy_df <- merge(tidy_df, m_constraints_df, by = "term", all.x = TRUE)
-  other_cols <- setdiff(colnames(tidy_df), c("term", c("lower", "upper")))
+  other_cols <- setdiff(colnames(tidy_df), c("curve_id", "term", "lower", "upper"))
+  
+  # New order: curve_id -> term -> lower, upper -> rest
+  tidy_df <- tidy_df[, c("curve_id", "term", "lower", "upper", other_cols)]
 
-  # New order: term → lower, upper → rest
-  tidy_df <- tidy_df[, c("term", "lower", "upper", other_cols)]
-
-  tidy_df <- attach_grouping_keys(tidy_df, best_fit$best_data, context = "tidy.nlsLM")
+ # tidy_df <- attach_grouping_keys(tidy_df, best_fit$best_data, context = "tidy.nlsLM")
 
   best_fit$best_parameters <- tidy_df
   if (verbose) {
