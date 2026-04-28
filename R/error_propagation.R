@@ -614,6 +614,10 @@ predict_and_propagate_error <- function(best_fit,
   # sample_se$pcov_robust_concentration  <- NA_real_
   #
   # sample_se_v  <<- sample_se
+  # remove from downstream output 
+  sample_se$overall_se <- NULL
+  sample_se$cv_x <- NULL
+ 
   best_fit$sample_se <- sample_se
 
   if (verbose) message("Finished predict_and_propagate_error")

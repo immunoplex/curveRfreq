@@ -148,9 +148,6 @@ results$best_fit_summary
 # Parameter estimates
 results$best_parameters
 
-# Parameter estimates
-results$best_parameters
-
 # prediction grid from the best fitting model.
 head(results$best_pred)
 
