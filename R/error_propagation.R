@@ -599,7 +599,7 @@ predict_and_propagate_error <- function(best_fit,
   # source_nom is an internal routing column (source + wavelength composite);
   # do NOT propagate it -- source and wavelength are stored as separate DB columns.
   # wavelength and feature are handled by attach_grouping_keys below.
-  sample_se <- attach_grouping_keys(sample_se, best_fit$best_data, context = "predict_and_propagate_error/sample_se")
+  #sample_se <- attach_grouping_keys(sample_se, best_fit$best_data, context = "predict_and_propagate_error/sample_se")
 
   # Remove intermediate columns, rename se_x
   sample_se <- sample_se[, !names(sample_se) %in% c("y_new")]
