@@ -356,7 +356,7 @@ Model parameter values (e.g., `a`, `b`, `c`, `d`, `g`) are included.
 
 | Field | Notation | Description |
 |-------|----------|-------------|
-| Model Type | `crit` | Selected model identifier |
+| Model Type | `model_name` | Selected model identifier |
 | Convergence Status | `status` | Indicates whether the model successfully converged |
 | Standard curve formula | `formula` | Model formula used for fitting |
 | Log Response Flag | `is_log_response` | Whether response variable is log-transformed |
