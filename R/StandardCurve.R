@@ -802,7 +802,27 @@ StandardCurve <- R6Class(
           }
           bp
         },
-        best_standard = self$best_fit$best_data
+        best_standard = self$best_fit$best_data,
+        candidate_parameters = {
+          cp <- self$plot_data$fit_params_aic
+          if (!is.null(cp) && !is.null(self$loaded_data$curve_id_lookup)) {
+            cp[[self$curve_col]] <- unique(self$loaded_data$curve_id_lookup[[self$curve_col]])[1L]
+            cp <- cp[, c(self$curve_col, setdiff(names(cp), self$curve_col))]
+          }
+          cp$is_best_model <- cp$model == self$best_fit$best_model_name
+          
+          cp
+        }, 
+        candidate_residuals = {
+          cr <- self$plot_data$resid_df
+          if (!is.null(cr) && !is.null(self$loaded_data$curve_id_lookup)) {
+            cr[[self$curve_col]] <- unique(self$loaded_data$curve_id_lookup[[self$curve_col]])[1L]
+            cr <- cr[, c(self$curve_col, setdiff(names(cr), self$curve_col))]
+          }
+          cr$is_best_model <- cr$model == self$best_fit$best_model_name
+          
+          cr
+        }
         # best_curve_id = {
         #   df <- self$antigen_plate$curve_id_lookup
         #   df$response_var <- self$response_var

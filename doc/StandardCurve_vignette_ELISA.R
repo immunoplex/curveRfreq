@@ -156,6 +156,14 @@ head(results$best_standard)
 # Precision profile (populated after $propagate_error())
 head(results$sample_se)
 
+# Model Comparisons can be derived from the following tables. 
+# This is all converged candidate fits and not solely the best fit
+head(results$candidate_parameters)
+
+# residuals vs fitted values
+head(results$candidate_residuals)
+
+
 ## ----multi-antigen, eval = FALSE----------------------------------------------
 # # Define per-antigen constraints as a named list
 # antigen_constraints_list <- list(
