@@ -1,5 +1,5 @@
 
-# curveRfreq
+# curveRfreq <img src="man/figures/logo.png" align="right" height="139" alt="" />
 
 `curveRfreq` is an R package designed for fast, transparent standard
 curve fitting for immunoassay data including data from bead array and
