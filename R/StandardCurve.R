@@ -822,6 +822,14 @@ StandardCurve <- R6Class(
           cr$is_best_model <- cr$model == self$best_fit$best_model_name
           
           cr
+        },
+        second_derivative = {
+          d2 <- self$best_fit$best_d2xy %||% NULL
+          if (!is.null(d2) && !is.null(self$loaded_data$curve_id_lookup)) {
+            d2[[self$curve_col]] <- unique(self$loaded_data$curve_id_lookup[[self$curve_col]])[1L]
+            d2 <- d2[, c(self$curve_col, setdiff(names(d2), self$curve_col))]
+          }
+          d2
         }
         # best_curve_id = {
         #   df <- self$antigen_plate$curve_id_lookup
