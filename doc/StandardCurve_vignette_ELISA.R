@@ -163,6 +163,9 @@ head(results$candidate_parameters)
 # residuals vs fitted values
 head(results$candidate_residuals)
 
+## The second derivative for the curve is also available 
+head(results$second_derivative)
+
 
 ## ----multi-antigen, eval = FALSE----------------------------------------------
 # # Define per-antigen constraints as a named list
