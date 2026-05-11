@@ -1,0 +1,164 @@
+# Package index
+
+## All functions
+
+- [`FEAT_NONE`](https://immunoplex.github.io/curveRfreq/reference/FEAT_NONE.md)
+  : Sentinel value for missing feature
+- [`StandardCurve`](https://immunoplex.github.io/curveRfreq/reference/StandardCurve.md)
+  : StandardCurve
+- [`WL_NONE`](https://immunoplex.github.io/curveRfreq/reference/WL_NONE.md)
+  : Sentinel value for missing wavelength
+- [`adaptive_constraint_profile()`](https://immunoplex.github.io/curveRfreq/reference/adaptive_constraint_profile.md)
+  : Build an Adaptive Constraint Profile from Observed Data
+- [`attach_grouping_keys()`](https://immunoplex.github.io/curveRfreq/reference/attach_grouping_keys.md)
+  : Attach grouping keys to output data
+- [`bead_assay_example`](https://immunoplex.github.io/curveRfreq/reference/bead_assay_example.md)
+  : Bead-based immunoassay example dataset
+- [`calculate_predicted_concentration()`](https://immunoplex.github.io/curveRfreq/reference/calculate_predicted_concentration.md)
+  : Back-Calculate Concentration from Fitted Model for Each Sample
+- [`compute_antigen_se_table()`](https://immunoplex.github.io/curveRfreq/reference/compute_antigen_se_table.md)
+  : Compute Median Assay SE for Each Antigen/Feature Across All Plates
+- [`compute_concentration()`](https://immunoplex.github.io/curveRfreq/reference/compute_concentration.md)
+  : Compute Concentration Column from Dilution and Undiluted Standard
+- [`compute_curve_ci()`](https://immunoplex.github.io/curveRfreq/reference/compute_curve_ci.md)
+  : Compute delta-method 95% confidence interval bands for a fitted
+  curve
+- [`compute_inflection_point()`](https://immunoplex.github.io/curveRfreq/reference/compute_inflection_point.md)
+  : Compute Inflection Point of Fitted Curve
+- [`compute_log_response()`](https://immunoplex.github.io/curveRfreq/reference/compute_log_response.md)
+  : Log10-Transform the Assay Response Variable
+- [`compute_loqs()`](https://immunoplex.github.io/curveRfreq/reference/compute_loqs.md)
+  : Compute Shape/curvature-based Lower and Upper Limits of
+  Quantification (LOQ) based on the second derivative
+- [`compute_robust_curves()`](https://immunoplex.github.io/curveRfreq/reference/compute_robust_curves.md)
+  : Fit All Candidate Sigmoid Models Using Robust Multi-Start Strategy
+- [`correct_prozone()`](https://immunoplex.github.io/curveRfreq/reference/correct_prozone.md)
+  : Correct the Prozone (Hook) Effect in Standard Curve Data
+- [`curveRfreq`](https://immunoplex.github.io/curveRfreq/reference/curveRfreq-package.md)
+  [`curveRfreq-package`](https://immunoplex.github.io/curveRfreq/reference/curveRfreq-package.md)
+  : curveRfreq: Frequentist Immunoassay Standard Curve Fitting
+- [`dydxgompertz4()`](https://immunoplex.github.io/curveRfreq/reference/dydxgompertz4.md)
+  : First Derivative of the Gompertz Model
+- [`dydxlogistic4()`](https://immunoplex.github.io/curveRfreq/reference/dydxlogistic4.md)
+  : First Derivative of the 4PL Model
+- [`dydxlogistic5()`](https://immunoplex.github.io/curveRfreq/reference/dydxlogistic5.md)
+  : First Derivative of the 5PL Model
+- [`dydxloglogistic4()`](https://immunoplex.github.io/curveRfreq/reference/dydxloglogistic4.md)
+  : First Derivative of the loglogistic4 Model
+- [`dydxloglogistic5()`](https://immunoplex.github.io/curveRfreq/reference/dydxloglogistic5.md)
+  : First Derivative of the loglogistic5 Model
+- [`elisa_assay_example`](https://immunoplex.github.io/curveRfreq/reference/elisa_assay_example.md)
+  : ELISA example dataset
+- [`ensure_response_column()`](https://immunoplex.github.io/curveRfreq/reference/ensure_response_column.md)
+  : Ensure the response variable column exists in a data frame. If the
+  named column is missing, attempts to find it via
+  assay_response_variable metadata or common response column names.
+  Optionally coerces to numeric.
+- [`format_assay_terms()`](https://immunoplex.github.io/curveRfreq/reference/format_assay_terms.md)
+  : Format common assay variable names for display
+- [`generate_lods()`](https://immunoplex.github.io/curveRfreq/reference/generate_lods.md)
+  : Compute lower and upper limits of detection (LOD)
+- [`generate_mdc_rdl()`](https://immunoplex.github.io/curveRfreq/reference/generate_mdc_rdl.md)
+  : Compute MDC and RDL values from fitted model and LODs
+- [`get_blank_se()`](https://immunoplex.github.io/curveRfreq/reference/get_blank_se.md)
+  : Extract the Standard Error of the Blank from Antigen Settings
+- [`get_plot_data()`](https://immunoplex.github.io/curveRfreq/reference/get_plot_data.md)
+  : Build prediction and diagnostic data for model comparison plots
+- [`get_study_exp_antigen_plate_param()`](https://immunoplex.github.io/curveRfreq/reference/get_study_exp_antigen_plate_param.md)
+  : Extract Undiluted Standard Curve Concentration from Constraint List
+- [`gompertz4()`](https://immunoplex.github.io/curveRfreq/reference/gompertz4.md)
+  : Four-Parameter Gompertz Forward Function
+- [`grad_gompertz4()`](https://immunoplex.github.io/curveRfreq/reference/grad_gompertz4.md)
+  : Analytical Gradient of the Inverse Gompertz
+- [`grad_logistic4()`](https://immunoplex.github.io/curveRfreq/reference/grad_logistic4.md)
+  : Analytical Gradient of the Inverse 4PL
+- [`grad_logistic5()`](https://immunoplex.github.io/curveRfreq/reference/grad_logistic5.md)
+  : Analytical Gradient of the Inverse 5PL
+- [`grad_loglogistic4()`](https://immunoplex.github.io/curveRfreq/reference/grad_loglogistic4.md)
+  : Analytical Gradient of the Inverse loglogistic4
+- [`grad_loglogistic5()`](https://immunoplex.github.io/curveRfreq/reference/grad_loglogistic5.md)
+  : Analytical Gradient of the Inverse loglogistic5
+- [`include_blanks_conc()`](https://immunoplex.github.io/curveRfreq/reference/include_blanks_conc.md)
+  : Include Blank Controls as an Extra Point on the Standard Curve
+- [`inv_gompertz4()`](https://immunoplex.github.io/curveRfreq/reference/inv_gompertz4.md)
+  : Inverse of the Gompertz Model
+- [`inv_logistic4()`](https://immunoplex.github.io/curveRfreq/reference/inv_logistic4.md)
+  : Inverse of the 4PL Model
+- [`inv_logistic5()`](https://immunoplex.github.io/curveRfreq/reference/inv_logistic5.md)
+  : Inverse of the 5PL Model
+- [`inv_loglogistic4()`](https://immunoplex.github.io/curveRfreq/reference/inv_loglogistic4.md)
+  : Inverse of the loglogistic4 Model
+- [`inv_loglogistic5()`](https://immunoplex.github.io/curveRfreq/reference/inv_loglogistic5.md)
+  : Inverse of the loglogistic5 Model
+- [`logistic4()`](https://immunoplex.github.io/curveRfreq/reference/logistic4.md)
+  : Four-Parameter Logistic (4PL) Function
+- [`logistic5()`](https://immunoplex.github.io/curveRfreq/reference/logistic5.md)
+  : Five-Parameter Logistic (5PL) Function
+- [`loglogistic4()`](https://immunoplex.github.io/curveRfreq/reference/loglogistic4.md)
+  : Four-Parameter Dose–Response (loglogistic4) Forward Function
+- [`loglogistic5()`](https://immunoplex.github.io/curveRfreq/reference/loglogistic5.md)
+  : Five-Parameter Dose–Response (loglogistic5) Forward Function
+- [`lookup_antigen_se()`](https://immunoplex.github.io/curveRfreq/reference/lookup_antigen_se.md)
+  : Look Up SE for a Specific Antigen from the SE Table
+- [`make_curve_id_string()`](https://immunoplex.github.io/curveRfreq/reference/make_curve_id_string.md)
+  : Construct a Standardized curve_id String
+- [`make_inv_and_grad_fixed()`](https://immunoplex.github.io/curveRfreq/reference/make_inv_and_grad_fixed.md)
+  : Build Inverse, Gradient, and grad_y Closures for a Model
+- [`make_start_lists()`](https://immunoplex.github.io/curveRfreq/reference/make_start_lists.md)
+  : Build Multi-Start Lists for Each Model
+- [`nlsLM_fit()`](https://immunoplex.github.io/curveRfreq/reference/nlsLM_fit.md)
+  : Fit a Single NLS Model Using minpack.lm
+- [`normalize_wavelength()`](https://immunoplex.github.io/curveRfreq/reference/normalize_wavelength.md)
+  : Normalize wavelength value for bead-arrays.
+- [`obtain_free_variables()`](https://immunoplex.github.io/curveRfreq/reference/obtain_free_variables.md)
+  : Identify Free Parameters in a List of Model Formulae
+- [`obtain_lower_constraint()`](https://immunoplex.github.io/curveRfreq/reference/obtain_lower_constraint.md)
+  : Obtain lower asymptote constraints for a given antigen
+- [`obtain_model_constraints()`](https://immunoplex.github.io/curveRfreq/reference/obtain_model_constraints.md)
+  : Compute Model Constraints for All Candidate Models
+- [`obtain_response_variable()`](https://immunoplex.github.io/curveRfreq/reference/obtain_response_variable.md)
+  : Extract the Response Variable Name from a List of Formulae
+- [`` `%||%` ``](https://immunoplex.github.io/curveRfreq/reference/op-null-default.md)
+  : Null-coalescing operator
+- [`parse_curve_id()`](https://immunoplex.github.io/curveRfreq/reference/parse_curve_id.md)
+  : Parse Colon-Separated Curve Identifiers into Structured Columns
+- [`perform_blank_operation()`](https://immunoplex.github.io/curveRfreq/reference/perform_blank_operation.md)
+  : Apply a Blank Operation to Standard Curve Data
+- [`plot_model_comparisons()`](https://immunoplex.github.io/curveRfreq/reference/plot_model_comparisons.md)
+  : Plot comparison of nonlinear model fits
+- [`plot_standard_curve()`](https://immunoplex.github.io/curveRfreq/reference/plot_standard_curve.md)
+  : Plot Standard Curve (Minimal + Uncertainty)
+- [`predict_and_propagate_error()`](https://immunoplex.github.io/curveRfreq/reference/predict_and_propagate_error.md)
+  : Predict Concentrations and Propagate Uncertainty for a Single Plate
+- [`preprocess_robust_curves()`](https://immunoplex.github.io/curveRfreq/reference/preprocess_robust_curves.md)
+  : Preprocess Standard Curve Data for Robust Curve Fitting
+- [`propagate_error_analytic()`](https://immunoplex.github.io/curveRfreq/reference/propagate_error_analytic.md)
+  : Analytic error propagation for inverse sigmoid models
+- [`propagate_error_dataframe()`](https://immunoplex.github.io/curveRfreq/reference/propagate_error_dataframe.md)
+  : Propagate uncertainty for inverse predictions across a data frame
+- [`resolve_curve_settings()`](https://immunoplex.github.io/curveRfreq/reference/resolve_curve_settings.md)
+  : Resolve curve settings for an antigen on a plate
+- [`resolve_fixed_lower_asymptote()`](https://immunoplex.github.io/curveRfreq/reference/resolve_fixed_lower_asymptote.md)
+  : Determine Whether the Lower Asymptote Should Be Fixed
+- [`resolve_response_col()`](https://immunoplex.github.io/curveRfreq/reference/resolve_response_col.md)
+  : Resolve the assay response column name
+- [`safe_unique()`](https://immunoplex.github.io/curveRfreq/reference/safe_unique.md)
+  : Safely Collapse Unique Values
+- [`select_antigen_plate()`](https://immunoplex.github.io/curveRfreq/reference/select_antigen_plate.md)
+  : Select and Prepare Antigen Plate Data
+- [`select_model_fit_AIC()`](https://immunoplex.github.io/curveRfreq/reference/select_model_fit_AIC.md)
+  : Select the Best Model Fit by AIC
+- [`select_model_formulas()`](https://immunoplex.github.io/curveRfreq/reference/select_model_formulas.md)
+  : Select Model Formulas for Standard Curve Fitting
+- [`select_nlsLM_aic()`](https://immunoplex.github.io/curveRfreq/reference/select_nlsLM_aic.md)
+  : Select Best Multi-Start NLS Fit by AIC
+- [`summarize_fit()`](https://immunoplex.github.io/curveRfreq/reference/summarize_fit.md)
+  : Summarize Fitted Model with QC Metrics, LOD, Detection Limits, and
+  Curvature LOQs
+- [`summarize_model_fits()`](https://immunoplex.github.io/curveRfreq/reference/summarize_model_fits.md)
+  : Summarise Model Convergence and Information Criteria
+- [`summarize_model_parameters()`](https://immunoplex.github.io/curveRfreq/reference/summarize_model_parameters.md)
+  : Summarise Parameter Estimates and Confidence Intervals for All
+  Models
+- [`tidy.nlsLM()`](https://immunoplex.github.io/curveRfreq/reference/tidy.nlsLM.md)
+  : Tidy parameter estimates from a fitted nlsLM model
