@@ -1,10 +1,21 @@
 Package: curveRfreq
 Title: Frequentist Immunoassay Standard Curve Fitting
 Version: 0.0.0.9000
-Authors@R: 
-    person("First", "Last", , "first.last@example.com", role = c("aut", "cre"))
+Authors@R: c(
+    person("Seamus O.", "Stein",
+           email = "first.last@example.com",
+           role = c("aut", "cre")),
+    person("Michael Scot", "Zens",
+           email = "michael.s.zens@dartmouth.edu",
+           role = "aut"),
+    person("Anne G.", "Hoen",
+           email = "anne.g.hoen@dartmouth.edu",
+           role = "aut")
+  )
 Description: provides frequentist methods for modeling and calibrating immunoassay standard curves 
             (e.g., 4PL and 5PL models).
+URL: https://github.com/immunoplex/curveRfreq
+BugReports: https://github.com/immunoplex/curveRfreq/issues
 Imports:
     minpack.lm,
     nlstools,
