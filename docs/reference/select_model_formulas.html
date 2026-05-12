@@ -9,7 +9,7 @@ numeric constant in every formula; otherwise a is a free parameter."><meta prope
     <a href="#main" class="visually-hidden-focusable">Skip to contents</a>
 
 
-    <nav class="navbar navbar-expand-lg fixed-top bg-light" data-bs-theme="light" aria-label="Site navigation"><div class="container">
+    <nav class="navbar navbar-expand-lg fixed-top bg-primary" data-bs-theme="dark" aria-label="Site navigation"><div class="container">
 
     <a class="navbar-brand me-2" href="../index.html">curveRfreq</a>
 
@@ -24,7 +24,8 @@ numeric constant in every formula; otherwise a is a free parameter."><meta prope
       <ul class="navbar-nav me-auto"><li class="active nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
 <li class="nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
-  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/StandardCurve_vignette_ELISA.html">Frequentist Modeling of Immunoassay Standard Curves with the StandardCurve Class: ELISA Example</a></li>
+  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/model_comparisons.html">Comparison of five nonlinear regression models for standard curve fitting</a></li>
+    <li><a class="dropdown-item" href="../articles/StandardCurve_vignette_ELISA.html">Frequentist Modeling of Immunoassay Standard Curves with the StandardCurve Class: ELISA Example</a></li>
     <li><a class="dropdown-item" href="../articles/StandardCurve_vignette_example_data.html">Frequentist Modeling of Immunoassay Standard Curves with the StandardCurve Class: Bead Array Example</a></li>
   </ul></li>
       </ul><ul class="navbar-nav"><li class="nav-item"><form class="form-inline" role="search">
@@ -118,7 +119,7 @@ consumes these formulas.</p></div>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] "logistic4"    "logistic5"    "loglogistic4" "loglogistic5" "gompertz4"   </span>
 <span class="r-in"><span><span class="va">forms</span><span class="op">$</span><span class="va">logistic4</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> mfi ~ d + (((50) - d)/I((1 + exp((concentration - c)/b))))</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> &lt;environment: 0x128f6e570&gt;</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> &lt;environment: 0x12ea97278&gt;</span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># Free lower asymptote</span></span></span>
 <span class="r-in"><span><span class="va">forms_free</span> <span class="op">&lt;-</span> <span class="fu">select_model_formulas</span><span class="op">(</span>fixed_constraint <span class="op">=</span> <span class="cn">NULL</span>,</span></span>
@@ -129,7 +130,7 @@ consumes these formulas.</p></div>
 <span class="r-in"><span>                                      <span class="st">"gompertz4"</span><span class="op">)</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">forms_free</span><span class="op">$</span><span class="va">logistic4</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> mfi ~ d + (a - d)/I(1 + exp((concentration - c)/b))</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> &lt;environment: 0x128f6e570&gt;</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> &lt;environment: 0x12ea97278&gt;</span>
 <span class="r-in"><span></span></span>
 </code></pre></div>
     </div>

@@ -79,7 +79,7 @@ names(forms)
 #> [1] "logistic4"    "logistic5"    "loglogistic4" "loglogistic5" "gompertz4"   
 forms$logistic4
 #> mfi ~ d + (((50) - d)/I((1 + exp((concentration - c)/b))))
-#> <environment: 0x128f6e570>
+#> <environment: 0x12ea97278>
 
 # Free lower asymptote
 forms_free <- select_model_formulas(fixed_constraint = NULL,
@@ -90,5 +90,5 @@ forms_free <- select_model_formulas(fixed_constraint = NULL,
                                       "gompertz4"))
 forms_free$logistic4
 #> mfi ~ d + (a - d)/I(1 + exp((concentration - c)/b))
-#> <environment: 0x128f6e570>
+#> <environment: 0x12ea97278>
 ```

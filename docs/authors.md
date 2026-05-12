@@ -15,12 +15,13 @@ Source:
 
 Stein S, Zens M, Hoen A (2026). *curveRfreq: Frequentist Immunoassay
 Standard Curve Fitting*. R package version 0.0.0.9000,
+https://immunoplex.github.io/curveRfreq,
 <https://github.com/immunoplex/curveRfreq>.
 
     @Manual{,
       title = {curveRfreq: Frequentist Immunoassay Standard Curve Fitting},
       author = {Seamus O. Stein and Michael Scot Zens and Anne G. Hoen},
       year = {2026},
-      note = {R package version 0.0.0.9000},
+      note = {R package version 0.0.0.9000, https://immunoplex.github.io/curveRfreq},
       url = {https://github.com/immunoplex/curveRfreq},
     }

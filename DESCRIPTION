@@ -14,7 +14,7 @@ Authors@R: c(
   )
 Description: provides frequentist methods for modeling and calibrating immunoassay standard curves 
             (e.g., 4PL and 5PL models).
-URL: https://github.com/immunoplex/curveRfreq
+URL: https://github.com/immunoplex/curveRfreq, https://immunoplex.github.io/curveRfreq
 BugReports: https://github.com/immunoplex/curveRfreq/issues
 Imports:
     minpack.lm,
