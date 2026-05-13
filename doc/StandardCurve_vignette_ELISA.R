@@ -13,6 +13,9 @@ data(elisa_assay_example)
 # Inspect the curve/plate lookup table
 head(elisa_assay_example$curve_id_lookup)
 
+## ----collapse = TRUE, comment = "#>"------------------------------------------
+str(elisa_assay_example, max.level = 2, give.attr = FALSE, vec.len = 2)
+
 ## ----filter-function----------------------------------------------------------
 filter_by_curve_id <- function(loaded_data,
                                curve_id,
