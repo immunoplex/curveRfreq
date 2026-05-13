@@ -70,8 +70,22 @@ data(bead_assay_example)
 head(bead_assay_example$curve_id_lookup)
 ```
 
-`bead_assay_example` is a plain list. The `StandardCurve` class expects it to contain
+The structure of `bead_assay_example`: 
+
+A named list of simulated multi-plate bead-based immunoassay data 
+spanning 6 plates across 2 analytes (`alpha` and `beta`), each measured on 
+3 replicate plates. It contains 20 patient samples per plate across 3 timepoints 
+(baseline, month3, month6) and 2 treatment groups. The response variable is 
+median fluorescence intensity (`mfi`) rather than optical density or absorbance. The `assay_response_variable` is a string corresponding to the name of the assay response column (mfi for bead-based assays). More information
+can be found by running `help(bead_assay_example)`.
+
+The `StandardCurve` class expects the `bead_assay_example` list to contain
 `$standards`, `$blanks`, `$samples`, `$response_var`, and `$indep_var`.
+
+
+```{r, collapse = TRUE, comment = "#>"}
+str(bead_assay_example, max.level = 2, give.attr = FALSE, vec.len = 2)
+```
 
 We choose a `curve_id` from the lookup table and use a custom filtering function (`filter_by_curve_id)` to subset the dataset of interest (`bead_assay_example` in this vignette). This function takes the full dataset and the chosen `curve_id`, filters all relevant components, and returns a reduced dataset containing only records associated with that specific curve. The filtered dataset is then passed to the constructor.
 

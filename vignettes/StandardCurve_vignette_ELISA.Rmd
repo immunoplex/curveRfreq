@@ -70,8 +70,24 @@ data(elisa_assay_example)
 head(elisa_assay_example$curve_id_lookup)
 ```
 
-`elisa_assay_example` is a plain list. The `StandardCurve` class expects it to contain
+The structure of `elisa_assay_example`:
+
+A named list of simulated multi-plate ELISA data for a single analyte (`alpha`), 
+spanning 6 plates and 20 patient samples per plate across 3 timepoints 
+(baseline, month3, month6) and 2 treatment groups. Plates 1–3 use a 
+five-parameter logistic (5-PL) standard curve; plates 4–6 use a Gompertz curve, 
+reflecting realistic between-plate variability in curve shape.
+The assay response column `od` can also be `absorbance`. The `assay_response_variable` is a string corresponding to the nae of the assay response column. More information
+can be found by running `help(elisa_assay_example)`.
+
+The `StandardCurve` class expects it to contain
 `$standards`, `$blanks`, `$samples`, `$response_var`, and `$indep_var`.
+
+
+```{r, collapse = TRUE, comment = "#>"}
+str(elisa_assay_example, max.level = 2, give.attr = FALSE, vec.len = 2)
+```
+
 
 We choose a `curve_id` from the lookup table and use a custom filtering function (`filter_by_curve_id)` to subset the dataset of interest (`elisa_assay_example` in this vignette). This function takes the full dataset and the chosen `curve_id`, filters all relevant components, and returns a reduced dataset containing only records associated with that specific curve. The filtered dataset is then passed to the constructor.
 
@@ -120,6 +136,7 @@ curve_id   <- 6
 antigen <- elisa_assay_example$curve_id_lookup[elisa_assay_example$curve_id_lookup$curve_id == curve_id,]$antigen
 curve_data <- filter_by_curve_id(elisa_assay_example, curve_id = curve_id)
 ```
+
 
 ## Configuration
 
