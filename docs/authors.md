@@ -2,9 +2,9 @@
 
 ## Authors
 
-- **Seamus O. Stein**. Author, maintainer.
+- **Seamus O. Stein**. Author.
 
-- **Michael Scot Zens**. Author.
+- **Michael Scot Zens**. Author, maintainer.
 
 - **Anne G. Hoen**. Author.
 

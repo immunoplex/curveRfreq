@@ -3,11 +3,11 @@ Title: Frequentist Immunoassay Standard Curve Fitting
 Version: 0.0.0.9000
 Authors@R: c(
     person("Seamus O.", "Stein",
-           email = "first.last@example.com",
-           role = c("aut", "cre")),
+           email = "seamusstein@gmail.com",
+           role = "aut"),
     person("Michael Scot", "Zens",
            email = "michael.s.zens@dartmouth.edu",
-           role = "aut"),
+           role = c("aut", "cre")),
     person("Anne G.", "Hoen",
            email = "anne.g.hoen@dartmouth.edu",
            role = "aut")
