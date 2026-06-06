@@ -1,0 +1,9 @@
+"0","library(curveRfreq)   # also attaches curveRcore"
+"0","library(ggplot2)"
+"0",""
+"0","data(bead_assay_example)"
+"0",""
+"0","# Top-level structure"
+"0","str(bead_assay_example, max.level = 1)"
+"2","Error: object 'bead_assay_example' not found
+"

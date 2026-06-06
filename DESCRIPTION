@@ -1,0 +1,37 @@
+Package: curveRfreq
+Title: Frequentist Immunoassay Standard Curve Fitting
+Version: 0.2.0
+Authors@R: c(
+    person("Seamus O.", "Stein",
+           email = "seamusstein@gmail.com",
+           role = "aut"),
+    person("Michael Scot", "Zens",
+           email = "michael.s.zens@dartmouth.edu",
+           role = c("aut", "cre")),
+    person("Anne G.", "Hoen",
+           email = "anne.g.hoen@dartmouth.edu",
+           role = "aut")
+  )
+Description: Frequentist standard curve fitting for immunoassay data
+    (bead array and ELISA). Fits an ensemble of five nonlinear models
+    (4PL, 5PL, loglogistic, Richards, Gompertz) via Levenberg-Marquardt
+    nonlinear least squares, selects the best model by AIC, and propagates
+    measurement uncertainty via the delta method. Depends on curveRcore
+    for model math, ensuring parameterisation parity with curveRbayes.
+URL: https://github.com/immunoplex/curveRfreq
+BugReports: https://github.com/immunoplex/curveRfreq/issues
+Imports:
+    curveRcore,
+    minpack.lm,
+    stats
+Suggests:
+    testthat (>= 3.0.0),
+    knitr,
+    rmarkdown
+License: AGPL (>= 3)
+Encoding: UTF-8
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 7.3.3
+Config/testthat/edition: 3
+Depends:
+    R (>= 3.5)
