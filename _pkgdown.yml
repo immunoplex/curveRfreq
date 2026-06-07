@@ -1,70 +1,75 @@
-url: https://immunoplex.github.io/curveRweights/
-
+url: https://immunoplex.github.io/curveRfreq/
 template:
-  bootstrap: 5
+  bootstrap: 5.0
   bootswatch: flatly
 
-reference:
-  - title: "Data Preparation"
-    desc: "Prepare and diagnose calibration curve precision data"
-    contents:
-      - prepare_cv
-      - diagnose_cv
-
-  - title: "Model Fitting"
-    desc: "Fit the Bayesian location-scale model"
-    contents:
-      - fit_saturated_weight
-      - fit_saturated_weight_batch
-
-  - title: "Weight Computation"
-    desc: "Compute and apply precision weights"
-    contents:
-      - compute_saturated_weights
-      - apply_saturated_weights
-
-  - title: "Diagnostics"
-    desc: "Interpret and diagnose weight estimates"
-    contents:
-      - interpret_beta1
-      - weight_diagnostics
-
-  - title: "Data"
-    desc: "Example datasets"
-    contents:
-      - example_assay
+home:
+  title: curveRfreq
+  description: Frequentist nonlinear calibration curves for the curveR suite. Multi-start
+    Levenberg-Marquardt NLS with AIC + eligibility-gate model selection and delta-method
+    uncertainty propagation.
 
 navbar:
-  title: "curveRweights"
   logo:
-    image: man/figures/logo.png   # <-- sticker appears in navbar
-    href: index.html
+    src: man/figures/logo_small.png
+    alt: curveRfreq logo
+    width: 200px
   structure:
     left:
-      - intro
-      - reference
-      - articles
-    right:
-      - search
-      - github
+    - intro
+    - reference
+    - articles
+    - news
+    right: github
   components:
     github:
-      icon: fa-github
-      href: https://github.com/immunoplex/curveRweights
+      icon: fab fa-github
+      href: https://github.com/immunoplex/curveRfreq
+      aria-label: GitHub
 
-home:
-  title: "curveRweights"
-  description: "Curve-based inverse-variance weighted estimation"
+reference:
+- title: Main Entry Points
+  desc: The two functions most users call directly. Both expect preprocessed data
+    on the fitting scale (use curveRcore::preprocess_standards() upstream).
+  contents:
+  - bead_assay_example
+  - fit_calibration_freq
+  - fit_calibration_freq_multiplate
 
-  # Logo on homepage
-  sidebar:
-    structure: [links, license, community, citation, authors, dev]
+- title: Multi-Curve Helpers
+  desc: Convenience extractors that operate on calibration_result_multiplate objects.
+  contents:
+  - collect_samples
+  - summary_table
 
-authors:
-  sidebar:
-    roles: [aut, cre]
+- title: NLS Fitting Engine
+  desc: Lower-level functions that implement multi-start Levenberg-Marquardt fitting
+    for one plate. Called internally by fit_calibration_freq() but exported for users
+    who need fine-grained control.
+  contents:
+  - compute_model_constraints
+  - fit_ensemble_nls
+  - generate_start_lists
 
-articles:
-  - title: "Getting Started"
-    contents:
-      - introduction
+- title: Model Selection
+  desc: AIC-based ranking and best-parameter extraction. select_best_aic() is a pure
+    ranking step; eligibility gating is handled upstream by curveRcore::select_best_eligible().
+  contents:
+  - summarise_ensemble
+  - extract_best_parameters
+  - select_best_aic
+
+- title: Grid Prediction & Uncertainty
+  desc: Evaluates the best-fit model across the prediction grid, computes delta-method
+    confidence intervals on the response, back-calculates concentration, and propagates
+    uncertainty to se_concentration and pcov.
+  contents: predict_grid_freq
+
+- title: Sample Back-Calculation
+  desc: Applies the analytical model inverse to test-sample responses, propagates
+    uncertainty via the delta method, and multiplies by the dilution factor to produce
+    final_concentration.
+  contents: predict_samples_freq
+
+news:
+  one_page: yes

@@ -1,0 +1,14 @@
+# curveRfreq 0.1.0
+
+* Initial release.
+* `fit_calibration_freq()` — single-curve NLS calibration with
+  multi-start Levenberg-Marquardt and AIC + eligibility-gate selection.
+* `fit_calibration_freq_multiplate()` — multi-curve wrapper that splits
+  by `curve_id` and handles per-curve errors gracefully.
+* Per-model precision grids: every converged model gets a full `pcov`
+  profile, not just the selected best.
+* Four eligibility gates: `at_bound`, `vcov_condition`, `rel_se`,
+  `dynamic_range` — intercept unidentified models before AIC ranking.
+* `summary_table()` and `collect_samples()` for tidy extraction from
+  multi-curve results.
+* `bead_assay_example` synthetic dataset for two antigens × three plates.

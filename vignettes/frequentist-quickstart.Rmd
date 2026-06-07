@@ -17,7 +17,8 @@ knitr::opts_chunk$set(
   comment   = "#>",
   fig.width = 7,
   fig.height = 4.5,
-  out.width = "100%"
+  out.width = "100%",
+  eval = requireNamespace("curveRcore", quietly = TRUE)
 )
 ```
 

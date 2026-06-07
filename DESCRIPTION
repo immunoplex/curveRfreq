@@ -1,5 +1,5 @@
 Package: curveRfreq
-Title: Frequentist Immunoassay Standard Curve Fitting
+Title: Frequentist Calibration Curves for the curveR Suite
 Version: 0.2.0
 Authors@R: c(
     person("Seamus O.", "Stein",
@@ -12,14 +12,18 @@ Authors@R: c(
            email = "anne.g.hoen@dartmouth.edu",
            role = "aut")
   )
-Description: Frequentist standard curve fitting for immunoassay data
-    (bead array and ELISA). Fits an ensemble of five nonlinear models
-    (4PL, 5PL, loglogistic, Richards, Gompertz) via Levenberg-Marquardt
-    nonlinear least squares, selects the best model by AIC, and propagates
-    measurement uncertainty via the delta method. Depends on curveRcore
-    for model math, ensuring parameterisation parity with curveRbayes.
-URL: https://github.com/immunoplex/curveRfreq
+Description: Fits an ensemble of nonlinear least-squares (NLS) calibration 
+    models (4PL, 5PL, Gompertz) to preprocessed standard curve data 
+    using multi-start Levenberg-Marquardt optimisation. Selects the 
+    best model by AIC subject to quantification-eligibility gates, 
+    and back-calculates sample concentrations with delta-method 
+    uncertainty. Produces the calibration_result S3 class defined 
+    in curveRcore, making results directly comparable with 
+    curveRbayes.
+URL: https://github.com/immunoplex/curveRfreq, https://immunoplex.github.io/curveRfreq/
 BugReports: https://github.com/immunoplex/curveRfreq/issues
+Remotes:
+    immunoplex/curveRcore
 Imports:
     curveRcore,
     minpack.lm,
@@ -27,7 +31,8 @@ Imports:
 Suggests:
     testthat (>= 3.0.0),
     knitr,
-    rmarkdown
+    rmarkdown,
+    ggplot2
 License: AGPL (>= 3)
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
@@ -35,3 +40,4 @@ RoxygenNote: 7.3.3
 Config/testthat/edition: 3
 Depends:
     R (>= 3.5)
+VignetteBuilder: knitr
