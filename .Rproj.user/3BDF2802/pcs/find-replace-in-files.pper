@@ -1,15 +1,15 @@
 {
     "dialog-state": {
-        "query": "enrich_grid_with_d2y",
+        "query": "fit_calibration_freq",
         "path": "",
         "regex": false,
         "caseSensitive": false,
         "wholeWord": false,
         "filePatterns": [],
-        "useGitGrep": false,
+        "useGitGrep": true,
         "excludeGitIgnore": true,
         "excludeFilePatterns": [],
-        "resultsCount": 7,
+        "resultsCount": 82,
         "errorCount": 0,
         "replaceErrors": "",
         "projectRelative": true

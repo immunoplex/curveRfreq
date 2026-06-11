@@ -33,6 +33,7 @@ reference:
     on the fitting scale (use curveRcore::preprocess_standards() upstream).
   contents:
   - bead_assay_example
+  - elisa_assay_example
   - fit_calibration_freq
   - fit_calibration_freq_multiplate
 

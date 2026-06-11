@@ -18,9 +18,6 @@ A list with six elements:
 \source{
 Synthetic data generated for package documentation.
 }
-\usage{
-bead_assay_example
-}
 \description{
 A synthetic dataset that mirrors the structure expected by
 \code{\link[=fit_calibration_freq_multiplate]{fit_calibration_freq_multiplate()}}. Contains two antigens (alpha and beta)
@@ -31,4 +28,3 @@ The alpha curves were simulated with a Gompertz model; the beta curves
 with a 5PL model, reflecting realistic between-antigen variation in
 curve shape.
 }
-\keyword{datasets}

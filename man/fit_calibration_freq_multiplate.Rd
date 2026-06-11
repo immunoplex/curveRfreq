@@ -6,6 +6,7 @@
 \usage{
 fit_calibration_freq_multiplate(
   standards,
+  blanks = NULL,
   samples = NULL,
   response_var,
   model_names = c("logistic4", "gompertz4"),
@@ -27,6 +28,12 @@ fit_calibration_freq_multiplate(
 Must contain a \code{curve_id} column, a response column (named by
 \code{response_var}), and a \code{concentration} column — all already on the
 fitting scale.}
+
+\item{blanks}{Data frame or NULL. Stacked preprocessed blank data. When
+non-NULL, must contain a \code{curve_id} column and a response column (named
+by \code{response_var}), both already on the fitting scale. Stored in each
+\code{result$blanks} for QA and plotting only — not used in fitting.
+NULL (default) leaves \code{result$blanks} empty for every curve.}
 
 \item{samples}{Data frame or NULL. Stacked sample data with a
 \code{curve_id} column and the response column (raw measurement scale).}
@@ -68,13 +75,13 @@ are fitted. Default NULL fits all found in \code{standards}.}
 A \code{calibration_result_multiplate} object (from curveRcore).
 }
 \description{
-Splits preprocessed \code{standards} (and optionally \code{samples}) by
+Splits preprocessed \code{standards}, \code{blanks}, and optionally \code{samples} by
 \code{curve_id}, calls \code{\link[=fit_calibration_freq]{fit_calibration_freq()}} for each curve, and
 collects the results.
 }
 \details{
-\strong{Important:} \code{standards} must already be on the fitting scale.
-Use \code{\link[curveRcore:preprocess_standards]{curveRcore::preprocess_standards()}} upstream on each curve's
+\strong{Important:} \code{standards} and \code{blanks} must already be on the fitting
+scale. Use \code{\link[curveRcore:preprocess_standards]{curveRcore::preprocess_standards()}} upstream on each curve's
 data before stacking, or preprocess the full stacked frame if all
 curves share the same settings.
 }

@@ -21,4 +21,33 @@
 #' curve shape.
 #'
 #' @source Synthetic data generated for package documentation.
-"bead_assay_example"
+#' @name bead_assay_example
+#' @docType data
+NULL
+
+#' Synthetic Multi-Plate ELISA Example Dataset
+#'
+#' A synthetic dataset that mirrors the structure expected by
+#' [fit_calibration_freq_multiplate()] for an ELISA (optical density)
+#' assay. Contains two antigens across three replicate plates each
+#' (six curve_ids total).
+#'
+#' @format A list with elements analogous to [bead_assay_example]:
+#' \describe{
+#'   \item{standards}{Data frame. One row per standard well with an `od`
+#'     response column.}
+#'   \item{blanks}{Data frame. Blank wells per plate.}
+#'   \item{samples}{Data frame. Patient samples.}
+#'   \item{curve_id_lookup}{Data frame. Maps curve_id to antigen/plate.}
+#'   \item{response_var}{Character. Name of the response column ("od").}
+#'   \item{indep_var}{Character. Name of the independent variable
+#'     ("concentration").}
+#' }
+#'
+#' @details
+#' Simulated OD-based immunoassay data for testing and vignette examples.
+#'
+#' @source Synthetic data generated for package documentation.
+#' @name elisa_assay_example
+#' @docType data
+NULL

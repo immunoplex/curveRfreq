@@ -1,23 +1,23 @@
 # =============================================================================
 # fit_multiplate.R — Multi-curve loop wrapper
 #
-# Accepts ALREADY-PREPROCESSED stacked data frames (standards and optionally
-# samples) with a curve_id column. Splits by curve_id, calls
+# Accepts ALREADY-PREPROCESSED stacked data frames (standards, blanks, and
+# optionally samples) with a curve_id column. Splits by curve_id, calls
 # fit_calibration_freq() for each, collects results.
 #
-# No preprocessing. No blanks. No lookup table. No antigen/plate metadata.
+# No preprocessing. No lookup table. No antigen/plate metadata.
 # Just curve_ids.
 # =============================================================================
 
 
 #' Fit Frequentist Calibration Curves Across Multiple Curves
 #'
-#' Splits preprocessed `standards` (and optionally `samples`) by
+#' Splits preprocessed `standards`, `blanks`, and optionally `samples` by
 #' `curve_id`, calls [fit_calibration_freq()] for each curve, and
 #' collects the results.
 #'
-#' **Important:** `standards` must already be on the fitting scale.
-#' Use [curveRcore::preprocess_standards()] upstream on each curve's
+#' **Important:** `standards` and `blanks` must already be on the fitting
+#' scale. Use [curveRcore::preprocess_standards()] upstream on each curve's
 #' data before stacking, or preprocess the full stacked frame if all
 #' curves share the same settings.
 #'
@@ -25,6 +25,11 @@
 #'   Must contain a `curve_id` column, a response column (named by
 #'   `response_var`), and a `concentration` column — all already on the
 #'   fitting scale.
+#' @param blanks Data frame or NULL. Stacked preprocessed blank data. When
+#'   non-NULL, must contain a `curve_id` column and a response column (named
+#'   by `response_var`), both already on the fitting scale. Stored in each
+#'   `result$blanks` for QA and plotting only — not used in fitting.
+#'   NULL (default) leaves `result$blanks` empty for every curve.
 #' @param samples Data frame or NULL. Stacked sample data with a
 #'   `curve_id` column and the response column (raw measurement scale).
 #' @param response_var Character. Name of the response column.
@@ -52,6 +57,7 @@
 #'
 #' @export
 fit_calibration_freq_multiplate <- function(standards,
+                                            blanks = NULL,
                                             samples = NULL,
                                             response_var,
                                             model_names = c("logistic4", "gompertz4"),
@@ -77,6 +83,15 @@ fit_calibration_freq_multiplate <- function(standards,
   if (!("concentration" %in% names(standards)))
     stop("standards must contain a 'concentration' column (preprocessed)")
 
+  if (!is.null(blanks)) {
+    if (!is.data.frame(blanks))
+      stop("blanks must be a data frame")
+    if (!("curve_id" %in% names(blanks)))
+      stop("blanks must contain a 'curve_id' column")
+    if (!(response_var %in% names(blanks)))
+      stop("response_var '", response_var, "' not found in blanks")
+  }
+
   if (!is.null(samples) && !("curve_id" %in% names(samples)))
     stop("samples must contain a 'curve_id' column when provided")
 
@@ -95,7 +110,22 @@ fit_calibration_freq_multiplate <- function(standards,
   if (n == 0) stop("No curve_ids to fit")
 
   # ── Split data ──
-  std_splits <- split(standards, standards$curve_id)
+  std_splits   <- split(standards, standards$curve_id)
+  blank_splits <- if (!is.null(blanks)) {
+    split(blanks, blanks$curve_id)
+  } else {
+    list()
+  }
+
+  # Warn about any curve_ids that have standards but no blanks
+  if (!is.null(blanks)) {
+    missing_blank_cids <- setdiff(as.character(all_cids),
+                                  names(blank_splits))
+    if (length(missing_blank_cids) > 0)
+      warning("curve_ids present in standards but not in blanks: ",
+              paste(missing_blank_cids, collapse = ", "),
+              ". An empty data frame will be used for those curves.")
+  }
 
   samp_splits <- if (!is.null(samples)) {
     split(samples, samples$curve_id)
@@ -112,8 +142,18 @@ fit_calibration_freq_multiplate <- function(standards,
 
     if (verbose) message(sprintf("[%d/%d] curve_id=%s", i, n, cid))
 
-    this_std  <- std_splits[[cid]]
-    this_samp <- if (!is.null(samp_splits)) samp_splits[[cid]] else NULL
+    this_std   <- std_splits[[cid]]
+    this_blank <- if (!is.null(blanks)) {
+      if (!is.null(blank_splits[[cid]])) {
+        blank_splits[[cid]]
+      } else {
+        # blanks supplied but this curve_id is absent — use zero-row frame
+        blanks[0L, , drop = FALSE]
+      }
+    } else {
+      NULL
+    }
+    this_samp  <- if (!is.null(samp_splits)) samp_splits[[cid]] else NULL
 
     if (is.null(this_samp) ||
         (is.data.frame(this_samp) && nrow(this_samp) == 0))
@@ -123,6 +163,7 @@ fit_calibration_freq_multiplate <- function(standards,
       withCallingHandlers(
         fit_calibration_freq(
           standards          = this_std,
+          blanks             = this_blank,
           samples            = this_samp,
           response_var       = response_var,
           model_names        = model_names,

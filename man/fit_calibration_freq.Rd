@@ -6,6 +6,7 @@
 \usage{
 fit_calibration_freq(
   standards,
+  blanks = NULL,
   samples = NULL,
   response_var,
   model_names = c("logistic4", "gompertz4"),
@@ -29,6 +30,11 @@ fit_calibration_freq(
 \item{standards}{Data frame. Preprocessed standard curve data with a
 response column (named by \code{response_var}) and a \code{concentration}
 column, both already on the fitting scale.}
+
+\item{blanks}{Data frame or NULL. Preprocessed blank data with a
+response column (named by \code{response_var}), on the fitting scale.
+Stored in \code{result$blanks} for QA and plotting only — not used in
+fitting. NULL (default) leaves \code{result$blanks} empty.}
 
 \item{samples}{Data frame or NULL. Test sample data with the response
 column (on the \strong{raw} measurement scale — log-transform is applied
@@ -93,7 +99,7 @@ quantification-eligibility gates, and produces grid and sample
 predictions with propagated uncertainty.
 }
 \details{
-\strong{Important:} \code{standards} must already be on the fitting scale.
+\strong{Important:} \code{standards} and 'blanks' must already be on the fitting scale.
 Both the response column and the \code{concentration} column should be
 transformed (e.g. log10) before calling this function. Use
 \code{\link[curveRcore:preprocess_standards]{curveRcore::preprocess_standards()}} upstream.

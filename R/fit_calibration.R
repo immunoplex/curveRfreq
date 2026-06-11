@@ -21,7 +21,7 @@
 #' quantification-eligibility gates, and produces grid and sample
 #' predictions with propagated uncertainty.
 #'
-#' **Important:** `standards` must already be on the fitting scale.
+#' **Important:** `standards` and 'blanks' must already be on the fitting scale.
 #' Both the response column and the `concentration` column should be
 #' transformed (e.g. log10) before calling this function. Use
 #' [curveRcore::preprocess_standards()] upstream.
@@ -29,6 +29,10 @@
 #' @param standards Data frame. Preprocessed standard curve data with a
 #'   response column (named by `response_var`) and a `concentration`
 #'   column, both already on the fitting scale.
+#' @param blanks Data frame or NULL. Preprocessed blank data with a
+#'   response column (named by `response_var`), on the fitting scale.
+#'   Stored in `result$blanks` for QA and plotting only — not used in
+#'   fitting. NULL (default) leaves `result$blanks` empty.
 #' @param samples Data frame or NULL. Test sample data with the response
 #'   column (on the **raw** measurement scale — log-transform is applied
 #'   internally for back-calculation). Optionally a `dilution` column.
@@ -70,6 +74,7 @@
 #'
 #' @export
 fit_calibration_freq <- function(standards,
+                                 blanks = NULL,
                                  samples = NULL,
                                  response_var,
                                  model_names = c("logistic4", "gompertz4"),
@@ -427,7 +432,9 @@ fit_calibration_freq <- function(standards,
     ensemble  = ensemble_out,
     selection = eligible_selection,
     grid      = grid,
-    samples   = samples_out
+    samples   = samples_out,
+    standards = standards,
+    blanks = blanks
   )
 
   # ── 12. Detection limits (LODs, MDC, RDL) for the best eligible model ────

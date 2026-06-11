@@ -117,6 +117,7 @@ compute_model_constraints <- function(data, formulas,
 #'
 #' @return Named list of lists: for each model, a list of named numeric
 #'   vectors suitable as `start` for `nlsLM()`.
+#' @importFrom stats setNames
 #' @export
 generate_start_lists <- function(model_constraints) {
   profile <- attr(model_constraints, "constraint_profile")
