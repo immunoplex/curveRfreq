@@ -200,6 +200,7 @@ samples_raw <- bead_assay_example$samples
 
 mp <- fit_calibration_freq_multiplate(
   standards          = std_preprocessed,
+  blanks             = blank_raw,
   samples            = samples_raw,
   response_var       = "mfi",
   model_names        = c("logistic4", "gompertz4"),
@@ -319,6 +320,7 @@ mp <- fit_calibration_freq_multiplate(
 | Argument | Type | Default | Meaning |
 |----|----|----|----|
 | `standards` | data frame | — | **Required.** Stacked preprocessed standards with `curve_id`, `concentration`, and the response column. |
+| `blanks` | data frame | — | **Required.** Stacked blank data with `curve_id` and the response column, on the same fitting scale as `standards`. Stored in `result$blanks` for QA and plotting. Every `curve_id` in `standards` should have a corresponding entry. |
 | `samples` | data frame or NULL | `NULL` | Stacked sample data on the **raw** (untransformed) response scale. The `dilution` column is used to recover pre-dilution concentration. |
 | `response_var` | character | — | **Required.** Name of the response column. Must match what preprocessing produced. |
 | `model_names` | character vector | `c("logistic4", "gompertz4")` | Which nonlinear models to fit. Any subset of [`curveRcore::available_models()`](https://immunoplex.github.io/curveRcore/reference/available_models.html) is valid. `"loglogistic4"` is silently dropped when `is_log_independent = TRUE` because it is algebraically redundant with `"logistic4"` on the log scale. |
@@ -1112,13 +1114,15 @@ components are:
 
 cr1 <- mp$plates[["1"]]
 str(cr1, max.level = 1)
-#> List of 7
+#> List of 9
 #>  $ meta            :List of 12
 #>  $ ensemble        :List of 2
 #>  $ selection       :List of 8
 #>  $ grid            :'data.frame':    200 obs. of  12 variables:
 #>  $ samples         :'data.frame':    20 obs. of  22 variables:
 #>  $ diagnostics     : NULL
+#>  $ standards       :'data.frame':    10 obs. of  9 variables:
+#>  $ blanks          :'data.frame':    4 obs. of  7 variables:
 #>  $ detection_limits:List of 5
 #>  - attr(*, "class")= chr [1:2] "calibration_result" "list"
 ```
@@ -1130,6 +1134,8 @@ str(cr1, max.level = 1)
 | `$selection` | list | `best_model_name`, `criterion`, `fallback`, `fallback_reason`, `assessments`, `eligible_models`, `weights` (AIC table), `aic_best`. |
 | `$grid` | data frame | Precision grid for the best model (pointer to `ensemble[[best]]$grid`). |
 | `$samples` | data frame or NULL | Back-calculated predictions for test samples. |
+| `$standards` | data frame or NULL | Preprocessed standard curve data used to fit this curve, stored for QA and plotting. |
+| `$blanks` | data frame or NULL | Blank measurements for this curve, stored for QA and plotting of the zero-signal reference. |
 
 #### Accessing ensemble entries
 

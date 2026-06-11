@@ -8,6 +8,8 @@ upstream).
 
 - [`bead_assay_example`](https://immunoplex.github.io/curveRfreq/reference/bead_assay_example.md)
   : Synthetic Multi-Plate Bead Assay Example Dataset
+- [`elisa_assay_example`](https://immunoplex.github.io/curveRfreq/reference/elisa_assay_example.md)
+  : Synthetic Multi-Plate ELISA Example Dataset
 - [`fit_calibration_freq()`](https://immunoplex.github.io/curveRfreq/reference/fit_calibration_freq.md)
   : Fit a Frequentist Calibration Curve (Single Curve)
 - [`fit_calibration_freq_multiplate()`](https://immunoplex.github.io/curveRfreq/reference/fit_calibration_freq_multiplate.md)

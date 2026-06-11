@@ -5,12 +5,6 @@ A synthetic dataset that mirrors the structure expected by
 Contains two antigens (alpha and beta) across three replicate plates
 each (six curve_ids total).
 
-## Usage
-
-``` r
-bead_assay_example
-```
-
 ## Format
 
 A list with six elements:

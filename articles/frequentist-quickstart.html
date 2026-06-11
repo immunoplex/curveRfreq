@@ -298,6 +298,7 @@ object, and handles per-curve errors gracefully.</p>
 <span></span>
 <span><span class="va">mp</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/fit_calibration_freq_multiplate.html">fit_calibration_freq_multiplate</a></span><span class="op">(</span></span>
 <span>  standards          <span class="op">=</span> <span class="va">std_preprocessed</span>,</span>
+<span>  blanks             <span class="op">=</span> <span class="va">blank_raw</span>,</span>
 <span>  samples            <span class="op">=</span> <span class="va">samples_raw</span>,</span>
 <span>  response_var       <span class="op">=</span> <span class="st">"mfi"</span>,</span>
 <span>  model_names        <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"logistic4"</span>, <span class="st">"gompertz4"</span><span class="op">)</span>,</span>
@@ -437,6 +438,17 @@ object, and handles per-curve errors gracefully.</p>
 column.</td>
 </tr>
 <tr class="even">
+<td><code>blanks</code></td>
+<td>data frame</td>
+<td>—</td>
+<td>
+<strong>Required.</strong> Stacked blank data with
+<code>curve_id</code> and the response column, on the same fitting scale
+as <code>standards</code>. Stored in <code>result$blanks</code> for QA
+and plotting. Every <code>curve_id</code> in <code>standards</code>
+should have a corresponding entry.</td>
+</tr>
+<tr class="odd">
 <td><code>samples</code></td>
 <td>data frame or NULL</td>
 <td><code>NULL</code></td>
@@ -444,7 +456,7 @@ column.</td>
 response scale. The <code>dilution</code> column is used to recover
 pre-dilution concentration.</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td><code>response_var</code></td>
 <td>character</td>
 <td>—</td>
@@ -452,7 +464,7 @@ pre-dilution concentration.</td>
 <strong>Required.</strong> Name of the response column. Must match
 what preprocessing produced.</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td><code>model_names</code></td>
 <td>character vector</td>
 <td><code>c("logistic4", "gompertz4")</code></td>
@@ -462,21 +474,21 @@ what preprocessing produced.</td>
 <code>is_log_independent = TRUE</code> because it is algebraically
 redundant with <code>"logistic4"</code> on the log scale.</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td><code>is_log_response</code></td>
 <td>logical</td>
 <td><code>TRUE</code></td>
 <td>Was the response log10-transformed during preprocessing? Must match
 the preprocessing step.</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td><code>is_log_independent</code></td>
 <td>logical</td>
 <td><code>TRUE</code></td>
 <td>Was concentration log10-transformed? Must match the preprocessing
 step.</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td><code>std_curve_conc</code></td>
 <td>numeric</td>
 <td>—</td>
@@ -485,7 +497,7 @@ step.</td>
 the raw scale (e.g. 30 AU/mL). Used to generate the prediction
 grid.</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td><code>fixed_a</code></td>
 <td>numeric or NULL</td>
 <td><code>NULL</code></td>
@@ -495,7 +507,7 @@ if <code>is_log_response = TRUE</code>). When NULL, <code>a</code> is
 freely estimated. Fixing <code>a</code> is most useful when blank wells
 reliably define the lower asymptote.</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td><code>cv_x_max</code></td>
 <td>numeric</td>
 <td>150</td>
@@ -504,34 +516,34 @@ back-calculated concentration. Values above this threshold are set to
 <code>cv_x_max</code> in <code>$pcov</code> and
 <code>$pcov_rmse</code>.</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td><code>n_grid</code></td>
 <td>integer</td>
 <td>200</td>
 <td>Number of evenly spaced log10-concentration points on the prediction
 grid.</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td><code>grid_min_conc</code></td>
 <td>numeric</td>
 <td>1e-4</td>
 <td>Lower end of the prediction grid, raw scale.</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td><code>grid_max_conc</code></td>
 <td>numeric or NULL</td>
 <td><code>NULL</code></td>
 <td>Upper end of the prediction grid, raw scale. NULL uses
 <code>std_curve_conc</code>.</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td><code>curve_ids</code></td>
 <td>vector or NULL</td>
 <td><code>NULL</code></td>
 <td>Subset of <code>curve_id</code> values to fit. NULL fits all curves
 found in <code>standards</code>.</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td><code>on_error</code></td>
 <td>
 <code>"warn"</code> or <code>"stop"</code>
@@ -540,7 +552,7 @@ found in <code>standards</code>.</td>
 <td>Error handling per curve. <code>"warn"</code> stores NULL for the
 failed curve and continues; <code>"stop"</code> raises immediately.</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td><code>verbose</code></td>
 <td>logical</td>
 <td><code>FALSE</code></td>
@@ -1533,13 +1545,15 @@ components are:</p>
 <div class="sourceCode" id="cb23"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">cr1</span> <span class="op">&lt;-</span> <span class="va">mp</span><span class="op">$</span><span class="va">plates</span><span class="op">[[</span><span class="st">"1"</span><span class="op">]</span><span class="op">]</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/utils/str.html" class="external-link">str</a></span><span class="op">(</span><span class="va">cr1</span>, max.level <span class="op">=</span> <span class="fl">1</span><span class="op">)</span></span>
-<span><span class="co">#&gt; List of 7</span></span>
+<span><span class="co">#&gt; List of 9</span></span>
 <span><span class="co">#&gt;  $ meta            :List of 12</span></span>
 <span><span class="co">#&gt;  $ ensemble        :List of 2</span></span>
 <span><span class="co">#&gt;  $ selection       :List of 8</span></span>
 <span><span class="co">#&gt;  $ grid            :'data.frame':    200 obs. of  12 variables:</span></span>
 <span><span class="co">#&gt;  $ samples         :'data.frame':    20 obs. of  22 variables:</span></span>
 <span><span class="co">#&gt;  $ diagnostics     : NULL</span></span>
+<span><span class="co">#&gt;  $ standards       :'data.frame':    10 obs. of  9 variables:</span></span>
+<span><span class="co">#&gt;  $ blanks          :'data.frame':    4 obs. of  7 variables:</span></span>
 <span><span class="co">#&gt;  $ detection_limits:List of 5</span></span>
 <span><span class="co">#&gt;  - attr(*, "class")= chr [1:2] "calibration_result" "list"</span></span></code></pre></div>
 <table class="table">
@@ -1590,6 +1604,18 @@ components are:</p>
 <td><code>$samples</code></td>
 <td>data frame or NULL</td>
 <td>Back-calculated predictions for test samples.</td>
+</tr>
+<tr class="even">
+<td><code>$standards</code></td>
+<td>data frame or NULL</td>
+<td>Preprocessed standard curve data used to fit this curve, stored for
+QA and plotting.</td>
+</tr>
+<tr class="odd">
+<td><code>$blanks</code></td>
+<td>data frame or NULL</td>
+<td>Blank measurements for this curve, stored for QA and plotting of the
+zero-signal reference.</td>
 </tr>
 </tbody>
 </table>

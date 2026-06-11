@@ -10,6 +10,7 @@ predictions with propagated uncertainty.
 ``` r
 fit_calibration_freq(
   standards,
+  blanks = NULL,
   samples = NULL,
   response_var,
   model_names = c("logistic4", "gompertz4"),
@@ -37,6 +38,13 @@ fit_calibration_freq(
   Data frame. Preprocessed standard curve data with a response column
   (named by `response_var`) and a `concentration` column, both already
   on the fitting scale.
+
+- blanks:
+
+  Data frame or NULL. Preprocessed blank data with a response column
+  (named by `response_var`), on the fitting scale. Stored in
+  `result$blanks` for QA and plotting only — not used in fitting. NULL
+  (default) leaves `result$blanks` empty.
 
 - samples:
 
@@ -128,8 +136,8 @@ component now contains `$assessments` (per-model eligibility results),
 
 ## Details
 
-**Important:** `standards` must already be on the fitting scale. Both
-the response column and the `concentration` column should be transformed
-(e.g. log10) before calling this function. Use
+**Important:** `standards` and 'blanks' must already be on the fitting
+scale. Both the response column and the `concentration` column should be
+transformed (e.g. log10) before calling this function. Use
 [`curveRcore::preprocess_standards()`](https://immunoplex.github.io/curveRcore/reference/preprocess_standards.html)
 upstream.

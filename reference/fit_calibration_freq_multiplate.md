@@ -1,6 +1,6 @@
 # Fit Frequentist Calibration Curves Across Multiple Curves
 
-Splits preprocessed `standards` (and optionally `samples`) by
+Splits preprocessed `standards`, `blanks`, and optionally `samples` by
 `curve_id`, calls
 [`fit_calibration_freq()`](https://immunoplex.github.io/curveRfreq/reference/fit_calibration_freq.md)
 for each curve, and collects the results.
@@ -10,6 +10,7 @@ for each curve, and collects the results.
 ``` r
 fit_calibration_freq_multiplate(
   standards,
+  blanks = NULL,
   samples = NULL,
   response_var,
   model_names = c("logistic4", "gompertz4"),
@@ -34,6 +35,14 @@ fit_calibration_freq_multiplate(
   Data frame. Stacked preprocessed standard curve data. Must contain a
   `curve_id` column, a response column (named by `response_var`), and a
   `concentration` column — all already on the fitting scale.
+
+- blanks:
+
+  Data frame or NULL. Stacked preprocessed blank data. When non-NULL,
+  must contain a `curve_id` column and a response column (named by
+  `response_var`), both already on the fitting scale. Stored in each
+  `result$blanks` for QA and plotting only — not used in fitting. NULL
+  (default) leaves `result$blanks` empty for every curve.
 
 - samples:
 
@@ -102,7 +111,8 @@ A `calibration_result_multiplate` object (from curveRcore).
 
 ## Details
 
-**Important:** `standards` must already be on the fitting scale. Use
+**Important:** `standards` and `blanks` must already be on the fitting
+scale. Use
 [`curveRcore::preprocess_standards()`](https://immunoplex.github.io/curveRcore/reference/preprocess_standards.html)
 upstream on each curve's data before stacking, or preprocess the full
 stacked frame if all curves share the same settings.
