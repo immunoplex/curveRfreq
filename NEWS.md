@@ -12,3 +12,16 @@
 * `summary_table()` and `collect_samples()` for tidy extraction from
   multi-curve results.
 * `bead_assay_example` synthetic dataset for two antigens × three plates.
+
+# curveRfreq <next>
+
+## Verified compatible with curveRcore 0.3.0 (mask-aware preprocessing)
+
+* No code changes required. `fit_calibration_freq*()` receive standards and
+  blanks already preprocessed by `curveRcore::preprocess_standards()`, and the
+  worker passes only the *included* subset (masked rows are filtered out before
+  the fit). Verified there is no internal call to `preprocess_standards()`,
+  `correct_prozone()`, `perform_blank_operation()`, or `compute_log_response()`,
+  no recomputation of set-level statistics, and no database reads in the fit
+  path. Blanks are stored in `result$blanks` for QA/plotting only and do not
+  enter the frequentist fit, so masked points cannot influence it.
