@@ -11,7 +11,7 @@
 ## Citation
 
 Source:
-[`DESCRIPTION`](https://github.com/immunoplex/curveRfreq/blob/main/DESCRIPTION)
+[`DESCRIPTION`](https://github.com/immunoplex/curveRfreq/blob/v0.4.0/DESCRIPTION)
 
 Stein S, Zens M, Hoen A (2026). *curveRfreq: Frequentist Calibration
 Curves for the curveR Suite*. R package version 0.2.0,

@@ -1121,7 +1121,7 @@ str(cr1, max.level = 1)
 #>  $ grid            :'data.frame':    200 obs. of  12 variables:
 #>  $ samples         :'data.frame':    20 obs. of  22 variables:
 #>  $ diagnostics     : NULL
-#>  $ standards       :'data.frame':    10 obs. of  9 variables:
+#>  $ standards       :'data.frame':    10 obs. of  11 variables:
 #>  $ blanks          :'data.frame':    4 obs. of  7 variables:
 #>  $ detection_limits:List of 5
 #>  - attr(*, "class")= chr [1:2] "calibration_result" "list"
