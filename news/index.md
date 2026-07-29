@@ -1,5 +1,12 @@
 # Changelog
 
+## curveRfreq 0.4.0 (2026-07-29)
+
+- Lockstep version bump — **no functional changes**. Released so the
+  curveR stack shares a version and the worker image can pin
+  `curveRfreq@v0.4.0` for reproducible builds. Rebuilt/verified against
+  curveRcore 0.4.0.
+
 ## curveRfreq 0.1.0
 
 - Initial release.
