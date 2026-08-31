@@ -1545,7 +1545,7 @@ components are:</p>
 <div class="sourceCode" id="cb23"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">cr1</span> <span class="op">&lt;-</span> <span class="va">mp</span><span class="op">$</span><span class="va">plates</span><span class="op">[[</span><span class="st">"1"</span><span class="op">]</span><span class="op">]</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/utils/str.html" class="external-link">str</a></span><span class="op">(</span><span class="va">cr1</span>, max.level <span class="op">=</span> <span class="fl">1</span><span class="op">)</span></span>
-<span><span class="co">#&gt; List of 9</span></span>
+<span><span class="co">#&gt; List of 10</span></span>
 <span><span class="co">#&gt;  $ meta            :List of 12</span></span>
 <span><span class="co">#&gt;  $ ensemble        :List of 2</span></span>
 <span><span class="co">#&gt;  $ selection       :List of 8</span></span>
@@ -1554,6 +1554,7 @@ components are:</p>
 <span><span class="co">#&gt;  $ diagnostics     : NULL</span></span>
 <span><span class="co">#&gt;  $ standards       :'data.frame':    10 obs. of  11 variables:</span></span>
 <span><span class="co">#&gt;  $ blanks          :'data.frame':    4 obs. of  7 variables:</span></span>
+<span><span class="co">#&gt;  $ population      :List of 3</span></span>
 <span><span class="co">#&gt;  $ detection_limits:List of 5</span></span>
 <span><span class="co">#&gt;  - attr(*, "class")= chr [1:2] "calibration_result" "list"</span></span></code></pre></div>
 <table class="table">
@@ -1626,11 +1627,12 @@ zero-signal reference.</td>
 <code class="sourceCode R"><span><span class="co"># Parameters for the best model</span></span>
 <span><span class="va">best_nm</span>  <span class="op">&lt;-</span> <span class="va">cr1</span><span class="op">$</span><span class="va">selection</span><span class="op">$</span><span class="va">best_model_name</span></span>
 <span><span class="va">cr1</span><span class="op">$</span><span class="va">ensemble</span><span class="op">[[</span><span class="va">best_nm</span><span class="op">]</span><span class="op">]</span><span class="op">$</span><span class="va">parameters</span></span>
-<span><span class="co">#&gt;   term   estimate  std_error</span></span>
-<span><span class="co">#&gt; 1    a  1.6247987 0.14270068</span></span>
-<span><span class="co">#&gt; 2    d  4.3501440 0.02615353</span></span>
-<span><span class="co">#&gt; 3    c -0.5903620 0.06937180</span></span>
-<span><span class="co">#&gt; 4    b  0.5054454 0.04603846</span></span>
+<span><span class="co">#&gt;          term    estimate  std_error</span></span>
+<span><span class="co">#&gt; 1           a  1.62479874 0.14270068</span></span>
+<span><span class="co">#&gt; 2           d  4.35014395 0.02615353</span></span>
+<span><span class="co">#&gt; 3           c -0.59036201 0.06937180</span></span>
+<span><span class="co">#&gt; 4           b  0.50544542 0.04603846</span></span>
+<span><span class="co">#&gt; 5 sigma_resid  0.04727645         NA</span></span>
 <span></span>
 <span><span class="co"># Fit statistics</span></span>
 <span><span class="va">cr1</span><span class="op">$</span><span class="va">ensemble</span><span class="op">[[</span><span class="va">best_nm</span><span class="op">]</span><span class="op">]</span><span class="op">$</span><span class="va">fit_stats</span></span>
@@ -1690,9 +1692,10 @@ the runner-up:</p>
 <code>calibration_result_multiplate</code> object:</p>
 <div class="sourceCode" id="cb26"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/str.html" class="external-link">str</a></span><span class="op">(</span><span class="va">mp</span>, max.level <span class="op">=</span> <span class="fl">1</span><span class="op">)</span></span>
-<span><span class="co">#&gt; List of 2</span></span>
-<span><span class="co">#&gt;  $ meta  :List of 8</span></span>
-<span><span class="co">#&gt;  $ plates:List of 6</span></span>
+<span><span class="co">#&gt; List of 3</span></span>
+<span><span class="co">#&gt;  $ meta      :List of 8</span></span>
+<span><span class="co">#&gt;  $ plates    :List of 6</span></span>
+<span><span class="co">#&gt;  $ population: NULL</span></span>
 <span><span class="co">#&gt;  - attr(*, "class")= chr [1:2] "calibration_result_multiplate" "list"</span></span></code></pre></div>
 <table class="table">
 <colgroup>

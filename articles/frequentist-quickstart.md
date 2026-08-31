@@ -1114,7 +1114,7 @@ components are:
 
 cr1 <- mp$plates[["1"]]
 str(cr1, max.level = 1)
-#> List of 9
+#> List of 10
 #>  $ meta            :List of 12
 #>  $ ensemble        :List of 2
 #>  $ selection       :List of 8
@@ -1123,6 +1123,7 @@ str(cr1, max.level = 1)
 #>  $ diagnostics     : NULL
 #>  $ standards       :'data.frame':    10 obs. of  11 variables:
 #>  $ blanks          :'data.frame':    4 obs. of  7 variables:
+#>  $ population      :List of 3
 #>  $ detection_limits:List of 5
 #>  - attr(*, "class")= chr [1:2] "calibration_result" "list"
 ```
@@ -1144,11 +1145,12 @@ str(cr1, max.level = 1)
 # Parameters for the best model
 best_nm  <- cr1$selection$best_model_name
 cr1$ensemble[[best_nm]]$parameters
-#>   term   estimate  std_error
-#> 1    a  1.6247987 0.14270068
-#> 2    d  4.3501440 0.02615353
-#> 3    c -0.5903620 0.06937180
-#> 4    b  0.5054454 0.04603846
+#>          term    estimate  std_error
+#> 1           a  1.62479874 0.14270068
+#> 2           d  4.35014395 0.02615353
+#> 3           c -0.59036201 0.06937180
+#> 4           b  0.50544542 0.04603846
+#> 5 sigma_resid  0.04727645         NA
 
 # Fit statistics
 cr1$ensemble[[best_nm]]$fit_stats
@@ -1211,9 +1213,10 @@ wraps results in a `calibration_result_multiplate` object:
 ``` r
 
 str(mp, max.level = 1)
-#> List of 2
-#>  $ meta  :List of 8
-#>  $ plates:List of 6
+#> List of 3
+#>  $ meta      :List of 8
+#>  $ plates    :List of 6
+#>  $ population: NULL
 #>  - attr(*, "class")= chr [1:2] "calibration_result_multiplate" "list"
 ```
 

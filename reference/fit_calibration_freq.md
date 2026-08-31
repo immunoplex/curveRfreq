@@ -27,6 +27,7 @@ fit_calibration_freq(
   grid_min_conc = 1e-04,
   grid_max_conc = NULL,
   curve_id = "1",
+  persist_draws = FALSE,
   verbose = FALSE
 )
 ```
