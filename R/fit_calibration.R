@@ -91,6 +91,7 @@ fit_calibration_freq <- function(standards,
                                  grid_min_conc = 1e-4,
                                  grid_max_conc = NULL,
                                  curve_id = "1",
+                                 persist_draws = FALSE,
                                  verbose = FALSE) {
 
   indep_var <- "concentration"
@@ -332,15 +333,26 @@ fit_calibration_freq <- function(standards,
     s   <- summary(fit)
     ct  <- as.data.frame(s$coefficients)
 
+    # Per-model parameters + the frequentist noise analog (residual SE) as a
+    # calib_param term 'sigma_resid'. It is per-curve (not a population param),
+    # so it rides in calib_param — NOT calib_hyperparam (which stays empty for
+    # the frequentist engine).
+    params_df <- data.frame(
+      term      = rownames(ct),
+      estimate  = ct[, 1],
+      std_error = ct[, 2],
+      stringsAsFactors = FALSE
+    )
+    sigma_resid <- tryCatch(s$sigma, error = function(z) NA_real_)
+    if (is.finite(sigma_resid %||% NA_real_))
+      params_df <- rbind(params_df, data.frame(
+        term = "sigma_resid", estimate = sigma_resid, std_error = NA_real_,
+        stringsAsFactors = FALSE))
+
     list(
       model_name = e$model_name,
       converged  = TRUE,
-      parameters = data.frame(
-        term      = rownames(ct),
-        estimate  = ct[, 1],
-        std_error = ct[, 2],
-        stringsAsFactors = FALSE
-      ),
+      parameters = params_df,
       fit_stats = list(
         n_obs    = stats::nobs(fit),
         n_params = length(stats::coef(fit)),
@@ -411,6 +423,43 @@ fit_calibration_freq <- function(standards,
     )
   }
 
+  # ── 10b. Population slot: freq fit diagnostics + (gated) MVN parameter draws ─
+  # Frequentist is per-plate with NO pooled population params, so population$params
+  # is NULL (calib_hyperparam stays empty for this engine). fit_diag carries the
+  # frequentist calib_fit_diag columns — the Hessian/vcov condition number is the
+  # identifiability signal (the analog of the Bayesian degenerate-fit ridge).
+  # When persist_draws is on, the best model's asymptotic-MVN parameter samples
+  # populate its per-model $draws (calib_draws, sample_kind = 'mvn').
+  population <- NULL
+  if (!is.na(best_name)) {
+    .g  <- function(x, d) if (is.null(x) || length(x) == 0L) d else x
+    bf  <- ensemble_raw[[best_name]]$fit
+    V   <- tryCatch(stats::vcov(bf), error = function(z) NULL)
+    cin <- tryCatch(bf$convInfo, error = function(z) NULL)
+    population <- list(
+      model_name = best_name,
+      params     = NULL,
+      fit_diag   = list(
+        converged                = TRUE,
+        n_iterations             = .g(cin$finIter, NA_integer_),
+        fit_seconds              = NA_real_,
+        hessian_condition_number = tryCatch(kappa(V), error = function(z) NA_real_),
+        gradient_norm            = NA_real_,
+        optimizer_code           = .g(cin$stopCode, NA_integer_),
+        rel_tol_achieved         = .g(cin$finTol, NA_real_)
+      )
+    )
+    if (isTRUE(persist_draws) && !is.null(V)) {
+      co   <- tryCatch(stats::coef(bf), error = function(z) NULL)
+      samp <- if (!is.null(co)) .mvn_draws(1000L, co, V) else NULL
+      if (!is.null(samp)) {
+        dl <- lapply(colnames(samp), function(cn) as.numeric(samp[, cn]))
+        names(dl) <- colnames(samp)
+        ensemble_out[[best_name]]$draws <- dl
+      }
+    }
+  }
+
   # ── 11. Build calibration_result ─────────────────────────────────────────
   meta <- list(
     method             = "frequentist",
@@ -434,11 +483,27 @@ fit_calibration_freq <- function(standards,
     grid      = grid,
     samples   = samples_out,
     standards = standards,
-    blanks = blanks
+    blanks = blanks,
+    population = population
   )
 
   # ── 12. Detection limits (LODs, MDC, RDL) for the best eligible model ────
   cr <- curveRcore::compute_detection_limits(cr, verbose = verbose)
 
   cr
+}
+
+
+# Asymptotic-MVN parameter sample from (coef, vcov) via Cholesky — no MASS
+# dependency. Returns an n x p matrix (rows = draws, in a stable order so terms
+# stay joinable) with column names = names(mu); NULL if Sigma is not positive
+# definite. Used for the frequentist calib_draws (sample_kind = 'mvn').
+.mvn_draws <- function(n, mu, Sigma) {
+  mu <- as.numeric(mu); p <- length(mu)
+  R  <- tryCatch(chol(Sigma), error = function(e) NULL)   # R'R = Sigma (upper-tri)
+  if (is.null(R)) return(NULL)
+  Z   <- matrix(stats::rnorm(n * p), nrow = n, ncol = p)
+  out <- sweep(Z %*% R, 2, mu, "+")                        # cov(rows) = R'R = Sigma
+  colnames(out) <- if (!is.null(names(mu))) names(mu) else paste0("p", seq_len(p))
+  out
 }

@@ -71,6 +71,7 @@ fit_calibration_freq_multiplate <- function(standards,
                                             grid_max_conc = NULL,
                                             curve_ids = NULL,
                                             on_error = c("warn", "stop"),
+                                            persist_draws = FALSE,
                                             verbose = FALSE) {
 
   on_error <- match.arg(on_error)
@@ -176,6 +177,7 @@ fit_calibration_freq_multiplate <- function(standards,
           grid_min_conc      = grid_min_conc,
           grid_max_conc      = grid_max_conc,
           curve_id           = cid,
+          persist_draws      = persist_draws,
           verbose            = verbose
         ),
         warning = function(w) {

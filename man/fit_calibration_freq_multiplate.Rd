@@ -20,6 +20,7 @@ fit_calibration_freq_multiplate(
   grid_max_conc = NULL,
   curve_ids = NULL,
   on_error = c("warn", "stop"),
+  persist_draws = FALSE,
   verbose = FALSE
 )
 }

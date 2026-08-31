@@ -2,12 +2,12 @@
     "sortOrder": [
         {
             "columnIndex": 4,
-            "ascending": true
+            "ascending": false
         },
         {
             "columnIndex": 2,
             "ascending": true
         }
     ],
-    "path": "~/R-git/curveRfreq"
+    "path": "~/R-git/curveRfreq/R"
 }
