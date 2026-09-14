@@ -14,13 +14,13 @@ Source:
 [`DESCRIPTION`](https://github.com/immunoplex/curveRfreq/blob/main/DESCRIPTION)
 
 Stein S, Zens M, Hoen A (2026). *curveRfreq: Frequentist Calibration
-Curves for the curveR Suite*. R package version 0.4.0,
+Curves for the curveR Suite*. R package version 0.4.1,
 <https://github.com/immunoplex/curveRfreq>.
 
     @Manual{,
       title = {curveRfreq: Frequentist Calibration Curves for the curveR Suite},
       author = {Seamus O. Stein and Michael Scot Zens and Anne G. Hoen},
       year = {2026},
-      note = {R package version 0.4.0},
+      note = {R package version 0.4.1},
       url = {https://github.com/immunoplex/curveRfreq},
     }

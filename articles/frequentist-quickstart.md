@@ -1032,12 +1032,12 @@ head(all_samples_pred[, c(
 #> 5        1     a005 20177.5                1.472263         59332.60615
 #> 6        1     a006    70.1               -1.817592            30.43951
 #>   se_concentration      pcov pcov_pass
-#> 1        0.3075734  70.82139      TRUE
-#> 2        0.4268163  98.27808      TRUE
-#> 3        0.5613527 129.25624      TRUE
-#> 4        0.4491785 103.42716      TRUE
-#> 5        0.5823824 134.09850      TRUE
-#> 6        0.2095433  48.24912      TRUE
+#> 1        0.3075734  70.82139     FALSE
+#> 2        0.4268163  98.27808     FALSE
+#> 3        0.5613527 129.25624     FALSE
+#> 4        0.4491785 103.42716     FALSE
+#> 5        0.5823824 134.09850     FALSE
+#> 6        0.2095433  48.24912     FALSE
 ```
 
 #### Output columns added by `predict_samples_freq()`
@@ -1066,10 +1066,10 @@ cat(sprintf("Total samples : %d\n", n_total))
 #> Total samples : 120
 cat(sprintf("pcov_pass = TRUE : %d  (%.1f %%)\n",
             n_pass, 100 * n_pass / n_total))
-#> pcov_pass = TRUE : 84  (70.0 %)
+#> pcov_pass = TRUE : 10  (8.3 %)
 cat(sprintf("Out-of-range    : %d  (%.1f %%)\n",
             n_out_of_range, 100 * n_out_of_range / n_total))
-#> Out-of-range    : 36  (30.0 %)
+#> Out-of-range    : 110  (91.7 %)
 ```
 
 ``` r

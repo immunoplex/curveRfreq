@@ -26,7 +26,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">curveRfreq</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.4.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.4.1</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -1425,12 +1425,12 @@ across all curves:</p>
 <span><span class="co">#&gt; 5        1     a005 20177.5                1.472263         59332.60615</span></span>
 <span><span class="co">#&gt; 6        1     a006    70.1               -1.817592            30.43951</span></span>
 <span><span class="co">#&gt;   se_concentration      pcov pcov_pass</span></span>
-<span><span class="co">#&gt; 1        0.3075734  70.82139      TRUE</span></span>
-<span><span class="co">#&gt; 2        0.4268163  98.27808      TRUE</span></span>
-<span><span class="co">#&gt; 3        0.5613527 129.25624      TRUE</span></span>
-<span><span class="co">#&gt; 4        0.4491785 103.42716      TRUE</span></span>
-<span><span class="co">#&gt; 5        0.5823824 134.09850      TRUE</span></span>
-<span><span class="co">#&gt; 6        0.2095433  48.24912      TRUE</span></span></code></pre></div>
+<span><span class="co">#&gt; 1        0.3075734  70.82139     FALSE</span></span>
+<span><span class="co">#&gt; 2        0.4268163  98.27808     FALSE</span></span>
+<span><span class="co">#&gt; 3        0.5613527 129.25624     FALSE</span></span>
+<span><span class="co">#&gt; 4        0.4491785 103.42716     FALSE</span></span>
+<span><span class="co">#&gt; 5        0.5823824 134.09850     FALSE</span></span>
+<span><span class="co">#&gt; 6        0.2095433  48.24912     FALSE</span></span></code></pre></div>
 <div class="section level4">
 <h4 id="output-columns-added-by-predict_samples_freq">Output columns added by <code>predict_samples_freq()</code><a class="anchor" aria-label="anchor" href="#output-columns-added-by-predict_samples_freq"></a>
 </h4>
@@ -1502,10 +1502,10 @@ finite.</td>
 <span><span class="co">#&gt; Total samples : 120</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/sprintf.html" class="external-link">sprintf</a></span><span class="op">(</span><span class="st">"pcov_pass = TRUE : %d  (%.1f %%)\n"</span>,</span>
 <span>            <span class="va">n_pass</span>, <span class="fl">100</span> <span class="op">*</span> <span class="va">n_pass</span> <span class="op">/</span> <span class="va">n_total</span><span class="op">)</span><span class="op">)</span></span>
-<span><span class="co">#&gt; pcov_pass = TRUE : 84  (70.0 %)</span></span>
+<span><span class="co">#&gt; pcov_pass = TRUE : 10  (8.3 %)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/sprintf.html" class="external-link">sprintf</a></span><span class="op">(</span><span class="st">"Out-of-range    : %d  (%.1f %%)\n"</span>,</span>
 <span>            <span class="va">n_out_of_range</span>, <span class="fl">100</span> <span class="op">*</span> <span class="va">n_out_of_range</span> <span class="op">/</span> <span class="va">n_total</span><span class="op">)</span><span class="op">)</span></span>
-<span><span class="co">#&gt; Out-of-range    : 36  (30.0 %)</span></span></code></pre></div>
+<span><span class="co">#&gt; Out-of-range    : 110  (91.7 %)</span></span></code></pre></div>
 <div class="sourceCode" id="cb22"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Convert predicted_concentration (log10 scale) back to natural scale</span></span>
 <span><span class="va">all_samples_pred</span><span class="op">$</span><span class="va">conc_AU_mL</span> <span class="op">&lt;-</span> <span class="fl">10</span><span class="op">^</span><span class="va">all_samples_pred</span><span class="op">$</span><span class="va">predicted_concentration</span> <span class="op">*</span></span>

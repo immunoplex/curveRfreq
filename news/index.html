@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">curveRfreq</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.4.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.4.1</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -33,6 +33,10 @@
       <small>Source: <a href="https://github.com/immunoplex/curveRfreq/blob/main/NEWS.md" class="external-link"><code>NEWS.md</code></a></small>
     </div>
 
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.4.1" id="curverfreq-041">curveRfreq 0.4.1<a class="anchor" aria-label="anchor" href="#curverfreq-041"></a></h2>
+<ul><li>Fix: predict_samples_freq() now gates pcov_pass on pcov_threshold (not cv_x_max), matching predict_grid_freq(). Previously frequentist test samples with pcov between pcov_threshold and cv_x_max were incorrectly marked pcov_pass = TRUE.</li>
+</ul></div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.4.0" id="curverfreq-040-2026-07-29">curveRfreq 0.4.0 (2026-07-29)<a class="anchor" aria-label="anchor" href="#curverfreq-040-2026-07-29"></a></h2>
 <ul><li>Lockstep version bump — <strong>no functional changes</strong>. Released so the curveR stack shares a version and the worker image can pin <code>curveRfreq@v0.4.0</code> for reproducible builds. Rebuilt/verified against curveRcore 0.4.0.</li>

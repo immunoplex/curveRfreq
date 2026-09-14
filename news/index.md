@@ -1,5 +1,12 @@
 # Changelog
 
+## curveRfreq 0.4.1
+
+- Fix: predict_samples_freq() now gates pcov_pass on pcov_threshold (not
+  cv_x_max), matching predict_grid_freq(). Previously frequentist test
+  samples with pcov between pcov_threshold and cv_x_max were incorrectly
+  marked pcov_pass = TRUE.
+
 ## curveRfreq 0.4.0 (2026-07-29)
 
 - Lockstep version bump — **no functional changes**. Released so the

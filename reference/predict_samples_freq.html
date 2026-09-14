@@ -11,7 +11,7 @@ uncertainty via the delta method to get se_concentration and pcov."><meta proper
 
     <a class="navbar-brand me-2" href="../index.html">curveRfreq</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.4.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.4.1</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -55,6 +55,7 @@ uncertainty via the delta method to get <code>se_concentration</code> and <code>
 <span>  is_log_response <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  se_response <span class="op">=</span> <span class="fl">0</span>,</span>
 <span>  cv_x_max <span class="op">=</span> <span class="fl">150</span>,</span>
+<span>  pcov_threshold <span class="op">=</span> <span class="fl">20</span>,</span>
 <span>  is_log_independent <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  verbose <span class="op">=</span> <span class="cn">FALSE</span></span>
 <span><span class="op">)</span></span></code></pre></div>
@@ -96,6 +97,12 @@ Typically <code>summary(fit)$sigma</code>. Default 0.</p></dd>
 
 <dt id="arg-cv-x-max">cv_x_max<a class="anchor" aria-label="anchor" href="#arg-cv-x-max"></a></dt>
 <dd><p>Numeric. Cap for pcov. Default 150.</p></dd>
+
+
+<dt id="arg-pcov-threshold">pcov_threshold<a class="anchor" aria-label="anchor" href="#arg-pcov-threshold"></a></dt>
+<dd><p>Numeric. Precision threshold (%) used to set
+<code>pcov_pass</code>. A grid point passes when <code>pcov &lt; pcov_threshold</code>. Default
+20. Must be <code>&lt;= cv_x_max</code>.</p></dd>
 
 
 <dt id="arg-is-log-independent">is_log_independent<a class="anchor" aria-label="anchor" href="#arg-is-log-independent"></a></dt>

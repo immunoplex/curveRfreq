@@ -16,6 +16,7 @@ predict_samples_freq(
   is_log_response = TRUE,
   se_response = 0,
   cv_x_max = 150,
+  pcov_threshold = 20,
   is_log_independent = TRUE,
   verbose = FALSE
 )
@@ -56,6 +57,12 @@ predict_samples_freq(
 - cv_x_max:
 
   Numeric. Cap for pcov. Default 150.
+
+- pcov_threshold:
+
+  Numeric. Precision threshold (%) used to set `pcov_pass`. A grid point
+  passes when `pcov < pcov_threshold`. Default 20. Must be
+  `<= cv_x_max`.
 
 - is_log_independent:
 
