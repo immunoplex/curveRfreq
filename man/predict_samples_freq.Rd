@@ -13,6 +13,7 @@ predict_samples_freq(
   is_log_response = TRUE,
   se_response = 0,
   cv_x_max = 150,
+  pcov_threshold = 20,
   is_log_independent = TRUE,
   verbose = FALSE
 )
@@ -35,6 +36,10 @@ column and \code{dilution}.}
 Typically \code{summary(fit)$sigma}. Default 0.}
 
 \item{cv_x_max}{Numeric. Cap for pcov. Default 150.}
+
+\item{pcov_threshold}{Numeric. Precision threshold (\%) used to set
+\code{pcov_pass}. A grid point passes when \code{pcov < pcov_threshold}. Default
+20. Must be \verb{<= cv_x_max}.}
 
 \item{is_log_independent}{Logical. Is x on log10 scale? Default TRUE.}
 
