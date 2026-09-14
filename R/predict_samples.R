@@ -17,6 +17,9 @@
 #' @param se_response Numeric. Residual SE on the fitting scale.
 #'   Typically `summary(fit)$sigma`. Default 0.
 #' @param cv_x_max Numeric. Cap for pcov. Default 150.
+#' @param pcov_threshold Numeric. Precision threshold (%) used to set
+#'   `pcov_pass`. A grid point passes when `pcov < pcov_threshold`. Default
+#'   20. Must be `<= cv_x_max`.
 #' @param is_log_independent Logical. Is x on log10 scale? Default TRUE.
 #' @param verbose Logical.
 #'
@@ -32,6 +35,7 @@ predict_samples_freq <- function(samples, fit, model_name,
                                  is_log_response = TRUE,
                                  se_response = 0,
                                  cv_x_max = 150,
+                                 pcov_threshold = 20,
                                  is_log_independent = TRUE,
                                  verbose = FALSE) {
 
@@ -134,7 +138,8 @@ predict_samples_freq <- function(samples, fit, model_name,
   samples$se_concentration <- se_x
   samples$pcov             <- pcov_vec
   samples$pcov_rmse        <- pcov_rmse_vec
-  samples$pcov_pass        <- !is.na(pcov_vec) & pcov_vec < cv_x_max
+  samples$pcov_pass <- !is.na(pcov_vec) & pcov_vec < pcov_threshold
+  # samples$pcov_pass        <- !is.na(pcov_vec) & pcov_vec < cv_x_max ### error found Sept 2026
 
   samples
 }

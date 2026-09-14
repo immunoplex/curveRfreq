@@ -418,6 +418,7 @@ fit_calibration_freq <- function(standards,
       is_log_response   = is_log_response,
       se_response       = sigma_fit,
       cv_x_max          = cv_x_max,
+      pcov_threshold    = pcov_threshold,
       is_log_independent = is_log_independent,
       verbose           = verbose
     )
