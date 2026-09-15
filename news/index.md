@@ -1,5 +1,10 @@
 # Changelog
 
+## curveRfreq 0.4.2
+
+- Created a new pcov_gate_class and changed the basis for pcov_pass
+  classifcations.
+
 ## curveRfreq 0.4.1
 
 - Fix: predict_samples_freq() now gates pcov_pass on pcov_threshold (not
