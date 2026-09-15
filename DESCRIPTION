@@ -1,6 +1,6 @@
 Package: curveRfreq
 Title: Frequentist Calibration Curves for the curveR Suite
-Version: 0.4.1
+Version: 0.4.2
 Authors@R: c( person("Seamus O.", "Stein", email =
         "seamusstein@gmail.com", role = "aut"), person("Michael Scot",
         "Zens", email = "michael.s.zens@dartmouth.edu", role = c("aut",
