@@ -241,7 +241,7 @@ summary_table <- function(mp) {
     if (is.null(cr)) {
       return(data.frame(
         curve_id = cid,
-        best_model = NA_character_, converged = FALSE,
+        best_model = NA_character_, converged = FALSE, fallback = FALSE,
         aic = NA_real_, bic = NA_real_, rss = NA_real_,
         n_obs = NA_integer_, n_samples = NA_integer_,
         a = NA_real_, b = NA_real_, c = NA_real_,
@@ -262,7 +262,13 @@ summary_table <- function(mp) {
     data.frame(
       curve_id   = cid,
       best_model = if (is.na(best)) NA_character_ else best,
-      converged  = !is.na(best),
+      # `converged` must mean "the selected model actually fitted", not merely
+      # "the selection step returned a name". select_best_eligible() always
+      # returns a name on its fallback path -- including a model whose nls()
+      # failed -- so keying off !is.na(best) alone reports convergence on
+      # plates where nothing converged.
+      converged  = !is.na(best) && isTRUE(ens$converged),
+      fallback   = isTRUE(cr$selection$fallback),
       aic        = if (!is.null(fs)) fs$aic else NA_real_,
       bic        = if (!is.null(fs)) fs$bic else NA_real_,
       rss        = if (!is.null(fs)) fs$rss else NA_real_,

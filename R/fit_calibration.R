@@ -385,7 +385,10 @@ fit_calibration_freq <- function(standards,
       grid_max_conc      = grid_max_conc,
       is_log_independent = is_log_independent
     )
-    if (!is.na(best_name)) {
+    # best_name may name a non-converged model (eligibility fallback), whose
+    # $fit is NULL; predict_grid_freq() would then call vcov(NULL). Guard the
+    # fit, not just the name -- matching the `!e$converged` check in step 6a.
+    if (!is.na(best_name) && !is.null(ensemble_raw[[best_name]]$fit)) {
       best_fit  <- ensemble_raw[[best_name]]$fit
       sigma_fit <- tryCatch(summary(best_fit)$sigma, error = function(e) 0)
       g <- predict_grid_freq(
@@ -405,7 +408,8 @@ fit_calibration_freq <- function(standards,
 
   # ── 10. Sample prediction ── (unchanged, uses eligibility-gated best_name)
   samples_out <- NULL
-  if (!is.null(samples) && nrow(samples) > 0 && !is.na(best_name)) {
+  if (!is.null(samples) && nrow(samples) > 0 && !is.na(best_name) &&
+      !is.null(ensemble_raw[[best_name]]$fit)) {
     best_fit  <- ensemble_raw[[best_name]]$fit
     sigma_fit <- tryCatch(summary(best_fit)$sigma, error = function(e) 0)
 

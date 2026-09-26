@@ -71,13 +71,26 @@ select_best_aic <- function(ensemble) {
 extract_best_parameters <- function(ensemble, best_model_name, fixed_a = NULL,
                                     model_constraints = NULL, level = 0.95) {
 
-  if (is.na(best_model_name) || !(best_model_name %in% names(ensemble))) {
-    return(data.frame(term = character(), estimate = numeric(),
-                      std_error = numeric(), ci_lower = numeric(),
-                      ci_upper = numeric(), stringsAsFactors = FALSE))
+  empty_params <- function() {
+    data.frame(term = character(), estimate = numeric(),
+               std_error = numeric(), ci_lower = numeric(),
+               ci_upper = numeric(), stringsAsFactors = FALSE)
   }
 
+  if (is.na(best_model_name) || !(best_model_name %in% names(ensemble))) {
+    return(empty_params())
+  }
+
+  # `best_model_name` is not guaranteed to name a *converged* model. When no
+  # model passes its eligibility gates, select_best_eligible() falls back to
+  # ranking every assessed model -- and assessments are built for the whole
+  # ensemble, including entries whose nls() failed and which therefore carry a
+  # NULL $fit. Guard on the fit itself, not just on the name.
   fit <- ensemble[[best_model_name]]$fit
+  if (is.null(fit)) {
+    return(empty_params())
+  }
+
   s   <- summary(fit)
   ct  <- as.data.frame(s$coefficients)
 
