@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">curveRfreq</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.4.2</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.4.3</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -33,6 +33,16 @@
       <small>Source: <a href="https://github.com/immunoplex/curveRfreq/blob/main/NEWS.md" class="external-link"><code>NEWS.md</code></a></small>
     </div>
 
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.4.3" id="curverfreq-043-2026-09-26">curveRfreq 0.4.3 (2026-09-26)<a class="anchor" aria-label="anchor" href="#curverfreq-043-2026-09-26"></a></h2>
+<ul><li>
+<strong><code>summary_table()$converged</code> now means the selected model actually fitted.</strong> It was <code>!is.na(selection$best_model_name)</code>, and the eligibility fallback in <code><a href="https://immunoplex.github.io/curveRcore/reference/select_best_eligible.html" class="external-link">curveRcore::select_best_eligible()</a></code> always returns a name – so a plate on which no <code><a href="https://rdrr.io/r/stats/nls.html" class="external-link">nls()</a></code> succeeded was still reported as converged. This was masked until now by a crash (below) that made the whole per-plate call fail and record the curve as failed for the wrong reason.</li>
+<li>
+<strong>New additive <code>fallback</code> column</strong> in <code><a href="../reference/summary_table.html">summary_table()</a></code>, recording whether the selection came from the eligibility fallback. “Fitted cleanly” and “fitted but passed no gate” were previously conflated; on real plates the latter is common.</li>
+<li>
+<strong>Fixed three NULL-fit dereferences.</strong> <code><a href="../reference/extract_best_parameters.html">extract_best_parameters()</a></code> guarded the model <em>name</em> but not the fit and hit <code>summary(NULL)$coefficients</code> (<code>$ operator is invalid for atomic vectors</code>); the grid fallback and the sample path in <code>fit_calibration()</code> had the same shape and reached <code>vcov(NULL)</code>. All three now guard the fit, matching the check step 6a already performed.</li>
+<li>Validated across 1,706 plates / 119 antigen units in four studies: no convergence count changed, and the 3-level case that per-plate NLS genuinely cannot fit is now reported as clean non-convergence rather than a caught crash.</li>
+</ul></div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.4.2" id="curverfreq-042">curveRfreq 0.4.2<a class="anchor" aria-label="anchor" href="#curverfreq-042"></a></h2>
 <ul><li>Created a new pcov_gate_class and changed the basis for pcov_pass classifcations.</li>
