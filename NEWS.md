@@ -1,3 +1,24 @@
+# curveRfreq 0.4.3 (2026-09-26)
+
+* **`summary_table()$converged` now means the selected model actually fitted.**
+  It was `!is.na(selection$best_model_name)`, and the eligibility fallback in
+  `curveRcore::select_best_eligible()` always returns a name -- so a plate on
+  which no `nls()` succeeded was still reported as converged. This was masked
+  until now by a crash (below) that made the whole per-plate call fail and
+  record the curve as failed for the wrong reason.
+* **New additive `fallback` column** in `summary_table()`, recording whether the
+  selection came from the eligibility fallback. "Fitted cleanly" and "fitted but
+  passed no gate" were previously conflated; on real plates the latter is common.
+* **Fixed three NULL-fit dereferences.** `extract_best_parameters()` guarded the
+  model *name* but not the fit and hit `summary(NULL)$coefficients`
+  (`$ operator is invalid for atomic vectors`); the grid fallback and the sample
+  path in `fit_calibration()` had the same shape and reached `vcov(NULL)`. All
+  three now guard the fit, matching the check step 6a already performed.
+* Validated across 1,706 plates / 119 antigen units in four studies: no
+  convergence count changed, and the 3-level case that per-plate NLS genuinely
+  cannot fit is now reported as clean non-convergence rather than a caught crash.
+
+
 # curveRfreq 0.4.2
 
 * Created a new pcov_gate_class and changed the basis for pcov_pass classifcations.
