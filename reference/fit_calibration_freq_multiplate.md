@@ -25,6 +25,9 @@ fit_calibration_freq_multiplate(
   curve_ids = NULL,
   on_error = c("warn", "stop"),
   persist_draws = FALSE,
+  decision_cutoff = NULL,
+  n_interval_draws = 1000L,
+  interval_seed = NULL,
   verbose = FALSE
 )
 ```
@@ -101,6 +104,16 @@ fit_calibration_freq_multiplate(
 
   Character. `"warn"` (default) stores NULL and continues; `"stop"`
   raises on first failure.
+
+- decision_cutoff, n_interval_draws:
+
+  Passed to
+  [`fit_calibration_freq()`](https://immunoplex.github.io/curveRfreq/reference/fit_calibration_freq.md).
+
+- interval_seed:
+
+  Integer or NULL. When set, curve `i` uses `interval_seed + i`, so
+  curves get distinct but reproducible streams.
 
 - verbose:
 

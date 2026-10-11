@@ -1048,11 +1048,28 @@ head(all_samples_pred[, c(
 | `observed_response_fit` | Response on the fitting scale (`log10(mfi)` when `is_log_response = TRUE`). |
 | `predicted_log10_concentration` | Back-calculated concentration on the log10 scale. |
 | `predicted_concentration` | Same as `predicted_log10_concentration` when `is_log_independent = TRUE`. |
-| `final_concentration` | Pre-dilution concentration: `10^predicted_concentration × dilution`. |
+| `final_concentration` | Dilution-corrected concentration: `10^predicted_log10_concentration × dilution`. |
 | `se_concentration` | Delta-method SE of `predicted_concentration`. |
 | `pcov` | %CV of back-calculated concentration. |
 | `pcov_rmse` | Relative RMSE; for samples equals `pcov` (bias undefined without known truth). |
-| `pcov_pass` | `TRUE` when `pcov < cv_x_max` and finite. |
+| `pcov_pass` | `TRUE` when `pcov < pcov_threshold` and finite (reclassified against LLOQ/ULOQ by [`curveRcore::classify_pcov_gates_multiplate()`](https://immunoplex.github.io/curveRcore/reference/classify_pcov_gates_multiplate.html)). |
+| `conc_q_lo`, `conc_q_med`, `conc_q_hi` | 2.5 / 50 / 97.5 % Monte Carlo predictive quantiles, natural scale, dilution-corrected. |
+| `p_below_lloq`, `p_above_uloq`, `p_below_cutoff` | Probability the concentration is below the LLOQ / above the ULOQ / below `decision_cutoff`. |
+| `frac_draws_below_a`, `frac_draws_above_d` | Share of Monte Carlo draws whose response lay beyond the low / high asymptote. |
+
+The last three rows come from a Monte Carlo predictive distribution
+rather than the delta method: `n_interval_draws` (default 1000)
+parameter vectors are drawn from the fitted multivariate normal,
+residual noise `N(0, sigma)` is added to the observed response, and each
+draw is inverted, with a draw beyond an asymptote counted as censored
+instead of dropped. The interval is therefore asymmetric on the natural
+scale and still defined for samples outside the curve’s range, where the
+delta-method `se_concentration` is `NA`. Set `interval_seed` for
+reproducible draws; the global random-number stream is never changed.
+Censoring classes and bounds come from
+[`curveRcore::classify_censoring_multiplate()`](https://immunoplex.github.io/curveRcore/reference/classify_censoring_multiplate.html)
+(see the curveRcore “Getting Started” vignette, section *Out-of-range
+samples*).
 
 ### Flagging out-of-range samples
 
@@ -1115,11 +1132,11 @@ components are:
 cr1 <- mp$plates[["1"]]
 str(cr1, max.level = 1)
 #> List of 10
-#>  $ meta            :List of 12
+#>  $ meta            :List of 15
 #>  $ ensemble        :List of 2
 #>  $ selection       :List of 8
 #>  $ grid            :'data.frame':    200 obs. of  12 variables:
-#>  $ samples         :'data.frame':    20 obs. of  22 variables:
+#>  $ samples         :'data.frame':    20 obs. of  30 variables:
 #>  $ diagnostics     : NULL
 #>  $ standards       :'data.frame':    10 obs. of  11 variables:
 #>  $ blanks          :'data.frame':    4 obs. of  7 variables:
@@ -1214,7 +1231,7 @@ wraps results in a `calibration_result_multiplate` object:
 
 str(mp, max.level = 1)
 #> List of 3
-#>  $ meta      :List of 8
+#>  $ meta      :List of 11
 #>  $ plates    :List of 6
 #>  $ population: NULL
 #>  - attr(*, "class")= chr [1:2] "calibration_result_multiplate" "list"
@@ -1257,7 +1274,7 @@ samp_all <- collect_samples(mp)
 cat("Total rows:", nrow(samp_all), "\n")
 #> Total rows: 120
 cat("Columns:", paste(names(samp_all), collapse = ", "), "\n")
-#> Columns: curve_id, timeperiod, patientid, well, stype, sampleid, agroup, dilution, pctaggbeads, samplingerrors, mfi, assay_response_variable, assay_independent_variable, raw_assay_response, observed_response_fit, predicted_log10_concentration, predicted_concentration, final_concentration, se_concentration, pcov, pcov_rmse, pcov_pass
+#> Columns: curve_id, timeperiod, patientid, well, stype, sampleid, agroup, dilution, pctaggbeads, samplingerrors, mfi, assay_response_variable, assay_independent_variable, raw_assay_response, observed_response_fit, predicted_log10_concentration, predicted_concentration, final_concentration, se_concentration, pcov, pcov_rmse, pcov_pass, conc_q_lo, conc_q_med, conc_q_hi, p_below_lloq, p_above_uloq, p_below_cutoff, frac_draws_below_a, frac_draws_above_d
 ```
 
 ------------------------------------------------------------------------

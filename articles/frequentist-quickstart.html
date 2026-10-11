@@ -26,7 +26,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">curveRfreq</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.4.3</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.5.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -1464,8 +1464,8 @@ across all curves:</p>
 </tr>
 <tr class="odd">
 <td><code>final_concentration</code></td>
-<td>Pre-dilution concentration:
-<code>10^predicted_concentration × dilution</code>.</td>
+<td>Dilution-corrected concentration:
+<code>10^predicted_log10_concentration × dilution</code>.</td>
 </tr>
 <tr class="even">
 <td><code>se_concentration</code></td>
@@ -1483,11 +1483,50 @@ without known truth).</td>
 <tr class="odd">
 <td><code>pcov_pass</code></td>
 <td>
-<code>TRUE</code> when <code>pcov &lt; cv_x_max</code> and
-finite.</td>
+<code>TRUE</code> when <code>pcov &lt; pcov_threshold</code> and
+finite (reclassified against LLOQ/ULOQ by
+<code><a href="https://immunoplex.github.io/curveRcore/reference/classify_pcov_gates_multiplate.html" class="external-link">curveRcore::classify_pcov_gates_multiplate()</a></code>).</td>
+</tr>
+<tr class="even">
+<td>
+<code>conc_q_lo</code>, <code>conc_q_med</code>,
+<code>conc_q_hi</code>
+</td>
+<td>2.5 / 50 / 97.5 % Monte Carlo predictive quantiles, natural scale,
+dilution-corrected.</td>
+</tr>
+<tr class="odd">
+<td>
+<code>p_below_lloq</code>, <code>p_above_uloq</code>,
+<code>p_below_cutoff</code>
+</td>
+<td>Probability the concentration is below the LLOQ / above the ULOQ /
+below <code>decision_cutoff</code>.</td>
+</tr>
+<tr class="even">
+<td>
+<code>frac_draws_below_a</code>,
+<code>frac_draws_above_d</code>
+</td>
+<td>Share of Monte Carlo draws whose response lay beyond the low / high
+asymptote.</td>
 </tr>
 </tbody>
 </table>
+<p>The last three rows come from a Monte Carlo predictive distribution
+rather than the delta method: <code>n_interval_draws</code> (default
+1000) parameter vectors are drawn from the fitted multivariate normal,
+residual noise <code>N(0, sigma)</code> is added to the observed
+response, and each draw is inverted, with a draw beyond an asymptote
+counted as censored instead of dropped. The interval is therefore
+asymmetric on the natural scale and still defined for samples outside
+the curve’s range, where the delta-method <code>se_concentration</code>
+is <code>NA</code>. Set <code>interval_seed</code> for reproducible
+draws; the global random-number stream is never changed. Censoring
+classes and bounds come from
+<code><a href="https://immunoplex.github.io/curveRcore/reference/classify_censoring_multiplate.html" class="external-link">curveRcore::classify_censoring_multiplate()</a></code> (see the
+curveRcore “Getting Started” vignette, section <em>Out-of-range
+samples</em>).</p>
 </div>
 </div>
 <div class="section level3">
@@ -1546,11 +1585,11 @@ components are:</p>
 <code class="sourceCode R"><span><span class="va">cr1</span> <span class="op">&lt;-</span> <span class="va">mp</span><span class="op">$</span><span class="va">plates</span><span class="op">[[</span><span class="st">"1"</span><span class="op">]</span><span class="op">]</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/utils/str.html" class="external-link">str</a></span><span class="op">(</span><span class="va">cr1</span>, max.level <span class="op">=</span> <span class="fl">1</span><span class="op">)</span></span>
 <span><span class="co">#&gt; List of 10</span></span>
-<span><span class="co">#&gt;  $ meta            :List of 12</span></span>
+<span><span class="co">#&gt;  $ meta            :List of 15</span></span>
 <span><span class="co">#&gt;  $ ensemble        :List of 2</span></span>
 <span><span class="co">#&gt;  $ selection       :List of 8</span></span>
 <span><span class="co">#&gt;  $ grid            :'data.frame':    200 obs. of  12 variables:</span></span>
-<span><span class="co">#&gt;  $ samples         :'data.frame':    20 obs. of  22 variables:</span></span>
+<span><span class="co">#&gt;  $ samples         :'data.frame':    20 obs. of  30 variables:</span></span>
 <span><span class="co">#&gt;  $ diagnostics     : NULL</span></span>
 <span><span class="co">#&gt;  $ standards       :'data.frame':    10 obs. of  11 variables:</span></span>
 <span><span class="co">#&gt;  $ blanks          :'data.frame':    4 obs. of  7 variables:</span></span>
@@ -1693,7 +1732,7 @@ the runner-up:</p>
 <div class="sourceCode" id="cb26"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/str.html" class="external-link">str</a></span><span class="op">(</span><span class="va">mp</span>, max.level <span class="op">=</span> <span class="fl">1</span><span class="op">)</span></span>
 <span><span class="co">#&gt; List of 3</span></span>
-<span><span class="co">#&gt;  $ meta      :List of 8</span></span>
+<span><span class="co">#&gt;  $ meta      :List of 11</span></span>
 <span><span class="co">#&gt;  $ plates    :List of 6</span></span>
 <span><span class="co">#&gt;  $ population: NULL</span></span>
 <span><span class="co">#&gt;  - attr(*, "class")= chr [1:2] "calibration_result_multiplate" "list"</span></span></code></pre></div>
@@ -1751,7 +1790,7 @@ the runner-up:</p>
 <span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="st">"Total rows:"</span>, <span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">nrow</a></span><span class="op">(</span><span class="va">samp_all</span><span class="op">)</span>, <span class="st">"\n"</span><span class="op">)</span></span>
 <span><span class="co">#&gt; Total rows: 120</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="st">"Columns:"</span>, <span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/names.html" class="external-link">names</a></span><span class="op">(</span><span class="va">samp_all</span><span class="op">)</span>, collapse <span class="op">=</span> <span class="st">", "</span><span class="op">)</span>, <span class="st">"\n"</span><span class="op">)</span></span>
-<span><span class="co">#&gt; Columns: curve_id, timeperiod, patientid, well, stype, sampleid, agroup, dilution, pctaggbeads, samplingerrors, mfi, assay_response_variable, assay_independent_variable, raw_assay_response, observed_response_fit, predicted_log10_concentration, predicted_concentration, final_concentration, se_concentration, pcov, pcov_rmse, pcov_pass</span></span></code></pre></div>
+<span><span class="co">#&gt; Columns: curve_id, timeperiod, patientid, well, stype, sampleid, agroup, dilution, pctaggbeads, samplingerrors, mfi, assay_response_variable, assay_independent_variable, raw_assay_response, observed_response_fit, predicted_log10_concentration, predicted_concentration, final_concentration, se_concentration, pcov, pcov_rmse, pcov_pass, conc_q_lo, conc_q_med, conc_q_hi, p_below_lloq, p_above_uloq, p_below_cutoff, frac_draws_below_a, frac_draws_above_d</span></span></code></pre></div>
 <hr>
 </div>
 </div>

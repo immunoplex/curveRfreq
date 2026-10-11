@@ -11,7 +11,7 @@ collects the results."><meta property="og:image" content="https://immunoplex.git
 
     <a class="navbar-brand me-2" href="../index.html">curveRfreq</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.4.3</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.5.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -63,6 +63,9 @@ collects the results.</p>
 <span>  curve_ids <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  on_error <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"warn"</span>, <span class="st">"stop"</span><span class="op">)</span>,</span>
 <span>  persist_draws <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>  decision_cutoff <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  n_interval_draws <span class="op">=</span> <span class="fl">1000L</span>,</span>
+<span>  interval_seed <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  verbose <span class="op">=</span> <span class="cn">FALSE</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
@@ -144,6 +147,16 @@ are fitted. Default NULL fits all found in <code>standards</code>.</p></dd>
 <dt id="arg-on-error">on_error<a class="anchor" aria-label="anchor" href="#arg-on-error"></a></dt>
 <dd><p>Character. <code>"warn"</code> (default) stores NULL and continues;
 <code>"stop"</code> raises on first failure.</p></dd>
+
+
+<dt id="arg-decision-cutoff-n-interval-draws">decision_cutoff, n_interval_draws<a class="anchor" aria-label="anchor" href="#arg-decision-cutoff-n-interval-draws"></a></dt>
+<dd><p>Passed to
+<code><a href="fit_calibration_freq.html">fit_calibration_freq()</a></code>.</p></dd>
+
+
+<dt id="arg-interval-seed">interval_seed<a class="anchor" aria-label="anchor" href="#arg-interval-seed"></a></dt>
+<dd><p>Integer or NULL. When set, curve <code>i</code> uses
+<code>interval_seed + i</code>, so curves get distinct but reproducible streams.</p></dd>
 
 
 <dt id="arg-verbose">verbose<a class="anchor" aria-label="anchor" href="#arg-verbose"></a></dt>

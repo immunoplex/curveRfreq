@@ -1,5 +1,44 @@
 # Changelog
 
+## curveRfreq 0.5.0
+
+- **Predictive intervals and threshold probabilities for test samples.**
+  [`predict_samples_freq()`](https://immunoplex.github.io/curveRfreq/reference/predict_samples_freq.md)
+  adds `conc_q_lo` / `conc_q_med` / `conc_q_hi`, `p_below_lloq`,
+  `p_above_uloq`, `p_below_cutoff`, `frac_draws_below_a` and
+  `frac_draws_above_d` from a Monte Carlo predictive distribution (MVN
+  parameter draws plus residual noise, out-of-range draws kept as
+  censored, summarised by
+  [`curveRcore::summarize_conc_draws()`](https://immunoplex.github.io/curveRcore/reference/summarize_conc_draws.html)).
+  New arguments `decision_cutoff`, `n_interval_draws` (default 1000; 0
+  disables) and `interval_seed` on
+  [`fit_calibration_freq()`](https://immunoplex.github.io/curveRfreq/reference/fit_calibration_freq.md)
+  and
+  [`fit_calibration_freq_multiplate()`](https://immunoplex.github.io/curveRfreq/reference/fit_calibration_freq_multiplate.md)
+  (curve `i` uses `interval_seed + i`). The global RNG stream is never
+  changed. `se_concentration` / `pcov` are unchanged (delta method).
+- **Parameter draws: one shared, named, persisted set.** The selected
+  model’s MVN parameter draws are now drawn once per fit (named like
+  `calib_param` terms, seeded via `interval_seed`, global RNG
+  untouched), used for the samples’ predictive intervals, and stored in
+  `$ensemble[[best]]$draws` **by default** – no longer only under
+  `persist_draws` (which now only matters when `n_interval_draws = 0`).
+  A fixed lower asymptote is recorded in
+  `$ensemble[[best]]$draws_fixed`. With `sigma_resid` and the per-curve
+  `$meta$interval_seed`, the stored draws reproduce the intervals
+  exactly.
+- **Bug fix:** `.mvn_draws()` dropped the parameter names
+  ([`as.numeric()`](https://rdrr.io/r/base/numeric.html) ran before
+  [`names()`](https://rdrr.io/r/base/names.html) was read), so persisted
+  frequentist draws were labelled `p1, p2, ...` and could not be joined
+  to `calib_param`.
+- Requires `curveRcore (>= 0.5.0)`; new dependency `withr`.
+- Vignette: corrected the `pcov_pass` and `final_concentration`
+  descriptions.
+- Known, pre-existing: `test-reference-regression.R` fails on the stored
+  fixture, which predates the `sigma_resid` parameter row; regenerate
+  the fixture.
+
 ## curveRfreq 0.4.3 (2026-09-26)
 
 - **`summary_table()$converged` now means the selected model actually

@@ -11,7 +11,7 @@ uncertainty via the delta method to get se_concentration and pcov."><meta proper
 
     <a class="navbar-brand me-2" href="../index.html">curveRfreq</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.4.3</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.5.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -57,6 +57,12 @@ uncertainty via the delta method to get <code>se_concentration</code> and <code>
 <span>  cv_x_max <span class="op">=</span> <span class="fl">150</span>,</span>
 <span>  pcov_threshold <span class="op">=</span> <span class="fl">20</span>,</span>
 <span>  is_log_independent <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>  lloq_log10 <span class="op">=</span> <span class="cn">NA_real_</span>,</span>
+<span>  uloq_log10 <span class="op">=</span> <span class="cn">NA_real_</span>,</span>
+<span>  decision_cutoff <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  n_interval_draws <span class="op">=</span> <span class="fl">1000L</span>,</span>
+<span>  interval_seed <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  param_draws <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  verbose <span class="op">=</span> <span class="cn">FALSE</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
@@ -109,6 +115,34 @@ Typically <code>summary(fit)$sigma</code>. Default 0.</p></dd>
 <dd><p>Logical. Is x on log10 scale? Default TRUE.</p></dd>
 
 
+<dt id="arg-lloq-log-uloq-log-">lloq_log10, uloq_log10<a class="anchor" aria-label="anchor" href="#arg-lloq-log-uloq-log-"></a></dt>
+<dd><p>Numeric. This curve's LLOQ/ULOQ (log10,
+pre-dilution) for <code>p_below_lloq</code> / <code>p_above_uloq</code>. Default <code>NA</code>.</p></dd>
+
+
+<dt id="arg-decision-cutoff">decision_cutoff<a class="anchor" aria-label="anchor" href="#arg-decision-cutoff"></a></dt>
+<dd><p>Numeric or NULL. Dilution-corrected concentration for
+<code>p_below_cutoff</code>. Default NULL (column is <code>NA</code>).</p></dd>
+
+
+<dt id="arg-n-interval-draws">n_interval_draws<a class="anchor" aria-label="anchor" href="#arg-n-interval-draws"></a></dt>
+<dd><p>Integer. Monte Carlo draws per sample for the
+predictive interval and probabilities. Default 1000; 0 disables them
+(columns <code>NA</code>).</p></dd>
+
+
+<dt id="arg-interval-seed">interval_seed<a class="anchor" aria-label="anchor" href="#arg-interval-seed"></a></dt>
+<dd><p>Integer or NULL. Seed for those draws. The global RNG
+state is never changed either way.</p></dd>
+
+
+<dt id="arg-param-draws">param_draws<a class="anchor" aria-label="anchor" href="#arg-param-draws"></a></dt>
+<dd><p>Matrix or NULL. Pre-drawn parameter draws (rows = draws,
+columns named like <code>coef(fit)</code>), as made by <code><a href="fit_calibration_freq.html">fit_calibration_freq()</a></code> so the
+intervals and the persisted <code>calib_draws</code> share one set. NULL draws them
+here from <code>coef(fit)</code> / <code>vcov(fit)</code>.</p></dd>
+
+
 <dt id="arg-verbose">verbose<a class="anchor" aria-label="anchor" href="#arg-verbose"></a></dt>
 <dd><p>Logical.</p></dd>
 
@@ -118,7 +152,20 @@ Typically <code>summary(fit)$sigma</code>. Default 0.</p></dd>
     <p>Data frame with original sample columns plus:
 <code>observed_response_fit</code>, <code>predicted_log10_concentration</code>,
 <code>predicted_concentration</code>, <code>final_concentration</code>,
-<code>se_concentration</code>, <code>pcov</code>, <code>pcov_rmse</code>.</p>
+<code>se_concentration</code>, <code>pcov</code>, <code>pcov_rmse</code>, and the
+<code><a href="https://immunoplex.github.io/curveRcore/reference/summarize_conc_draws.html" class="external-link">curveRcore::summarize_conc_draws()</a></code> columns.</p>
+    </div>
+    <div class="section level2">
+    <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
+    <p>The interval / probability columns come from a Monte Carlo
+predictive distribution, not the delta method: parameters are drawn from
+their asymptotic multivariate normal (<code>coef(fit)</code>, <code>vcov(fit)</code>), residual
+noise <code>N(0, se_response)</code> is added to the observed response (the same
+variance term the delta method uses), and each draw is inverted with
+<code><a href="https://immunoplex.github.io/curveRcore/reference/invert_with_bounds.html" class="external-link">curveRcore::invert_with_bounds()</a></code>, so draws beyond an asymptote count as
+censored. <code><a href="https://immunoplex.github.io/curveRcore/reference/summarize_conc_draws.html" class="external-link">curveRcore::summarize_conc_draws()</a></code> then summarises them,
+exactly as for Bayesian fits. <code>se_concentration</code> / <code>pcov</code> are unchanged
+(delta method).</p>
     </div>
 
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>

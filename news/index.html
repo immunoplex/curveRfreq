@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">curveRfreq</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.4.3</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.5.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -33,6 +33,18 @@
       <small>Source: <a href="https://github.com/immunoplex/curveRfreq/blob/main/NEWS.md" class="external-link"><code>NEWS.md</code></a></small>
     </div>
 
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.5.0" id="curverfreq-050">curveRfreq 0.5.0<a class="anchor" aria-label="anchor" href="#curverfreq-050"></a></h2>
+<ul><li>
+<strong>Predictive intervals and threshold probabilities for test samples.</strong> <code><a href="../reference/predict_samples_freq.html">predict_samples_freq()</a></code> adds <code>conc_q_lo</code> / <code>conc_q_med</code> / <code>conc_q_hi</code>, <code>p_below_lloq</code>, <code>p_above_uloq</code>, <code>p_below_cutoff</code>, <code>frac_draws_below_a</code> and <code>frac_draws_above_d</code> from a Monte Carlo predictive distribution (MVN parameter draws plus residual noise, out-of-range draws kept as censored, summarised by <code><a href="https://immunoplex.github.io/curveRcore/reference/summarize_conc_draws.html" class="external-link">curveRcore::summarize_conc_draws()</a></code>). New arguments <code>decision_cutoff</code>, <code>n_interval_draws</code> (default 1000; 0 disables) and <code>interval_seed</code> on <code><a href="../reference/fit_calibration_freq.html">fit_calibration_freq()</a></code> and <code><a href="../reference/fit_calibration_freq_multiplate.html">fit_calibration_freq_multiplate()</a></code> (curve <code>i</code> uses <code>interval_seed + i</code>). The global RNG stream is never changed. <code>se_concentration</code> / <code>pcov</code> are unchanged (delta method).</li>
+<li>
+<strong>Parameter draws: one shared, named, persisted set.</strong> The selected model’s MVN parameter draws are now drawn once per fit (named like <code>calib_param</code> terms, seeded via <code>interval_seed</code>, global RNG untouched), used for the samples’ predictive intervals, and stored in <code>$ensemble[[best]]$draws</code> <strong>by default</strong> – no longer only under <code>persist_draws</code> (which now only matters when <code>n_interval_draws = 0</code>). A fixed lower asymptote is recorded in <code>$ensemble[[best]]$draws_fixed</code>. With <code>sigma_resid</code> and the per-curve <code>$meta$interval_seed</code>, the stored draws reproduce the intervals exactly.</li>
+<li>
+<strong>Bug fix:</strong> <code>.mvn_draws()</code> dropped the parameter names (<code><a href="https://rdrr.io/r/base/numeric.html" class="external-link">as.numeric()</a></code> ran before <code><a href="https://rdrr.io/r/base/names.html" class="external-link">names()</a></code> was read), so persisted frequentist draws were labelled <code>p1, p2, ...</code> and could not be joined to <code>calib_param</code>.</li>
+<li>Requires <code>curveRcore (&gt;= 0.5.0)</code>; new dependency <code>withr</code>.</li>
+<li>Vignette: corrected the <code>pcov_pass</code> and <code>final_concentration</code> descriptions.</li>
+<li>Known, pre-existing: <code>test-reference-regression.R</code> fails on the stored fixture, which predates the <code>sigma_resid</code> parameter row; regenerate the fixture.</li>
+</ul></div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.4.3" id="curverfreq-043-2026-09-26">curveRfreq 0.4.3 (2026-09-26)<a class="anchor" aria-label="anchor" href="#curverfreq-043-2026-09-26"></a></h2>
 <ul><li>
