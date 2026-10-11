@@ -66,6 +66,12 @@
 #'   NULL uses `std_curve_conc`.
 #' @param curve_id Character or numeric. Identifier for this curve.
 #'   Default `"1"`.
+#' @param decision_cutoff Numeric or NULL. Dilution-corrected concentration
+#'   for each sample's `p_below_cutoff`. Default NULL (`NA`).
+#' @param n_interval_draws Integer. Monte Carlo draws per sample for the
+#'   predictive interval / probability columns. Default 1000; 0 disables.
+#' @param interval_seed Integer or NULL. Seed for those draws (the global RNG
+#'   is never changed).
 #' @param verbose Logical. Default FALSE.
 #'
 #' @return A `calibration_result` object (from curveRcore).  The
@@ -92,6 +98,9 @@ fit_calibration_freq <- function(standards,
                                  grid_max_conc = NULL,
                                  curve_id = "1",
                                  persist_draws = FALSE,
+                                 decision_cutoff = NULL,
+                                 n_interval_draws = 1000L,
+                                 interval_seed = NULL,
                                  verbose = FALSE) {
 
   indep_var <- "concentration"
@@ -407,6 +416,14 @@ fit_calibration_freq <- function(standards,
   }
 
   # ── 10. Sample prediction ── (unchanged, uses eligibility-gated best_name)
+  # One set of named, seeded MVN parameter draws for the selected model, shared
+  # by the samples' predictive intervals and calib_draws (see .fit_param_draws).
+  # If interval draws are disabled but persist_draws is on, still draw 1000.
+  n_par_draws <- if (n_interval_draws > 0) n_interval_draws else if (isTRUE(persist_draws)) 1000L else 0L
+  par_draws <- if (!is.na(best_name))
+    .fit_param_draws(ensemble_raw[[best_name]]$fit, n_par_draws, interval_seed, fixed_a)
+  else NULL
+
   samples_out <- NULL
   if (!is.null(samples) && nrow(samples) > 0 && !is.na(best_name) &&
       !is.null(ensemble_raw[[best_name]]$fit)) {
@@ -424,6 +441,12 @@ fit_calibration_freq <- function(standards,
       cv_x_max          = cv_x_max,
       pcov_threshold    = pcov_threshold,
       is_log_independent = is_log_independent,
+      lloq_log10        = assessments[[best_name]]$lloq %||% NA_real_,
+      uloq_log10        = assessments[[best_name]]$uloq %||% NA_real_,
+      decision_cutoff   = decision_cutoff,
+      n_interval_draws  = n_interval_draws,
+      interval_seed     = interval_seed,
+      param_draws       = if (n_interval_draws > 0) par_draws else NULL,
       verbose           = verbose
     )
   }
@@ -454,14 +477,16 @@ fit_calibration_freq <- function(standards,
         rel_tol_achieved         = .g(cin$finTol, NA_real_)
       )
     )
-    if (isTRUE(persist_draws) && !is.null(V)) {
-      co   <- tryCatch(stats::coef(bf), error = function(z) NULL)
-      samp <- if (!is.null(co)) .mvn_draws(1000L, co, V) else NULL
-      if (!is.null(samp)) {
-        dl <- lapply(colnames(samp), function(cn) as.numeric(samp[, cn]))
-        names(dl) <- colnames(samp)
-        ensemble_out[[best_name]]$draws <- dl
-      }
+    # Persisted by default (not gated by persist_draws): these are the very
+    # draws behind the samples' intervals, small (S x 4-5 values per curve),
+    # and named to match calib_param terms. A fixed `a` is not drawn; it is
+    # recorded as a constant so a curve can be rebuilt from calib_draws alone.
+    if (!is.null(par_draws)) {
+      dl <- lapply(colnames(par_draws), function(cn) as.numeric(par_draws[, cn]))
+      names(dl) <- colnames(par_draws)
+      ensemble_out[[best_name]]$draws <- dl
+      if (!is.null(fixed_a) && is.finite(fixed_a))
+        ensemble_out[[best_name]]$draws_fixed <- list(a = as.numeric(fixed_a))
     }
   }
 
@@ -478,7 +503,10 @@ fit_calibration_freq <- function(standards,
     is_log_independent = is_log_independent,
     n_standards        = nrow(standards),
     n_samples          = if (!is.null(samples)) nrow(samples) else 0L,
-    pcov_threshold     = pcov_threshold
+    pcov_threshold     = pcov_threshold,
+    decision_cutoff    = decision_cutoff,
+    n_interval_draws   = n_interval_draws,
+    interval_seed      = interval_seed   # with calib_draws + sigma_resid, reproduces the intervals
   )
 
   cr <- curveRcore::new_calibration_result(
@@ -504,11 +532,32 @@ fit_calibration_freq <- function(standards,
 # stay joinable) with column names = names(mu); NULL if Sigma is not positive
 # definite. Used for the frequentist calib_draws (sample_kind = 'mvn').
 .mvn_draws <- function(n, mu, Sigma) {
+  nm <- names(mu)                                          # read BEFORE as.numeric() drops them
   mu <- as.numeric(mu); p <- length(mu)
   R  <- tryCatch(chol(Sigma), error = function(e) NULL)   # R'R = Sigma (upper-tri)
   if (is.null(R)) return(NULL)
   Z   <- matrix(stats::rnorm(n * p), nrow = n, ncol = p)
   out <- sweep(Z %*% R, 2, mu, "+")                        # cov(rows) = R'R = Sigma
-  colnames(out) <- if (!is.null(names(mu))) names(mu) else paste0("p", seq_len(p))
+  colnames(out) <- if (!is.null(nm)) nm else paste0("p", seq_len(p))
   out
+}
+
+# The one set of frequentist parameter draws per fit: used for the samples'
+# predictive intervals AND persisted to calib_draws (sample_kind = 'mvn'), so
+# every stored interval can be reproduced from the stored draws. Named after
+# coef() (minus a fixed `a`); RNG isolated -- with_seed() for a given seed,
+# else with_preserve_seed() -- so the caller's random stream never moves.
+# NULL when S < 1 or vcov is not positive definite.
+.fit_param_draws <- function(fit, S, seed, fixed_a = NULL) {
+  S <- suppressWarnings(as.integer(S))
+  if (is.null(fit) || is.na(S) || S < 1L) return(NULL)
+  theta <- tryCatch(stats::coef(fit), error = function(e) NULL)
+  Sigma <- tryCatch(stats::vcov(fit), error = function(e) NULL)
+  if (is.null(theta) || is.null(Sigma)) return(NULL)
+  if (!is.null(fixed_a) && is.finite(fixed_a) && "a" %in% names(theta)) {
+    theta <- theta[names(theta) != "a"]
+    Sigma <- Sigma[rownames(Sigma) != "a", colnames(Sigma) != "a", drop = FALSE]
+  }
+  draw <- function() .mvn_draws(S, theta, Sigma)
+  if (is.null(seed)) withr::with_preserve_seed(draw()) else withr::with_seed(seed, draw())
 }

@@ -797,11 +797,26 @@ head(all_samples_pred[, c(
 | `observed_response_fit` | Response on the fitting scale (`log10(mfi)` when `is_log_response = TRUE`). |
 | `predicted_log10_concentration` | Back-calculated concentration on the log10 scale. |
 | `predicted_concentration` | Same as `predicted_log10_concentration` when `is_log_independent = TRUE`. |
-| `final_concentration` | Pre-dilution concentration: `10^predicted_concentration × dilution`. |
+| `final_concentration` | Dilution-corrected concentration: `10^predicted_log10_concentration × dilution`. |
 | `se_concentration` | Delta-method SE of `predicted_concentration`. |
 | `pcov` | %CV of back-calculated concentration. |
 | `pcov_rmse` | Relative RMSE; for samples equals `pcov` (bias undefined without known truth). |
-| `pcov_pass` | `TRUE` when `pcov < cv_x_max` and finite. |
+| `pcov_pass` | `TRUE` when `pcov < pcov_threshold` and finite (reclassified against LLOQ/ULOQ by `curveRcore::classify_pcov_gates_multiplate()`). |
+| `conc_q_lo`, `conc_q_med`, `conc_q_hi` | 2.5 / 50 / 97.5 % Monte Carlo predictive quantiles, natural scale, dilution-corrected. |
+| `p_below_lloq`, `p_above_uloq`, `p_below_cutoff` | Probability the concentration is below the LLOQ / above the ULOQ / below `decision_cutoff`. |
+| `frac_draws_below_a`, `frac_draws_above_d` | Share of Monte Carlo draws whose response lay beyond the low / high asymptote. |
+
+The last three rows come from a Monte Carlo predictive distribution rather than
+the delta method: `n_interval_draws` (default 1000) parameter vectors are drawn
+from the fitted multivariate normal, residual noise `N(0, sigma)` is added to
+the observed response, and each draw is inverted, with a draw beyond an
+asymptote counted as censored instead of dropped. The interval is therefore
+asymmetric on the natural scale and still defined for samples outside the
+curve's range, where the delta-method `se_concentration` is `NA`. Set
+`interval_seed` for reproducible draws; the global random-number stream is
+never changed. Censoring classes and bounds come from
+`curveRcore::classify_censoring_multiplate()` (see the curveRcore
+"Getting Started" vignette, section *Out-of-range samples*).
 
 ## Flagging out-of-range samples
 

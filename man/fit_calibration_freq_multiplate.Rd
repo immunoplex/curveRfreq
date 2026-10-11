@@ -21,6 +21,9 @@ fit_calibration_freq_multiplate(
   curve_ids = NULL,
   on_error = c("warn", "stop"),
   persist_draws = FALSE,
+  decision_cutoff = NULL,
+  n_interval_draws = 1000L,
+  interval_seed = NULL,
   verbose = FALSE
 )
 }
@@ -69,6 +72,12 @@ are fitted. Default NULL fits all found in \code{standards}.}
 
 \item{on_error}{Character. \code{"warn"} (default) stores NULL and continues;
 \code{"stop"} raises on first failure.}
+
+\item{decision_cutoff, n_interval_draws}{Passed to
+\code{\link[=fit_calibration_freq]{fit_calibration_freq()}}.}
+
+\item{interval_seed}{Integer or NULL. When set, curve \code{i} uses
+\code{interval_seed + i}, so curves get distinct but reproducible streams.}
 
 \item{verbose}{Logical.}
 }

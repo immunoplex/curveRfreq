@@ -15,6 +15,12 @@ predict_samples_freq(
   cv_x_max = 150,
   pcov_threshold = 20,
   is_log_independent = TRUE,
+  lloq_log10 = NA_real_,
+  uloq_log10 = NA_real_,
+  decision_cutoff = NULL,
+  n_interval_draws = 1000L,
+  interval_seed = NULL,
+  param_draws = NULL,
   verbose = FALSE
 )
 }
@@ -43,16 +49,46 @@ Typically \code{summary(fit)$sigma}. Default 0.}
 
 \item{is_log_independent}{Logical. Is x on log10 scale? Default TRUE.}
 
+\item{lloq_log10, uloq_log10}{Numeric. This curve's LLOQ/ULOQ (log10,
+pre-dilution) for \code{p_below_lloq} / \code{p_above_uloq}. Default \code{NA}.}
+
+\item{decision_cutoff}{Numeric or NULL. Dilution-corrected concentration for
+\code{p_below_cutoff}. Default NULL (column is \code{NA}).}
+
+\item{n_interval_draws}{Integer. Monte Carlo draws per sample for the
+predictive interval and probabilities. Default 1000; 0 disables them
+(columns \code{NA}).}
+
+\item{interval_seed}{Integer or NULL. Seed for those draws. The global RNG
+state is never changed either way.}
+
+\item{param_draws}{Matrix or NULL. Pre-drawn parameter draws (rows = draws,
+columns named like \code{coef(fit)}), as made by \code{\link[=fit_calibration_freq]{fit_calibration_freq()}} so the
+intervals and the persisted \code{calib_draws} share one set. NULL draws them
+here from \code{coef(fit)} / \code{vcov(fit)}.}
+
 \item{verbose}{Logical.}
 }
 \value{
 Data frame with original sample columns plus:
 \code{observed_response_fit}, \code{predicted_log10_concentration},
 \code{predicted_concentration}, \code{final_concentration},
-\code{se_concentration}, \code{pcov}, \code{pcov_rmse}.
+\code{se_concentration}, \code{pcov}, \code{pcov_rmse}, and the
+\code{\link[curveRcore:summarize_conc_draws]{curveRcore::summarize_conc_draws()}} columns.
 }
 \description{
 For each test sample, applies the inverse of the best-fit model to
 the observed response to get predicted concentration, then propagates
 uncertainty via the delta method to get \code{se_concentration} and \code{pcov}.
+}
+\details{
+The interval / probability columns come from a Monte Carlo
+predictive distribution, not the delta method: parameters are drawn from
+their asymptotic multivariate normal (\code{coef(fit)}, \code{vcov(fit)}), residual
+noise \code{N(0, se_response)} is added to the observed response (the same
+variance term the delta method uses), and each draw is inverted with
+\code{\link[curveRcore:invert_with_bounds]{curveRcore::invert_with_bounds()}}, so draws beyond an asymptote count as
+censored. \code{\link[curveRcore:summarize_conc_draws]{curveRcore::summarize_conc_draws()}} then summarises them,
+exactly as for Bayesian fits. \code{se_concentration} / \code{pcov} are unchanged
+(delta method).
 }

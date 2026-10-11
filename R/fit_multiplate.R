@@ -51,6 +51,10 @@
 #'   are fitted. Default NULL fits all found in `standards`.
 #' @param on_error Character. `"warn"` (default) stores NULL and continues;
 #'   `"stop"` raises on first failure.
+#' @param decision_cutoff,n_interval_draws Passed to
+#'   [fit_calibration_freq()].
+#' @param interval_seed Integer or NULL. When set, curve `i` uses
+#'   `interval_seed + i`, so curves get distinct but reproducible streams.
 #' @param verbose Logical.
 #'
 #' @return A `calibration_result_multiplate` object (from curveRcore).
@@ -72,6 +76,9 @@ fit_calibration_freq_multiplate <- function(standards,
                                             curve_ids = NULL,
                                             on_error = c("warn", "stop"),
                                             persist_draws = FALSE,
+                                            decision_cutoff = NULL,
+                                            n_interval_draws = 1000L,
+                                            interval_seed = NULL,
                                             verbose = FALSE) {
 
   on_error <- match.arg(on_error)
@@ -178,6 +185,9 @@ fit_calibration_freq_multiplate <- function(standards,
           grid_max_conc      = grid_max_conc,
           curve_id           = cid,
           persist_draws      = persist_draws,
+          decision_cutoff    = decision_cutoff,
+          n_interval_draws   = n_interval_draws,
+          interval_seed      = if (is.null(interval_seed)) NULL else interval_seed + i,
           verbose            = verbose
         ),
         warning = function(w) {
@@ -207,6 +217,9 @@ fit_calibration_freq_multiplate <- function(standards,
     response_var       = response_var,
     is_log_response    = is_log_response,
     is_log_independent = is_log_independent,
+    decision_cutoff    = decision_cutoff,
+    n_interval_draws   = n_interval_draws,
+    interval_seed      = interval_seed,
     timestamp          = Sys.time()
   )
 

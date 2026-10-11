@@ -24,6 +24,9 @@ fit_calibration_freq(
   grid_max_conc = NULL,
   curve_id = "1",
   persist_draws = FALSE,
+  decision_cutoff = NULL,
+  n_interval_draws = 1000L,
+  interval_seed = NULL,
   verbose = FALSE
 )
 }
@@ -85,6 +88,15 @@ NULL uses \code{std_curve_conc}.}
 
 \item{curve_id}{Character or numeric. Identifier for this curve.
 Default \code{"1"}.}
+
+\item{decision_cutoff}{Numeric or NULL. Dilution-corrected concentration
+for each sample's \code{p_below_cutoff}. Default NULL (\code{NA}).}
+
+\item{n_interval_draws}{Integer. Monte Carlo draws per sample for the
+predictive interval / probability columns. Default 1000; 0 disables.}
+
+\item{interval_seed}{Integer or NULL. Seed for those draws (the global RNG
+is never changed).}
 
 \item{verbose}{Logical. Default FALSE.}
 }
