@@ -239,8 +239,7 @@ mp <- fit_calibration_freq_multiplate(
 #>  Trying model: gompertz4
 #>   ✓ gompertz4 converged (AIC=-16.12)
 #>   [eligibility] logistic4      ✓ eligible
-#>   [eligibility] gompertz4      ✗ ineligible
-#>     gate dynamic_range    dynamic range = 0 log10 (need >= 0.5)
+#>   [eligibility] gompertz4      ✓ eligible
 #>   [selection] best = logistic4
 #> Waiting for profiling to be done...
 #>   [warning] NaNs produced
@@ -254,8 +253,7 @@ mp <- fit_calibration_freq_multiplate(
 #>  Trying model: gompertz4
 #>   ✓ gompertz4 converged (AIC=-19.38)
 #>   [eligibility] logistic4      ✓ eligible
-#>   [eligibility] gompertz4      ✗ ineligible
-#>     gate dynamic_range    dynamic range = 0 log10 (need >= 0.5)
+#>   [eligibility] gompertz4      ✓ eligible
 #>   [selection] best = logistic4
 #> Waiting for profiling to be done...
 #> [detection_limits] curve_id=3  LLOD_resp=1.912  ULOD_resp=4.3  MDC=[-1.624, 1.285]  RDL=[-1.611, 0.9333]
@@ -1219,7 +1217,7 @@ if (length(runner_up) > 0 &&
 }
 #> Runner-up model: gompertz4 
 #> Grid rows: 200 
-#> pcov range: [ 39.6 , 150 ]
+#> pcov range: [ 22.3 , 150 ]
 ```
 
 ### Multi-curve object
