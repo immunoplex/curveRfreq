@@ -1,3 +1,12 @@
+# curveRfreq 0.5.2
+
+* Tests only, no change to fitting or results. `test-reference-regression.R`
+  compares the best model's parameters with a snapshot made by curveRfreq 0.2.0
+  (2026-06-03), before the residual standard error was reported as an extra
+  parameter row, `sigma_resid`. The test now compares the curve parameters with
+  the snapshot exactly as before (they are unchanged to every digit) and checks
+  `sigma_resid` against the fit's own residual standard error.
+
 # curveRfreq 0.5.1
 
 * Maintenance release: no functional changes. Rebuilt and documented against

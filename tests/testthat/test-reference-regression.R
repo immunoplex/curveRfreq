@@ -119,6 +119,19 @@ test_that("best-model parameter estimates match reference", {
 
   expect_false(is.null(ref_params))
   expect_false(is.null(cur_params))
+
+  # The snapshot (curveRfreq 0.2.0, 2026-06-03) predates the residual standard
+  # error being reported as an extra term, 'sigma_resid' (the frequentist noise
+  # analogue, stored in calib_param). Compare the curve parameters with the
+  # snapshot exactly as before, and check sigma_resid against the fit itself.
+  sig <- cur_params[cur_params$term == "sigma_resid", , drop = FALSE]
+  expect_equal(nrow(sig), 1L)
+  fs <- result$ensemble[[best_name]]$fit_stats
+  expect_equal(sig$estimate, sqrt(fs$rss / fs$df_resid), tolerance = 1e-8,
+               info = "sigma_resid is the residual standard error of the fit")
+  cur_params <- cur_params[cur_params$term != "sigma_resid", , drop = FALSE]
+  ref_params <- ref_params[ref_params$term != "sigma_resid", , drop = FALSE]
+
   expect_equal(sort(ref_params$term), sort(cur_params$term))
 
   ref_params <- ref_params[order(ref_params$term), ]
